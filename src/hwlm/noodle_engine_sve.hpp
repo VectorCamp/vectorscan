@@ -127,24 +127,6 @@ hwlm_error_t scanSingle(const struct noodTable *n, const u8 *buf, size_t len,
 }
 
 static really_inline
-svuint16_t getCharMaskDouble(const struct noodTable *n, bool noCase) {
-    if (noCase) {
-        const uint64_t lowerFirst = n->key0 & 0xdf;
-        const uint64_t upperFirst = n->key0 | 0x20;
-        const uint64_t lowerSecond = n->key1 & 0xdf;
-        const uint64_t upperSecond = n->key1 | 0x20;
-        const uint64_t chars = lowerFirst | (lowerSecond << 8)
-                          | (lowerFirst << 16) | (upperSecond) << 24
-                          | (upperFirst << 32) | (lowerSecond) << 40
-                          | (upperFirst << 48) | (upperSecond) << 56;
-        return svreinterpret_u16(svdup_u64(chars));
-    } else {
-        uint16_t chars_u16 = n->key0 | (n->key1 << 8);
-        return svdup_u16(chars_u16);
-    }
-}
-
-static really_inline
 hwlm_error_t doubleCheckMatched(const struct noodTable *n, const u8 *buf,
                                 size_t len, const struct cb_info *cbi,
                                 const u8 *d, svbool_t matched,
@@ -238,7 +220,7 @@ hwlm_error_t scanDouble(const struct noodTable *n, const u8 *buf, size_t len,
     }
     ++d;
 
-    svuint16_t chars = getCharMaskDouble(n, noCase);
+    svuint16_t chars = getCharMaskDouble(n->key0, n->key1, noCase);
 
     if (scan_len <= svcntb()) {
         return scanDoubleOnce(n, buf, len, cbi, chars, d, e);

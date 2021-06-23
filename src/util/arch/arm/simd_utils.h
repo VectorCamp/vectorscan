@@ -53,6 +53,24 @@ svuint8_t getCharMaskSingle(const u8 c, bool noCase) {
     }
 }
 
+static really_inline
+svuint16_t getCharMaskDouble(const u8 c0, const u8 c1, bool noCase) {
+    if (noCase) {
+        const uint64_t lowerFirst = c0 & 0xdf;
+        const uint64_t upperFirst = c0 | 0x20;
+        const uint64_t lowerSecond = c1 & 0xdf;
+        const uint64_t upperSecond = c1 | 0x20;
+        const uint64_t chars = lowerFirst | (lowerSecond << 8)
+                          | (lowerFirst << 16) | (upperSecond) << 24
+                          | (upperFirst << 32) | (lowerSecond) << 40
+                          | (upperFirst << 48) | (upperSecond) << 56;
+        return svreinterpret_u16(svdup_u64(chars));
+    } else {
+        uint16_t chars_u16 = c0 | (c1 << 8);
+        return svdup_u16(chars_u16);
+    }
+}
+
 #endif
 
 #include <string.h> // for memcpy

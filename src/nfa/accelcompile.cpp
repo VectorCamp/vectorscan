@@ -207,16 +207,45 @@ void buildAccelDouble(const AccelInfo &info, AccelAux *aux) {
         u8 m2;
 
         if (buildDvermMask(info.double_stop2, &m1, &m2)) {
+            u8 c1 = info.double_stop2.begin()->first & m1;
+            u8 c2 = info.double_stop2.begin()->second & m2;
+#ifdef HAVE_SVE2
+            if (vermicelliDoubleMasked16Build(c1, c2, m1, m2, (u8 *)&aux->mdverm16.mask)) {
+                aux->accel_type = ACCEL_DVERM16_MASKED;
+                aux->mdverm16.offset = offset;
+                aux->mdverm16.c1 = c1;
+                aux->mdverm16.m1 = m1;
+                DEBUG_PRINTF("building maskeddouble16-vermicelli for 0x%02hhx%02hhx\n",
+                             c1, c2);
+                return;
+            } else if (outs2 <= 8 &&
+                       vermicelliDouble16Build(info.double_stop2, (u8 *)&aux->dverm16.mask,
+                                               (u8 *)&aux->dverm16.firsts)) {
+                aux->accel_type = ACCEL_DVERM16;
+                aux->dverm16.offset = offset;
+                DEBUG_PRINTF("building double16-vermicelli\n");
+                return;
+            }
+#endif // HAVE_SVE2
             aux->accel_type = ACCEL_DVERM_MASKED;
             aux->dverm.offset = offset;
-            aux->dverm.c1 = info.double_stop2.begin()->first & m1;
-            aux->dverm.c2 = info.double_stop2.begin()->second & m2;
+            aux->dverm.c1 = c1;
+            aux->dverm.c2 = c2;
             aux->dverm.m1 = m1;
             aux->dverm.m2 = m2;
-            DEBUG_PRINTF("building maskeddouble-vermicelli for 0x%02hhx%02hhx\n",
-                         aux->dverm.c1, aux->dverm.c2);
+            DEBUG_PRINTF("building maskeddouble-vermicelli for 0x%02hhx%02hhx\n", c1, c2);
             return;
         }
+#ifdef HAVE_SVE2
+        if (outs2 <= 8 &&
+            vermicelliDouble16Build(info.double_stop2, (u8 *)&aux->dverm16.mask,
+                                    (u8 *)&aux->dverm16.firsts)) {
+            aux->accel_type = ACCEL_DVERM16;
+            aux->dverm16.offset = offset;
+            DEBUG_PRINTF("building double16-vermicelli\n");
+            return;
+        }
+#endif // HAVE_SVE2
     }
 
     if (outs1 < outs2 && outs1 <= 2) { // Heuristic from UE-438.

@@ -43,6 +43,11 @@ namespace ue2 {
 
 bool vermicelli16Build(const CharReach &chars, u8 *rv);
 
+bool vermicelliDouble16Build(const flat_set<std::pair<u8, u8>> &twochar,
+                             u8 *chars, u8 *firsts);
+
+bool vermicelliDoubleMasked16Build(char c1, char c2, char m1, char m2, u8 *rv);
+
 } // namespace ue2
 
 #endif // VERM_COMPILE_H

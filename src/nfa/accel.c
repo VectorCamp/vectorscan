@@ -91,6 +91,28 @@ const u8 *run_accel(const union AccelAux *accel, const u8 *c, const u8 *c_end) {
 
         rv = vermicelli16Exec(accel->verm16.mask, c, c_end);
         break;
+
+    case ACCEL_DVERM16:
+        DEBUG_PRINTF("accel dverm16 %p %p\n", c, c_end);
+        if (c_end - c < 18) {
+            return c;
+        }
+
+        /* need to stop one early to get an accurate end state */
+        rv = vermicelliDouble16Exec(accel->dverm16.mask, accel->dverm16.firsts,
+                                    c, c_end - 1);
+        break;
+
+    case ACCEL_DVERM16_MASKED:
+        DEBUG_PRINTF("accel dverm16 masked %p %p\n", c, c_end);
+        if (c_end - c < 18) {
+            return c;
+        }
+
+        /* need to stop one early to get an accurate end state */
+        rv = vermicelliDoubleMasked16Exec(accel->mdverm16.mask, accel->mdverm16.c1,
+                                          accel->mdverm16.m1, c, c_end - 1);
+        break;
 #endif // HAVE_SVE2
 
     case ACCEL_DVERM_MASKED:

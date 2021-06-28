@@ -311,11 +311,6 @@ TEST(RDoubleVermicelli, Exec5) {
 #include "nfa/vermicellicompile.h"
 using namespace ue2;
 
-union Matches {
-    u8 val8[16];
-    m128 val128;
-};
-
 TEST(RVermicelli16, ExecNoMatch1) {
     char t1[] = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 
@@ -323,8 +318,8 @@ TEST(RVermicelli16, ExecNoMatch1) {
     chars.set('a');
     chars.set('B');
     chars.set('A');
-    Matches matches;
-    bool ret = vermicelli16Build(chars, matches.val8);
+    m128 matches;
+    bool ret = vermicelli16Build(chars, (u8 *)&matches);
     ASSERT_TRUE(ret);
 
     for (size_t i = 0; i < 16; i++) {
@@ -332,7 +327,7 @@ TEST(RVermicelli16, ExecNoMatch1) {
             const u8 *begin = (const u8 *)t1 + i;
             const u8 *end = (const u8 *)t1 + strlen(t1) - j;
 
-            const u8 *rv = rvermicelli16Exec(matches.val128, begin, end);
+            const u8 *rv = rvermicelli16Exec(matches, begin, end);
             ASSERT_EQ(begin - 1, rv);
         }
     }
@@ -345,12 +340,12 @@ TEST(RVermicelli16, Exec1) {
     CharReach chars;
     chars.set('a');
     chars.set('A');
-    Matches matches;
-    bool ret = vermicelli16Build(chars, matches.val8);
+    m128 matches;
+    bool ret = vermicelli16Build(chars, (u8 *)&matches);
     ASSERT_TRUE(ret);
 
     for (size_t i = 0; i < 16; i++) {
-        const u8 *rv = rvermicelli16Exec(matches.val128, buf, buf + strlen(t1) - i);
+        const u8 *rv = rvermicelli16Exec(matches, buf, buf + strlen(t1) - i);
         ASSERT_EQ(buf + 48, rv);
     }
 }
@@ -362,12 +357,12 @@ TEST(RVermicelli16,  Exec2) {
     CharReach chars;
     chars.set('a');
     chars.set('A');
-    Matches matches;
-    bool ret = vermicelli16Build(chars, matches.val8);
+    m128 matches;
+    bool ret = vermicelli16Build(chars, (u8 *)&matches);
     ASSERT_TRUE(ret);
 
     for (size_t i = 0; i < 16; i++) {
-        const u8 *rv = rvermicelli16Exec(matches.val128, buf + i, buf + strlen(t1));
+        const u8 *rv = rvermicelli16Exec(matches, buf + i, buf + strlen(t1));
         ASSERT_EQ(buf + 48, rv);
     }
 }
@@ -378,20 +373,20 @@ TEST(RVermicelli16,  Exec3) {
 
     CharReach chars;
     chars.set('a');
-    Matches matches_a;
-    bool ret = vermicelli16Build(chars, matches_a.val8);
+    m128 matches_a;
+    bool ret = vermicelli16Build(chars, (u8 *)&matches_a);
     ASSERT_TRUE(ret);
 
     chars.set('A');
-    Matches matches_A;
-    ret = vermicelli16Build(chars, matches_A.val8);
+    m128 matches_A;
+    ret = vermicelli16Build(chars, (u8 *)&matches_A);
     ASSERT_TRUE(ret);
 
     for (size_t i = 0; i < 16; i++) {
-        const u8 *rv = rvermicelli16Exec(matches_a.val128, buf, buf + strlen(t1) - i);
+        const u8 *rv = rvermicelli16Exec(matches_a, buf, buf + strlen(t1) - i);
         ASSERT_EQ(buf + 47, rv);
 
-        rv = rvermicelli16Exec(matches_A.val128, buf, buf + strlen(t1) - i);
+        rv = rvermicelli16Exec(matches_A, buf, buf + strlen(t1) - i);
         ASSERT_EQ(buf + 48, rv);
     }
 }
@@ -402,21 +397,21 @@ TEST(RVermicelli16, Exec4) {
 
     CharReach chars;
     chars.set('a');
-    Matches matches_a;
-    bool ret = vermicelli16Build(chars, matches_a.val8);
+    m128 matches_a;
+    bool ret = vermicelli16Build(chars, (u8 *)&matches_a);
     ASSERT_TRUE(ret);
 
     chars.set('A');
-    Matches matches_A;
-    ret = vermicelli16Build(chars, matches_A.val8);
+    m128 matches_A;
+    ret = vermicelli16Build(chars, (u8 *)&matches_A);
     ASSERT_TRUE(ret);
 
     for (size_t i = 0; i < 31; i++) {
         t1[16 + i] = 'a';
-        const u8 *rv = rvermicelli16Exec(matches_a.val128, buf, buf + strlen(t1));
+        const u8 *rv = rvermicelli16Exec(matches_a, buf, buf + strlen(t1));
         ASSERT_EQ(buf + 16 + i, rv);
 
-        rv = rvermicelli16Exec(matches_A.val128, buf, buf + strlen(t1));
+        rv = rvermicelli16Exec(matches_A, buf, buf + strlen(t1));
         ASSERT_EQ(buf + 16 + i, rv);
     }
 }
@@ -426,18 +421,18 @@ TEST(RVermicelli16, Exec5) {
     const u8 *buf = (const u8 *)t1;
 
     CharReach chars;
-    Matches matches[16];
+    m128 matches[16];
     bool ret;
 
     for (int i = 0; i < 16; ++i) {
         chars.set('a' + i);
-        ret = vermicelli16Build(chars, matches[i].val8);
+        ret = vermicelli16Build(chars, (u8 *)&matches[i]);
         ASSERT_TRUE(ret);
     }
 
     for (int j = 0; j < 16; ++j) {
         for (size_t i = 0; i < 16; i++) {
-            const u8 *rv = rvermicelli16Exec(matches[j].val128, buf, buf + strlen(t1) - i);
+            const u8 *rv = rvermicelli16Exec(matches[j], buf, buf + strlen(t1) - i);
             ASSERT_EQ(buf + j + 17, rv);
         }
     }
@@ -451,13 +446,13 @@ TEST(RNVermicelli16, ExecNoMatch1) {
     chars.set('b');
     chars.set('B');
     chars.set('A');
-    Matches matches;
-    bool ret = vermicelli16Build(chars, matches.val8);
+    m128 matches;
+    bool ret = vermicelli16Build(chars, (u8 *)&matches);
     ASSERT_TRUE(ret);
 
     for (size_t i = 0; i < 16; i++) {
         for (size_t j = 0; j < 16; j++) {
-            const u8 *rv = rnvermicelli16Exec(matches.val128, buf + i, buf + strlen(t1) - j);
+            const u8 *rv = rnvermicelli16Exec(matches, buf + i, buf + strlen(t1) - j);
             ASSERT_EQ(buf + i - 1, rv);
         }
     }
@@ -470,12 +465,12 @@ TEST(RNVermicelli16, Exec1) {
     CharReach chars;
     chars.set('b');
     chars.set('A');
-    Matches matches;
-    bool ret = vermicelli16Build(chars, matches.val8);
+    m128 matches;
+    bool ret = vermicelli16Build(chars, (u8 *)&matches);
     ASSERT_TRUE(ret);
 
     for (size_t i = 0; i < 16; i++) {
-        const u8 *rv = rnvermicelli16Exec(matches.val128, buf + i, buf + strlen(t1) - i);
+        const u8 *rv = rnvermicelli16Exec(matches, buf + i, buf + strlen(t1) - i);
         ASSERT_EQ(buf + 48, rv);
     }
 }
@@ -487,12 +482,12 @@ TEST(RNVermicelli16,  Exec2) {
     CharReach chars;
     chars.set('b');
     chars.set('A');
-    Matches matches;
-    bool ret = vermicelli16Build(chars, matches.val8);
+    m128 matches;
+    bool ret = vermicelli16Build(chars, (u8 *)&matches);
     ASSERT_TRUE(ret);
 
     for (size_t i = 0; i < 16; i++) {
-        const u8 *rv = rnvermicelli16Exec(matches.val128, buf, buf + strlen(t1) - i);
+        const u8 *rv = rnvermicelli16Exec(matches, buf, buf + strlen(t1) - i);
         ASSERT_EQ(buf + 48, rv);
     }
 }
@@ -503,20 +498,20 @@ TEST(RNVermicelli16,  Exec3) {
 
     CharReach chars;
     chars.set('b');
-    Matches matches_b;
-    bool ret = vermicelli16Build(chars, matches_b.val8);
+    m128 matches_b;
+    bool ret = vermicelli16Build(chars, (u8 *)&matches_b);
     ASSERT_TRUE(ret);
 
     chars.set('A');
-    Matches matches_A;
-    ret = vermicelli16Build(chars, matches_A.val8);
+    m128 matches_A;
+    ret = vermicelli16Build(chars, (u8 *)&matches_A);
     ASSERT_TRUE(ret);
 
     for (size_t i = 0; i < 16; i++) {
-        const u8 *rv = rnvermicelli16Exec(matches_b.val128, buf + i, buf + strlen(t1));
+        const u8 *rv = rnvermicelli16Exec(matches_b, buf + i, buf + strlen(t1));
         ASSERT_EQ(buf + 48, rv);
 
-        rv = rnvermicelli16Exec(matches_A.val128, buf + i, buf + strlen(t1));
+        rv = rnvermicelli16Exec(matches_A, buf + i, buf + strlen(t1));
         ASSERT_EQ(buf + 47, rv);
     }
 }
@@ -527,21 +522,21 @@ TEST(RNVermicelli16, Exec4) {
 
     CharReach chars;
     chars.set('b');
-    Matches matches_b;
-    bool ret = vermicelli16Build(chars, matches_b.val8);
+    m128 matches_b;
+    bool ret = vermicelli16Build(chars, (u8 *)&matches_b);
     ASSERT_TRUE(ret);
 
     chars.set('A');
-    Matches matches_A;
-    ret = vermicelli16Build(chars, matches_A.val8);
+    m128 matches_A;
+    ret = vermicelli16Build(chars, (u8 *)&matches_A);
     ASSERT_TRUE(ret);
 
     for (size_t i = 0; i < 31; i++) {
         t1[16 + i] = 'a';
-        const u8 *rv = rnvermicelli16Exec(matches_b.val128, buf, buf + strlen(t1));
+        const u8 *rv = rnvermicelli16Exec(matches_b, buf, buf + strlen(t1));
         ASSERT_EQ(buf + 16 + i, rv);
 
-        rv = rnvermicelli16Exec(matches_A.val128, buf, buf + strlen(t1));
+        rv = rnvermicelli16Exec(matches_A, buf, buf + strlen(t1));
         ASSERT_EQ(buf + 16 + i, rv);
     }
 }
@@ -551,18 +546,18 @@ TEST(RNVermicelli16, Exec5) {
     const u8 *buf = (const u8 *)t1;
 
     CharReach chars;
-    Matches matches[16];
+    m128 matches[16];
     bool ret;
 
     for (int i = 0; i < 16; ++i) {
         chars.set('q' - i);
-        ret = vermicelli16Build(chars, matches[i].val8);
+        ret = vermicelli16Build(chars, (u8 *)&matches[i]);
         ASSERT_TRUE(ret);
     }
 
     for (int j = 0; j < 16; ++j) {
         for (size_t i = 0; i < 16; i++) {
-            const u8 *rv = rnvermicelli16Exec(matches[j].val128, buf, buf + strlen(t1) - i);
+            const u8 *rv = rnvermicelli16Exec(matches[j], buf, buf + strlen(t1) - i);
             ASSERT_EQ(buf - j + 32, rv);
         }
     }

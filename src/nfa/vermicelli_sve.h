@@ -267,9 +267,7 @@ const u8 *rvermSearch(svuint8_t chars, const u8 *buf, const u8 *buf_end,
 }
 
 static really_inline
-const u8 *dvermSearch(char c1, char c2, bool nocase, const u8 *buf,
-                      const u8 *buf_end) {
-    svuint16_t chars = getCharMaskDouble(c1, c2, nocase);
+const u8 *dvermSearch(svuint8_t chars, const u8 *buf, const u8 *buf_end) {
     size_t len = buf_end - buf;
     if (len <= svcntb()) {
         return dvermSearchOnce(chars, buf, buf_end);
@@ -374,7 +372,8 @@ const u8 *vermicelliDoubleExec(char c1, char c2, bool nocase, const u8 *buf,
     assert(buf < buf_end);
     if (buf_end - buf > 1) {
         ++buf;
-        const u8 *ptr = dvermSearch(c1, c2, nocase, buf, buf_end);
+        svuint16_t chars = getCharMaskDouble(c1, c2, nocase);
+        const u8 *ptr = dvermSearch(chars, buf, buf_end);
         if (ptr) {
             return ptr;
         }
@@ -406,42 +405,92 @@ const u8 *rvermicelliDoubleExec(char c1, char c2, bool nocase, const u8 *buf,
 }
 
 static really_inline
-svuint8_t getDupSVEMaskFrom128(m128 _mask) {
-    return svld1rq_u8(svptrue_b8(), (const uint8_t *)&_mask);
+svuint8_t getDupSVEMaskFrom128(m128 mask) {
+    return svld1rq_u8(svptrue_b8(), (const uint8_t *)&mask);
 }
 
 static really_inline
-const u8 *vermicelli16Exec(const m128 _chars, const u8 *buf,
+const u8 *vermicelli16Exec(const m128 mask, const u8 *buf,
                            const u8 *buf_end) {
     DEBUG_PRINTF("verm16 scan over %td bytes\n", buf_end - buf);
-    svuint8_t chars = getDupSVEMaskFrom128(_chars);
+    svuint8_t chars = getDupSVEMaskFrom128(mask);
     const u8 *ptr = vermSearch(chars, buf, buf_end, false);
     return ptr ? ptr : buf_end;
 }
 
 static really_inline
-const u8 *nvermicelli16Exec(const m128 _chars, const u8 *buf,
+const u8 *nvermicelli16Exec(const m128 mask, const u8 *buf,
                             const u8 *buf_end) {
     DEBUG_PRINTF("nverm16 scan over %td bytes\n", buf_end - buf);
-    svuint8_t chars = getDupSVEMaskFrom128(_chars);
+    svuint8_t chars = getDupSVEMaskFrom128(mask);
     const u8 *ptr = vermSearch(chars, buf, buf_end, true);
     return ptr ? ptr : buf_end;
 }
 
 static really_inline
-const u8 *rvermicelli16Exec(const m128 _chars, const u8 *buf,
+const u8 *rvermicelli16Exec(const m128 mask, const u8 *buf,
                             const u8 *buf_end) {
     DEBUG_PRINTF("rverm16 scan over %td bytes\n", buf_end - buf);
-    svuint8_t chars = getDupSVEMaskFrom128(_chars);
+    svuint8_t chars = getDupSVEMaskFrom128(mask);
     const u8 *ptr = rvermSearch(chars, buf, buf_end, false);
     return ptr ? ptr : buf - 1;
 }
 
 static really_inline
-const u8 *rnvermicelli16Exec(const m128 _chars, const u8 *buf,
+const u8 *rnvermicelli16Exec(const m128 mask, const u8 *buf,
                              const u8 *buf_end) {
     DEBUG_PRINTF("rnverm16 scan over %td bytes\n", buf_end - buf);
-    svuint8_t chars = getDupSVEMaskFrom128(_chars);
+    svuint8_t chars = getDupSVEMaskFrom128(mask);
     const u8 *ptr = rvermSearch(chars, buf, buf_end, true);
     return ptr ? ptr : buf - 1;
+}
+
+static really_inline
+bool vermicelliDouble16CheckPartial(const u64a first_chars, const u8 *buf_end) {
+    svuint8_t firsts = svreinterpret_u8(svdup_u64(first_chars));
+    svbool_t matches = svcmpeq(svptrue_b8(), firsts, svdup_u8(buf_end[-1]));
+    return svptest_any(svptrue_b8(), matches);
+}
+
+static really_inline
+const u8 *vermicelliDouble16Exec(const m128 mask, const u64a firsts,
+                                 const u8 *buf, const u8 *buf_end) {
+    assert(buf < buf_end);
+    DEBUG_PRINTF("double verm16 scan over %td bytes\n", buf_end - buf);
+    if (buf_end - buf > 1) {
+        ++buf;
+        svuint16_t chars = svreinterpret_u16(getDupSVEMaskFrom128(mask));
+        const u8 *ptr = dvermSearch(chars, buf, buf_end);
+        if (ptr) {
+            return ptr;
+        }
+    }
+    /* check for partial match at end */
+    if (vermicelliDouble16CheckPartial(firsts, buf_end)) {
+        DEBUG_PRINTF("partial!!!\n");
+        return buf_end - 1;
+    }
+    return buf_end;
+}
+
+static really_inline
+const u8 *vermicelliDoubleMasked16Exec(const m128 mask, char c1, char m1,
+                                       const u8 *buf, const u8 *buf_end) {
+    assert(buf < buf_end);
+    DEBUG_PRINTF("double verm16 masked scan over %td bytes\n", buf_end - buf);
+    if (buf_end - buf > 1) {
+        ++buf;
+        svuint16_t chars = svreinterpret_u16(getDupSVEMaskFrom128(mask));
+        const u8 *ptr = dvermSearch(chars, buf, buf_end);
+        if (ptr) {
+            return ptr;
+        }
+    }
+    /* check for partial match at end */
+    if ((buf_end[-1] & m1) == (u8)c1) {
+        DEBUG_PRINTF("partial!!!\n");
+        return buf_end - 1;
+    }
+
+    return buf_end;
 }

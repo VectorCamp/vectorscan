@@ -232,10 +232,9 @@ const u8 *rdvermSearchLoopBody(svuint16_t chars, const u8 *buf) {
 }
 
 static really_inline
-const u8 *vermSearch(char c, bool nocase, const u8 *buf, const u8 *buf_end,
+const u8 *vermSearch(svuint8_t chars, const u8 *buf, const u8 *buf_end,
                      bool negate) {
     assert(buf < buf_end);
-    svuint8_t chars = getCharMaskSingle(c, nocase);
     size_t len = buf_end - buf;
     if (len <= svcntb()) {
         return vermSearchOnce(chars, buf, buf_end, negate);
@@ -267,10 +266,9 @@ const u8 *vermSearch(char c, bool nocase, const u8 *buf, const u8 *buf_end,
 }
 
 static really_inline
-const u8 *rvermSearch(char c, bool nocase, const u8 *buf, const u8 *buf_end,
+const u8 *rvermSearch(svuint8_t chars, const u8 *buf, const u8 *buf_end,
                       bool negate) {
     assert(buf < buf_end);
-    svuint8_t chars = getCharMaskSingle(c, nocase);
     size_t len = buf_end - buf;
     if (len <= svcntb()) {
         return rvermSearchOnce(chars, buf, buf_end, negate);
@@ -353,7 +351,8 @@ const u8 *vermicelliExec(char c, bool nocase, const u8 *buf,
                          const u8 *buf_end) {
     DEBUG_PRINTF("verm scan %s\\x%02hhx over %td bytes\n",
                  nocase ? "nocase " : "", c, buf_end - buf);
-    const u8 *ptr = vermSearch(c, nocase, buf, buf_end, false);
+    svuint8_t chars = getCharMaskSingle(c, nocase);
+    const u8 *ptr = vermSearch(chars, buf, buf_end, false);
     return ptr ? ptr : buf_end;
 }
 
@@ -364,7 +363,8 @@ const u8 *nvermicelliExec(char c, bool nocase, const u8 *buf,
                          const u8 *buf_end) {
     DEBUG_PRINTF("nverm scan %s\\x%02hhx over %td bytes\n",
                  nocase ? "nocase " : "", c, buf_end - buf);
-    const u8 *ptr = vermSearch(c, nocase, buf, buf_end, true);
+    svuint8_t chars = getCharMaskSingle(c, nocase);
+    const u8 *ptr = vermSearch(chars, buf, buf_end, true);
     return ptr ? ptr : buf_end;
 }
 
@@ -375,7 +375,8 @@ const u8 *rvermicelliExec(char c, bool nocase, const u8 *buf,
                           const u8 *buf_end) {
     DEBUG_PRINTF("rev verm scan %s\\x%02hhx over %td bytes\n",
                  nocase ? "nocase " : "", c, buf_end - buf);
-    const u8 *ptr = rvermSearch(c, nocase, buf, buf_end, false);
+    svuint8_t chars = getCharMaskSingle(c, nocase);
+    const u8 *ptr = rvermSearch(chars, buf, buf_end, false);
     return ptr ? ptr : buf - 1;
 }
 
@@ -386,7 +387,8 @@ const u8 *rnvermicelliExec(char c, bool nocase, const u8 *buf,
                            const u8 *buf_end) {
     DEBUG_PRINTF("rev verm scan %s\\x%02hhx over %td bytes\n",
                  nocase ? "nocase " : "", c, buf_end - buf);
-    const u8 *ptr = rvermSearch(c, nocase, buf, buf_end, true);
+    svuint8_t chars = getCharMaskSingle(c, nocase);
+    const u8 *ptr = rvermSearch(chars, buf, buf_end, true);
     return ptr ? ptr : buf - 1;
 }
 
@@ -427,4 +429,45 @@ const u8 *rvermicelliDoubleExec(char c1, char c2, bool nocase, const u8 *buf,
         }
     }
     return buf - 1;
+}
+
+static really_inline
+svuint8_t getDupSVEMaskFrom128(m128 _mask) {
+    return svld1rq_u8(svptrue_b8(), (const uint8_t *)&_mask);
+}
+
+static really_inline
+const u8 *vermicelli16Exec(const m128 _chars, const u8 *buf,
+                           const u8 *buf_end) {
+    DEBUG_PRINTF("verm16 scan over %td bytes\n", buf_end - buf);
+    svuint8_t chars = getDupSVEMaskFrom128(_chars);
+    const u8 *ptr = vermSearch(chars, buf, buf_end, false);
+    return ptr ? ptr : buf_end;
+}
+
+static really_inline
+const u8 *nvermicelli16Exec(const m128 _chars, const u8 *buf,
+                            const u8 *buf_end) {
+    DEBUG_PRINTF("nverm16 scan over %td bytes\n", buf_end - buf);
+    svuint8_t chars = getDupSVEMaskFrom128(_chars);
+    const u8 *ptr = vermSearch(chars, buf, buf_end, true);
+    return ptr ? ptr : buf_end;
+}
+
+static really_inline
+const u8 *rvermicelli16Exec(const m128 _chars, const u8 *buf,
+                            const u8 *buf_end) {
+    DEBUG_PRINTF("rverm16 scan over %td bytes\n", buf_end - buf);
+    svuint8_t chars = getDupSVEMaskFrom128(_chars);
+    const u8 *ptr = rvermSearch(chars, buf, buf_end, false);
+    return ptr ? ptr : buf - 1;
+}
+
+static really_inline
+const u8 *rnvermicelli16Exec(const m128 _chars, const u8 *buf,
+                             const u8 *buf_end) {
+    DEBUG_PRINTF("rnverm16 scan over %td bytes\n", buf_end - buf);
+    svuint8_t chars = getDupSVEMaskFrom128(_chars);
+    const u8 *ptr = rvermSearch(chars, buf, buf_end, true);
+    return ptr ? ptr : buf - 1;
 }

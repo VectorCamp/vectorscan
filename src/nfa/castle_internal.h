@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2016, Intel Corporation
+ * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -52,6 +53,8 @@ struct SubCastle {
 #define CASTLE_NVERM 2
 #define CASTLE_SHUFTI 3
 #define CASTLE_TRUFFLE 4
+#define CASTLE_VERM16 5
+#define CASTLE_NVERM16 6
 
 enum ExclusiveType {
     NOT_EXCLUSIVE,     //!< no subcastles are exclusive
@@ -129,6 +132,9 @@ struct ALIGN_AVX_DIRECTIVE Castle {
         struct {
             char c;
         } verm;
+        struct {
+            m128 mask;
+        } verm16;
         struct {
             m128 mask_lo;
             m128 mask_hi;

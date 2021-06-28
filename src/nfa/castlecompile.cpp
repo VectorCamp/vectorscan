@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2017, Intel Corporation
+ * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -39,6 +40,7 @@
 #include "repeatcompile.h"
 #include "shufticompile.h"
 #include "trufflecompile.h"
+#include "vermicellicompile.h"
 #include "nfagraph/ng_dump.h"
 #include "nfagraph/ng_equivalence.h"
 #include "nfagraph/ng_repeat.h"
@@ -100,6 +102,19 @@ void writeCastleScanEngine(const CharReach &cr, Castle *c) {
         c->u.verm.c = negated.find_first();
         return;
     }
+
+#ifdef HAVE_SVE2
+    if (cr.count() <= 16) {
+        c->type = CASTLE_NVERM16;
+        vermicelli16Build(cr, (u8 *)&c->u.verm16.mask);
+        return;
+    }
+    if (negated.count() <= 16) {
+        c->type = CASTLE_VERM16;
+        vermicelli16Build(negated, (u8 *)&c->u.verm16.mask);
+        return;
+    }
+#endif // HAVE_SVE2
 
     if (shuftiBuildMasks(negated, (u8 *)&c->u.shuf.mask_lo,
                          (u8 *)&c->u.shuf.mask_hi) != -1) {

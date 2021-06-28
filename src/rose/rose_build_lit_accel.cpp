@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2017, Intel Corporation
+ * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,6 +37,7 @@
 #include "nfa/accel.h"
 #include "nfa/shufticompile.h"
 #include "nfa/trufflecompile.h"
+#include "nfa/vermicellicompile.h"
 #include "util/compare.h"
 #include "util/dump_charclass.h"
 #include "util/ue2string.h"
@@ -440,6 +442,17 @@ void findForwardAccelScheme(const vector<AccelString> &lits,
     }
 
     const CharReach &cr = reach[min_offset];
+#ifdef HAVE_SVE2
+    if (min_count <= 16) {
+        vermicelli16Build(cr, (u8 *)&aux->verm16.mask);
+        DEBUG_PRINTF("built verm16 for %s (%zu chars, offset %u)\n",
+                     describeClass(cr).c_str(), cr.count(), min_offset);
+        aux->verm16.accel_type = ACCEL_VERM16;
+        aux->verm16.offset = verify_u8(min_offset);
+        return;
+    }
+#endif // HAVE_SVE2
+
     if (-1 !=
         shuftiBuildMasks(cr, (u8 *)&aux->shufti.lo, (u8 *)&aux->shufti.hi)) {
         DEBUG_PRINTF("built shufti for %s (%zu chars, offset %u)\n",

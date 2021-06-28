@@ -879,6 +879,8 @@ SET (hs_compile_SRCS
     src/nfa/tamaramacompile.h
     src/nfa/trufflecompile.cpp
     src/nfa/trufflecompile.h
+    src/nfa/vermicellicompile.cpp
+    src/nfa/vermicellicompile.h
     src/nfagraph/ng.cpp
     src/nfagraph/ng.h
     src/nfagraph/ng_anchored_acyclic.cpp

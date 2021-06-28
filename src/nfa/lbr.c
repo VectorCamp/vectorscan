@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2017, Intel Corporation
+ * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -361,6 +362,56 @@ char lbrRevScanNVerm(const struct NFA *nfa, const u8 *buf,
     return 1;
 }
 
+#ifdef HAVE_SVE2
+
+static really_inline
+char lbrRevScanVerm16(const struct NFA *nfa, const u8 *buf,
+                      size_t begin, size_t end, size_t *loc) {
+    assert(begin <= end);
+    assert(nfa->type == LBR_NFA_VERM16);
+    const struct lbr_verm16 *l = getImplNfa(nfa);
+
+    if (begin == end) {
+        return 0;
+    }
+
+    const u8 *ptr = rvermicelli16Exec(l->mask, buf + begin, buf + end);
+    if (ptr == buf + begin - 1) {
+        DEBUG_PRINTF("no escape found\n");
+        return 0;
+    }
+
+    assert(loc);
+    *loc = ptr - buf;
+    DEBUG_PRINTF("escape found at offset %zu\n", *loc);
+    return 1;
+}
+
+static really_inline
+char lbrRevScanNVerm16(const struct NFA *nfa, const u8 *buf,
+                       size_t begin, size_t end, size_t *loc) {
+    assert(begin <= end);
+    assert(nfa->type == LBR_NFA_NVERM16);
+    const struct lbr_verm16 *l = getImplNfa(nfa);
+
+    if (begin == end) {
+        return 0;
+    }
+
+    const u8 *ptr = rnvermicelli16Exec(l->mask, buf + begin, buf + end);
+    if (ptr == buf + begin - 1) {
+        DEBUG_PRINTF("no escape found\n");
+        return 0;
+    }
+
+    assert(loc);
+    *loc = ptr - buf;
+    DEBUG_PRINTF("escape found at offset %zu\n", *loc);
+    return 1;
+}
+
+#endif // HAVE_SVE2
+
 static really_inline
 char lbrRevScanShuf(const struct NFA *nfa, const u8 *buf,
                     size_t begin, size_t end,
@@ -467,6 +518,56 @@ char lbrFwdScanNVerm(const struct NFA *nfa, const u8 *buf,
     return 1;
 }
 
+#ifdef HAVE_SVE2
+
+static really_inline
+char lbrFwdScanVerm16(const struct NFA *nfa, const u8 *buf,
+                      size_t begin, size_t end, size_t *loc) {
+    assert(begin <= end);
+    assert(nfa->type == LBR_NFA_VERM16);
+    const struct lbr_verm16 *l = getImplNfa(nfa);
+
+    if (begin == end) {
+        return 0;
+    }
+
+    const u8 *ptr = vermicelli16Exec(l->mask, buf + begin, buf + end);
+    if (ptr == buf + end) {
+        DEBUG_PRINTF("no escape found\n");
+        return 0;
+    }
+
+    assert(loc);
+    *loc = ptr - buf;
+    DEBUG_PRINTF("escape found at offset %zu\n", *loc);
+    return 1;
+}
+
+static really_inline
+char lbrFwdScanNVerm16(const struct NFA *nfa, const u8 *buf,
+                       size_t begin, size_t end, size_t *loc) {
+    assert(begin <= end);
+    assert(nfa->type == LBR_NFA_NVERM16);
+    const struct lbr_verm16 *l = getImplNfa(nfa);
+
+    if (begin == end) {
+        return 0;
+    }
+
+    const u8 *ptr = nvermicelli16Exec(l->mask, buf + begin, buf + end);
+    if (ptr == buf + end) {
+        DEBUG_PRINTF("no escape found\n");
+        return 0;
+    }
+
+    assert(loc);
+    *loc = ptr - buf;
+    DEBUG_PRINTF("escape found at offset %zu\n", *loc);
+    return 1;
+}
+
+#endif // HAVE_SVE2
+
 static really_inline
 char lbrFwdScanShuf(const struct NFA *nfa, const u8 *buf,
                     size_t begin, size_t end,
@@ -523,6 +624,16 @@ char lbrFwdScanTruf(const struct NFA *nfa, const u8 *buf,
 
 #define ENGINE_ROOT_NAME NVerm
 #include "lbr_common_impl.h"
+
+#ifdef HAVE_SVE2
+
+#define ENGINE_ROOT_NAME Verm16
+#include "lbr_common_impl.h"
+
+#define ENGINE_ROOT_NAME NVerm16
+#include "lbr_common_impl.h"
+
+#endif // HAVE_SVE2
 
 #define ENGINE_ROOT_NAME Shuf
 #include "lbr_common_impl.h"

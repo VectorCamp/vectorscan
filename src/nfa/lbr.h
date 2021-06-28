@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2016, Intel Corporation
+ * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -100,6 +101,52 @@ char nfaExecLbrNVerm_expandState(const struct NFA *nfa, void *dest,
 #define nfaExecLbrNVerm_testEOD NFA_API_NO_IMPL
 #define nfaExecLbrNVerm_B_Reverse NFA_API_NO_IMPL
 #define nfaExecLbrNVerm_zombie_status NFA_API_ZOMBIE_NO_IMPL
+
+#ifdef HAVE_SVE2
+
+// LBR Verm16
+
+char nfaExecLbrVerm16_Q(const struct NFA *n, struct mq *q, s64a end);
+char nfaExecLbrVerm16_Q2(const struct NFA *n, struct mq *q, s64a end);
+char nfaExecLbrVerm16_QR(const struct NFA *n, struct mq *q, ReportID report);
+char nfaExecLbrVerm16_reportCurrent(const struct NFA *n, struct mq *q);
+char nfaExecLbrVerm16_inAccept(const struct NFA *n, ReportID report,
+                               struct mq *q);
+char nfaExecLbrVerm16_inAnyAccept(const struct NFA *n, struct mq *q);
+char nfaExecLbrVerm16_queueInitState(const struct NFA *n, struct mq *q);
+char nfaExecLbrVerm16_initCompressedState(const struct NFA *n, u64a offset,
+                                          void *state, u8 key);
+char nfaExecLbrVerm16_queueCompressState(const struct NFA *nfa,
+                                         const struct mq *q, s64a loc);
+char nfaExecLbrVerm16_expandState(const struct NFA *nfa, void *dest,
+                                  const void *src, u64a offset, u8 key);
+
+#define nfaExecLbrVerm16_testEOD NFA_API_NO_IMPL
+#define nfaExecLbrVerm16_B_Reverse NFA_API_NO_IMPL
+#define nfaExecLbrVerm16_zombie_status NFA_API_ZOMBIE_NO_IMPL
+
+// LBR Negated Verm16
+
+char nfaExecLbrNVerm16_Q(const struct NFA *n, struct mq *q, s64a end);
+char nfaExecLbrNVerm16_Q2(const struct NFA *n, struct mq *q, s64a end);
+char nfaExecLbrNVerm16_QR(const struct NFA *n, struct mq *q, ReportID report);
+char nfaExecLbrNVerm16_reportCurrent(const struct NFA *n, struct mq *q);
+char nfaExecLbrNVerm16_inAccept(const struct NFA *n, ReportID report,
+                                struct mq *q);
+char nfaExecLbrNVerm16_inAnyAccept(const struct NFA *n, struct mq *q);
+char nfaExecLbrNVerm16_queueInitState(const struct NFA *n, struct mq *q);
+char nfaExecLbrNVerm16_initCompressedState(const struct NFA *n, u64a offset,
+                                           void *state, u8 key);
+char nfaExecLbrNVerm16_queueCompressState(const struct NFA *nfa,
+                                          const struct mq *q, s64a loc);
+char nfaExecLbrNVerm16_expandState(const struct NFA *nfa, void *dest,
+                                   const void *src, u64a offset, u8 key);
+
+#define nfaExecLbrNVerm16_testEOD NFA_API_NO_IMPL
+#define nfaExecLbrNVerm16_B_Reverse NFA_API_NO_IMPL
+#define nfaExecLbrNVerm16_zombie_status NFA_API_ZOMBIE_NO_IMPL
+
+#endif // HAVE_SVE2
 
 // LBR Shuf
 

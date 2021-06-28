@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2020, Intel Corporation
+ * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -339,6 +340,42 @@ const nfa_dispatch_fn NFATraits<LBR_NFA_NVERM>::has_repeats_other_than_firsts = 
 #if defined(DUMP_SUPPORT)
 const char *NFATraits<LBR_NFA_NVERM>::name = "Lim Bounded Repeat (NV)";
 #endif
+
+#ifdef HAVE_SVE2
+
+template<> struct NFATraits<LBR_NFA_VERM16> {
+    UNUSED static const char *name;
+    static const NFACategory category = NFA_OTHER;
+    static const u32 stateAlign = 8;
+    static const bool fast = true;
+    static const nfa_dispatch_fn has_accel;
+    static const nfa_dispatch_fn has_repeats;
+    static const nfa_dispatch_fn has_repeats_other_than_firsts;
+};
+const nfa_dispatch_fn NFATraits<LBR_NFA_VERM16>::has_accel = dispatch_false;
+const nfa_dispatch_fn NFATraits<LBR_NFA_VERM16>::has_repeats = dispatch_false;
+const nfa_dispatch_fn NFATraits<LBR_NFA_VERM16>::has_repeats_other_than_firsts = dispatch_false;
+#if defined(DUMP_SUPPORT)
+const char *NFATraits<LBR_NFA_VERM16>::name = "Lim Bounded Repeat (V16)";
+#endif
+
+template<> struct NFATraits<LBR_NFA_NVERM16> {
+    UNUSED static const char *name;
+    static const NFACategory category = NFA_OTHER;
+    static const u32 stateAlign = 8;
+    static const bool fast = true;
+    static const nfa_dispatch_fn has_accel;
+    static const nfa_dispatch_fn has_repeats;
+    static const nfa_dispatch_fn has_repeats_other_than_firsts;
+};
+const nfa_dispatch_fn NFATraits<LBR_NFA_NVERM16>::has_accel = dispatch_false;
+const nfa_dispatch_fn NFATraits<LBR_NFA_NVERM16>::has_repeats = dispatch_false;
+const nfa_dispatch_fn NFATraits<LBR_NFA_NVERM16>::has_repeats_other_than_firsts = dispatch_false;
+#if defined(DUMP_SUPPORT)
+const char *NFATraits<LBR_NFA_NVERM16>::name = "Lim Bounded Repeat (NV16)";
+#endif
+
+#endif // HAVE_SVE2
 
 template<> struct NFATraits<LBR_NFA_SHUF> {
     UNUSED static const char *name;

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2017, Intel Corporation
+ * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -62,6 +63,11 @@ const u8 *run_hwlm_accel(const union AccelAux *aux, const u8 *ptr,
         DEBUG_PRINTF("double vermicelli-nocase for 0x%02hhx%02hhx\n",
                      aux->dverm.c1, aux->dverm.c2);
         return vermicelliDoubleExec(aux->dverm.c1, aux->dverm.c2, 1, ptr, end);
+#ifdef HAVE_SVE2
+    case ACCEL_VERM16:
+        DEBUG_PRINTF("single vermicelli16\n");
+        return vermicelli16Exec(aux->verm16.mask, ptr, end);
+#endif // HAVE_SVE2
     case ACCEL_SHUFTI:
         DEBUG_PRINTF("single shufti\n");
         return shuftiExec(aux->shufti.lo, aux->shufti.hi, ptr, end);

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2017, Intel Corporation
+ * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,6 +30,7 @@
 #include "accel.h"
 #include "accelcompile.h"
 #include "shufticompile.h"
+#include "vermicellicompile.h"
 #include "trufflecompile.h"
 #include "nfagraph/ng_limex_accel.h" /* for constants */
 #include "util/bitutils.h"
@@ -70,6 +72,16 @@ void buildAccelSingle(const AccelInfo &info, AccelAux *aux) {
                      aux->verm.c);
         return;
     }
+
+#ifdef HAVE_SVE2
+    if (outs <= 16) {
+        aux->accel_type = ACCEL_VERM16;
+        aux->verm16.offset = offset;
+        vermicelli16Build(info.single_stops, (u8 *)&aux->verm16.mask);
+        DEBUG_PRINTF("building vermicelli16\n");
+        return;
+    }
+#endif
 
     DEBUG_PRINTF("attempting shufti for %zu chars\n", outs);
     if (-1 != shuftiBuildMasks(info.single_stops, (u8 *)&aux->shufti.lo,

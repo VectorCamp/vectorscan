@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2017, Intel Corporation
+ * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -43,6 +44,7 @@
 #include "nfa/repeatcompile.h"
 #include "nfa/shufticompile.h"
 #include "nfa/trufflecompile.h"
+#include "nfa/vermicellicompile.h"
 #include "util/alloc.h"
 #include "util/bitutils.h" // for lg2
 #include "util/compile_context.h"
@@ -209,6 +211,56 @@ bytecode_ptr<NFA> buildLbrNVerm(const CharReach &cr, const depth &repeatMin,
     return nfa;
 }
 
+#ifdef HAVE_SVE2
+
+static
+bytecode_ptr<NFA> buildLbrVerm16(const CharReach &cr, const depth &repeatMin,
+                                 const depth &repeatMax, u32 minPeriod,
+                                 bool is_reset, ReportID report) {
+    const CharReach escapes(~cr);
+
+    if (escapes.count() > 16) {
+        return nullptr;
+    }
+
+    enum RepeatType rtype = chooseRepeatType(repeatMin, repeatMax, minPeriod,
+                                             is_reset);
+    auto nfa = makeLbrNfa<lbr_verm16>(LBR_NFA_VERM16, rtype, repeatMax);
+    struct lbr_verm16 *lv = (struct lbr_verm16 *)getMutableImplNfa(nfa.get());
+    vermicelli16Build(escapes, (u8 *)&lv->mask);
+
+    fillNfa<lbr_verm16>(nfa.get(), &lv->common, report, repeatMin, repeatMax,
+                        minPeriod, rtype);
+
+    DEBUG_PRINTF("built verm16 lbr\n");
+    return nfa;
+}
+
+static
+bytecode_ptr<NFA> buildLbrNVerm16(const CharReach &cr, const depth &repeatMin,
+                                  const depth &repeatMax, u32 minPeriod,
+                                  bool is_reset, ReportID report) {
+    const CharReach escapes(cr);
+
+    if (escapes.count() > 16) {
+        return nullptr;
+    }
+
+    enum RepeatType rtype = chooseRepeatType(repeatMin, repeatMax, minPeriod,
+                                             is_reset);
+    auto nfa = makeLbrNfa<lbr_verm16>(LBR_NFA_NVERM16, rtype, repeatMax);
+    struct lbr_verm16 *lv = (struct lbr_verm16 *)getMutableImplNfa(nfa.get());
+    vermicelli16Build(escapes, (u8 *)&lv->mask);
+
+    fillNfa<lbr_verm16>(nfa.get(), &lv->common, report, repeatMin, repeatMax,
+                        minPeriod, rtype);
+
+    DEBUG_PRINTF("built negated verm16 lbr\n");
+    return nfa;
+}
+
+#endif // HAVE_SVE2
+
 static
 bytecode_ptr<NFA> buildLbrShuf(const CharReach &cr, const depth &repeatMin,
                                const depth &repeatMax, u32 minPeriod,
@@ -269,6 +321,16 @@ bytecode_ptr<NFA> constructLBR(const CharReach &cr, const depth &repeatMin,
         nfa = buildLbrNVerm(cr, repeatMin, repeatMax, minPeriod, is_reset,
                             report);
     }
+#ifdef HAVE_SVE2
+    if (!nfa) {
+        nfa = buildLbrVerm16(cr, repeatMin, repeatMax, minPeriod, is_reset,
+                             report);
+    }
+    if (!nfa) {
+        nfa = buildLbrNVerm16(cr, repeatMin, repeatMax, minPeriod, is_reset,
+                              report);
+    }
+#endif // HAVE_SVE2
     if (!nfa) {
         nfa = buildLbrShuf(cr, repeatMin, repeatMax, minPeriod, is_reset,
                            report);

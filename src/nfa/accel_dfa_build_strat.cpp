@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2017, Intel Corporation
+ * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,6 +34,7 @@
 #include "nfagraph/ng_limex_accel.h"
 #include "shufticompile.h"
 #include "trufflecompile.h"
+#include "vermicellicompile.h"
 #include "util/accel_scheme.h"
 #include "util/charreach.h"
 #include "util/container.h"
@@ -513,6 +515,15 @@ accel_dfa_build_strat::buildAccel(UNUSED dstate_id_t this_idx,
         DEBUG_PRINTF("state %hu is caseless vermicelli\n", this_idx);
         return;
     }
+
+#ifdef HAVE_SVE2
+    if (info.cr.count() <= 16) {
+        accel->accel_type = ACCEL_VERM16;
+        vermicelli16Build(info.cr, (u8 *)&accel->verm16.mask);
+        DEBUG_PRINTF("state %hu is vermicelli16\n", this_idx);
+        return;
+    }
+#endif // HAVE_SVE2
 
     if (info.cr.count() > max_floating_stop_char()) {
         accel->accel_type = ACCEL_NONE;

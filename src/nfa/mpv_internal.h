@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2016, Intel Corporation
+ * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,6 +37,8 @@
 #define MPV_SHUFTI 2
 #define MPV_TRUFFLE 3
 #define MPV_NVERM  4
+#define MPV_VERM16 5
+#define MPV_NVERM16 6
 
 struct mpv_puffette {
     u32 repeats;
@@ -65,6 +68,9 @@ struct mpv_kilopuff {
         struct {
             char c;
         } verm;
+        struct {
+            m128 mask;
+        } verm16;
         struct {
             m128 mask_lo;
             m128 mask_hi;

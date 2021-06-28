@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2017, Intel Corporation
+ * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -80,6 +81,17 @@ const u8 *run_accel(const union AccelAux *accel, const u8 *c, const u8 *c_end) {
         rv = vermicelliDoubleExec(accel->dverm.c1, accel->dverm.c2, 1, c,
                                   c_end - 1);
         break;
+
+#ifdef HAVE_SVE2
+    case ACCEL_VERM16:
+        DEBUG_PRINTF("accel verm16 %p %p\n", c, c_end);
+        if (c_end - c < 16) {
+            return c;
+        }
+
+        rv = vermicelli16Exec(accel->verm16.mask, c, c_end);
+        break;
+#endif // HAVE_SVE2
 
     case ACCEL_DVERM_MASKED:
         DEBUG_PRINTF("accel dverm masked %p %p\n", c, c_end);

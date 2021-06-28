@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2017, Intel Corporation
+ * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,6 +34,7 @@
 #include "nfa_internal.h"
 #include "shufticompile.h"
 #include "trufflecompile.h"
+#include "vermicellicompile.h"
 #include "util/alloc.h"
 #include "util/multibit_build.h"
 #include "util/order_check.h"
@@ -175,6 +177,14 @@ void writeKiloPuff(const map<ClusterKey, vector<raw_puff>>::const_iterator &it,
         size_t set = reach.find_first();
         assert(set != CharReach::npos);
         kp->u.verm.c = (char)set;
+#ifdef HAVE_SVE2
+    } else if (reach.count() >= 240) {
+        kp->type = MPV_VERM16;
+        vermicelli16Build(~reach, (u8 *)&kp->u.verm16.mask);
+    } else if (reach.count() <= 16) {
+        kp->type = MPV_NVERM16;
+        vermicelli16Build(reach, (u8 *)&kp->u.verm16.mask);
+#endif // HAVE_SVE2
     } else if (shuftiBuildMasks(~reach, (u8 *)&kp->u.shuf.mask_lo,
                                 (u8 *)&kp->u.shuf.mask_hi) != -1) {
         kp->type = MPV_SHUFTI;

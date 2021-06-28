@@ -1,5 +1,4 @@
 /*
- * Copyright (c) 2015, Intel Corporation
  * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,61 +27,22 @@
  */
 
 /** \file
- * \brief Large Bounded Repeat (LBR): data structures.
+ * \brief Vermicelli acceleration: compile code.
  */
 
-#ifndef LBR_INTERNAL_H
-#define LBR_INTERNAL_H
+#ifndef VERM_COMPILE_H
+#define VERM_COMPILE_H
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+#include "ue2common.h"
+#include "util/charreach.h"
+#include "util/flat_containers.h"
 
-#include "repeat_internal.h"
+#include <utility>
 
-/** \brief Common LBR header. */
-struct lbr_common {
-    u32 repeatInfoOffset;   //!< offset of RepeatInfo structure relative
-                            //   to the start of lbr_common
-    ReportID report;        //!< report to raise on match
-};
+namespace ue2 {
 
-struct lbr_dot {
-    struct lbr_common common;
-};
+bool vermicelli16Build(const CharReach &chars, u8 *rv);
 
-struct lbr_verm {
-    struct lbr_common common;
-    char c; //!< escape char
-};
+} // namespace ue2
 
-struct lbr_verm16 {
-    struct lbr_common common;
-    m128 mask;
-};
-
-struct lbr_shuf {
-    struct lbr_common common;
-    m128 mask_lo; //!< shufti lo mask for escape chars
-    m128 mask_hi; //!< shufti hi mask for escape chars
-};
-
-struct lbr_truf {
-    struct lbr_common common;
-    m128 mask1;
-    m128 mask2;
-};
-
-/** \brief Uncompressed ("full") state structure used by the LBR. This is
- * stored in scratch, not in stream state. */
-struct lbr_state {
-    u64a lastEscape; //!< \brief offset of last escape seen.
-    union RepeatControl ctrl; //!< \brief repeat control block. */
-};
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif // LBR_INTERNAL_H
+#endif // VERM_COMPILE_H

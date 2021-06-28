@@ -1,5 +1,4 @@
 /*
- * Copyright (c) 2015, Intel Corporation
  * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,61 +27,27 @@
  */
 
 /** \file
- * \brief Large Bounded Repeat (LBR): data structures.
+ * \brief Vermicelli acceleration: compile code.
  */
+#include "vermicellicompile.h"
+#include "util/charreach.h"
 
-#ifndef LBR_INTERNAL_H
-#define LBR_INTERNAL_H
+#include <cstring>
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+namespace ue2 {
 
-#include "repeat_internal.h"
-
-/** \brief Common LBR header. */
-struct lbr_common {
-    u32 repeatInfoOffset;   //!< offset of RepeatInfo structure relative
-                            //   to the start of lbr_common
-    ReportID report;        //!< report to raise on match
-};
-
-struct lbr_dot {
-    struct lbr_common common;
-};
-
-struct lbr_verm {
-    struct lbr_common common;
-    char c; //!< escape char
-};
-
-struct lbr_verm16 {
-    struct lbr_common common;
-    m128 mask;
-};
-
-struct lbr_shuf {
-    struct lbr_common common;
-    m128 mask_lo; //!< shufti lo mask for escape chars
-    m128 mask_hi; //!< shufti hi mask for escape chars
-};
-
-struct lbr_truf {
-    struct lbr_common common;
-    m128 mask1;
-    m128 mask2;
-};
-
-/** \brief Uncompressed ("full") state structure used by the LBR. This is
- * stored in scratch, not in stream state. */
-struct lbr_state {
-    u64a lastEscape; //!< \brief offset of last escape seen.
-    union RepeatControl ctrl; //!< \brief repeat control block. */
-};
-
-#ifdef __cplusplus
+bool vermicelli16Build(const CharReach &chars, u8 *rv) {
+    size_t i = chars.find_first();
+    u8 arr[16];
+    std::memset(arr, i, sizeof(arr));
+    size_t count = 1;
+    for (i = chars.find_next(i); i != CharReach::npos; i = chars.find_next(i)) {
+        if (count == sizeof(arr)) return false;
+        arr[count] = i;
+        ++count;
+    }
+    std::memcpy(rv, arr, sizeof(arr));
+    return true;
 }
-#endif
 
-#endif // LBR_INTERNAL_H
+} // namespace ue2

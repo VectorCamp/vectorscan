@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2020, Intel Corporation
+ * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -65,6 +66,10 @@ enum NFAEngineType {
     LBR_NFA_DOT,        /**< magic pseudo nfa */
     LBR_NFA_VERM,       /**< magic pseudo nfa */
     LBR_NFA_NVERM,      /**< magic pseudo nfa */
+#ifdef HAVE_SVE2
+    LBR_NFA_VERM16,     /**< magic pseudo nfa */
+    LBR_NFA_NVERM16,    /**< magic pseudo nfa */
+#endif // HAVE_SVE2
     LBR_NFA_SHUF,       /**< magic pseudo nfa */
     LBR_NFA_TRUF,       /**< magic pseudo nfa */
     CASTLE_NFA,         /**< magic pseudo nfa */
@@ -218,6 +223,9 @@ static really_inline int isNfaType(u8 t) {
 static really_inline
 int isLbrType(u8 t) {
     return t == LBR_NFA_DOT || t == LBR_NFA_VERM || t == LBR_NFA_NVERM ||
+#ifdef HAVE_SVE2
+           t == LBR_NFA_VERM16 || t == LBR_NFA_NVERM16 ||
+#endif // HAVE_SVE2
            t == LBR_NFA_SHUF || t == LBR_NFA_TRUF;
 }
 

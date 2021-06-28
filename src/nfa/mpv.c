@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2016, Intel Corporation
+ * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -260,6 +261,13 @@ size_t limitByReach(const struct mpv_kilopuff *kp, const u8 *buf,
     } else if (kp->type == MPV_NVERM) {
         return nvermicelliExec(kp->u.verm.c, 0, buf, buf + length) - buf;
     }
+#ifdef HAVE_SVE2
+    else if (kp->type == MPV_VERM16) {
+        return vermicelli16Exec(kp->u.verm16.mask, buf, buf + length) - buf;
+    } else if (kp->type == MPV_NVERM16) {
+        return nvermicelli16Exec(kp->u.verm16.mask, buf, buf + length) - buf;
+    }
+#endif // HAVE_SVE2
 
     assert(kp->type == MPV_DOT);
     return length;

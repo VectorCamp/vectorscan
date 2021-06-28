@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2020, Intel Corporation
+ * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -53,6 +54,14 @@
 
 // general framework calls
 
+#ifdef HAVE_SVE2
+#define VERM16_CASES(dbnt_func)                                                \
+        DISPATCH_CASE(LBR_NFA_VERM16, LbrVerm16, dbnt_func);                   \
+        DISPATCH_CASE(LBR_NFA_NVERM16, LbrNVerm16, dbnt_func);
+#else
+#define VERM16_CASES(dbnt_func)
+#endif
+
 #define DISPATCH_BY_NFA_TYPE(dbnt_func)                                        \
     switch (nfa->type) {                                                       \
         DISPATCH_CASE(LIMEX_NFA_32, LimEx32, dbnt_func);                       \
@@ -80,6 +89,7 @@
         DISPATCH_CASE(SHENG_NFA_64, Sheng64, dbnt_func);                       \
         DISPATCH_CASE(MCSHENG_64_NFA_8, McSheng64_8, dbnt_func);               \
         DISPATCH_CASE(MCSHENG_64_NFA_16, McSheng64_16, dbnt_func);             \
+        VERM16_CASES(dbnt_func)                                                \
     default:                                                                   \
         assert(0);                                                             \
     }

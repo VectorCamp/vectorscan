@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2017, Intel Corporation
+ * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -62,6 +63,7 @@ enum AccelType {
     ACCEL_TRUFFLE,
     ACCEL_RED_TAPE,
     ACCEL_DVERM_MASKED,
+    ACCEL_VERM16
 };
 
 /** \brief Structure for accel framework. */
@@ -97,6 +99,11 @@ union AccelAux {
         u8 len1;
         u8 len2;
     } mdverm;
+    struct {
+        u8 accel_type;
+        u8 offset;
+        m128 mask;
+    } verm16;
     struct {
         u8 accel_type;
         u8 offset;

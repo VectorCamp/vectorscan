@@ -75,5 +75,3 @@ const u8 *shuftiRevSlow(const u8 *lo, const u8 *hi, const u8 *buf,
 #else
 #include "shufti_simd.hpp"
 #endif
-
-#include "shufti_common.hpp"

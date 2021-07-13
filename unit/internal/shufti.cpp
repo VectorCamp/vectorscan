@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2017, Intel Corporation
+ * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -516,7 +517,7 @@ TEST(DoubleShufti, ExecNoMatch1b) {
         const u8 *rv = shuftiDoubleExec(lo1, hi1, lo2, hi2,
                                         (u8 *)t1 + i, (u8 *)t1 + strlen(t1));
 
-        ASSERT_EQ((size_t)t1 + i + 15, (size_t)rv);
+        ASSERT_LE((size_t)t1 + i + 15, (size_t)rv);
     }
 }
 
@@ -560,7 +561,7 @@ TEST(DoubleShufti, ExecNoMatch2b) {
         const u8 *rv = shuftiDoubleExec(lo1, hi1, lo2, hi2, (u8 *)t1 + i,
                                         (u8 *)t1 + strlen(t1));
 
-        ASSERT_EQ((size_t)t1 + i + 15, (size_t)rv);
+        ASSERT_LE((size_t)t1 + i + 15, (size_t)rv);
     }
 }
 
@@ -602,7 +603,7 @@ TEST(DoubleShufti, ExecNoMatch3b) {
         const u8 *rv = shuftiDoubleExec(lo1, hi1, lo2, hi2,
                                         (u8 *)t1 + i, (u8 *)t1 + strlen(t1));
 
-        ASSERT_EQ((size_t)t1 + i + 15, (size_t)rv);
+        ASSERT_LE((size_t)t1 + i + 15, (size_t)rv);
     }
 }
 

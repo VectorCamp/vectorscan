@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2020, Intel Corporation
+ * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -40,6 +41,41 @@
 #include "util/simd_types.h"
 #include "util/unaligned.h"
 #include "util/intrinsics.h"
+
+#ifdef HAVE_SVE
+
+really_really_inline
+uint64_t accelSearchGetOffset(svbool_t matched) {
+    return svcntp_b8(svptrue_b8(), svbrkb_z(svptrue_b8(), matched));
+}
+
+really_really_inline
+const u8 *accelSearchCheckMatched(const u8 *buf, svbool_t matched) {
+    if (unlikely(svptest_any(svptrue_b8(), matched))) {
+        const u8 *matchPos = buf + accelSearchGetOffset(matched);
+        DEBUG_PRINTF("match pos %p\n", matchPos);
+        return matchPos;
+    }
+    return NULL;
+}
+
+really_really_inline
+const u8 *accelRevSearchCheckMatched(const u8 *buf, svbool_t matched) {
+    if (unlikely(svptest_any(svptrue_b8(), matched))) {
+        const u8 *matchPos = buf + (svcntb() -
+            svcntp_b8(svptrue_b8(), svbrka_z(svptrue_b8(), svrev_b8(matched))));
+        DEBUG_PRINTF("match pos %p\n", matchPos);
+        return matchPos;
+    }
+    return NULL;
+}
+
+static really_inline
+svuint8_t getSVEMaskFrom128(m128 mask) {
+    return svld1_u8(svptrue_pat_b8(SV_VL16), (const uint8_t *)&mask);
+}
+
+#endif
 
 #ifdef HAVE_SVE2
 

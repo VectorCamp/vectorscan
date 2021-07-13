@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2015-2017, Intel Corporation
  * Copyright (c) 2020, 2021, VectorCamp PC
+ * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -69,20 +70,10 @@ const u8 *shuftiRevSlow(const u8 *lo, const u8 *hi, const u8 *buf,
     return buf_end;
 }
 
+#ifdef HAVE_SVE
+#include "shufti_sve.hpp"
+#else
 #include "shufti_simd.hpp"
+#endif
 
-const u8 *shuftiExec(m128 mask_lo, m128 mask_hi, const u8 *buf,
-                      const u8 *buf_end) {
-    return shuftiExecReal<VECTORSIZE>(mask_lo, mask_hi, buf, buf_end);
-}
-
-const u8 *rshuftiExec(m128 mask_lo, m128 mask_hi, const u8 *buf,
-                       const u8 *buf_end) {
-    return rshuftiExecReal<VECTORSIZE>(mask_lo, mask_hi, buf, buf_end);
-}
-
-const u8 *shuftiDoubleExec(m128 mask1_lo, m128 mask1_hi,
-                            m128 mask2_lo, m128 mask2_hi,
-                            const u8 *buf, const u8 *buf_end) {
-    return shuftiDoubleExecReal<VECTORSIZE>(mask1_lo, mask1_hi, mask2_lo, mask2_hi, buf, buf_end);
-}
+#include "shufti_common.hpp"

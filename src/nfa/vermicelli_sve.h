@@ -33,14 +33,9 @@
  */
 
 static really_inline
-uint64_t vermSearchGetOffset(svbool_t matched) {
-    return svcntp_b8(svptrue_b8(), svbrkb_z(svptrue_b8(), matched));
-}
-
-static really_inline
 int dvermSearchGetOffset(svbool_t matched, svbool_t matched_rot) {
-    int offset = vermSearchGetOffset(matched);
-    int offset_rot = vermSearchGetOffset(matched_rot) - 1;
+    int offset = accelSearchGetOffset(matched);
+    int offset_rot = accelSearchGetOffset(matched_rot) - 1;
     return (offset_rot < offset) ? offset_rot : offset;
 }
 
@@ -54,27 +49,6 @@ uint64_t rdvermSearchGetOffset(svbool_t matched, svbool_t matched_rot) {
     uint64_t offset = rdvermSearchGetSingleOffset(matched);
     uint64_t offset_rot = rdvermSearchGetSingleOffset(matched_rot) - 1;
     return (offset_rot < offset) ? offset_rot : offset;
-}
-
-static really_inline
-const u8 *vermSearchCheckMatched(const u8 *buf, svbool_t matched) {
-    if (unlikely(svptest_any(svptrue_b8(), matched))) {
-        const u8 *matchPos = buf + vermSearchGetOffset(matched);
-        DEBUG_PRINTF("match pos %p\n", matchPos);
-        return matchPos;
-    }
-    return NULL;
-}
-
-static really_inline
-const u8 *rvermSearchCheckMatched(const u8 *buf, svbool_t matched) {
-    if (unlikely(svptest_any(svptrue_b8(), matched))) {
-        const u8 *matchPos = buf + (svcntb() -
-            svcntp_b8(svptrue_b8(), svbrka_z(svptrue_b8(), svrev_b8(matched))));
-        DEBUG_PRINTF("match pos %p\n", matchPos);
-        return matchPos;
-    }
-    return NULL;
 }
 
 static really_inline
@@ -130,14 +104,14 @@ const u8 *vermSearchOnce(svuint8_t chars, const u8 *buf, const u8 *buf_end,
     DEBUG_PRINTF("l = %td\n", buf_end - buf);
     svbool_t pg = svwhilelt_b8_s64(0, buf_end - buf);
     svbool_t matched = singleMatched(chars, buf, pg, negate, 0);
-    return vermSearchCheckMatched(buf, matched);
+    return accelSearchCheckMatched(buf, matched);
 }
 
 static really_inline
 const u8 *vermSearchLoopBody(svuint8_t chars, const u8 *buf, bool negate) {
     DEBUG_PRINTF("start %p end %p\n", buf, buf + svcntb());
     svbool_t matched = singleMatched(chars, buf, svptrue_b8(), negate, 0);
-    return vermSearchCheckMatched(buf, matched);
+    return accelSearchCheckMatched(buf, matched);
 }
 
 static really_inline
@@ -149,9 +123,9 @@ const u8 *vermSearchLoopBodyUnrolled(svuint8_t chars, const u8 *buf,
     svbool_t any = svorr_z(svptrue_b8(), matched0, matched1);
     if (unlikely(svptest_any(svptrue_b8(), any))) {
         if (svptest_any(svptrue_b8(), matched0)) {
-            return buf + vermSearchGetOffset(matched0);
+            return buf + accelSearchGetOffset(matched0);
         } else {
-            return buf + svcntb() + vermSearchGetOffset(matched1);
+            return buf + svcntb() + accelSearchGetOffset(matched1);
         }
     }
     return NULL;
@@ -165,14 +139,14 @@ const u8 *rvermSearchOnce(svuint8_t chars, const u8 *buf, const u8 *buf_end,
     DEBUG_PRINTF("l = %td\n", buf_end - buf);
     svbool_t pg = svwhilelt_b8_s64(0, buf_end - buf);
     svbool_t matched = singleMatched(chars, buf, pg, negate, 0);
-    return rvermSearchCheckMatched(buf, matched);
+    return accelRevSearchCheckMatched(buf, matched);
 }
 
 static really_inline
 const u8 *rvermSearchLoopBody(svuint8_t chars, const u8 *buf, bool negate) {
     DEBUG_PRINTF("start %p end %p\n", buf, buf + svcntb());
     svbool_t matched = singleMatched(chars, buf, svptrue_b8(), negate, 0);
-    return rvermSearchCheckMatched(buf, matched);
+    return accelRevSearchCheckMatched(buf, matched);
 }
 
 static really_inline

@@ -47,15 +47,6 @@
 
 #if defined(HAVE_C_ARM_NEON_H)
 #  define USE_ARM_NEON_H
-#  if defined(HAVE_C_ARM_SVE_H)
-#    define USE_ARM_SVE
-#    if defined(BUILD_SVE2)
-#      define USE_ARM_SVE2
-#      if defined(BUILD_SVE2_BITPERM)
-#        define USE_ARM_SVE2_BITPERM
-#      endif
-#    endif
-#  endif
 #endif
 
 #ifdef __cplusplus
@@ -74,7 +65,7 @@
 #include <intrin.h>
 #elif defined(USE_ARM_NEON_H)
 #include <arm_neon.h>
-#  if defined(USE_ARM_SVE)
+#  if defined(HAVE_SVE)
 #    include <arm_sve.h>
 #  endif
 #else

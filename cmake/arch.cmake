@@ -41,10 +41,10 @@ if (ARCH_AARCH64)
             svuint8_t a = svbsl(svdup_u8(1), svdup_u8(2), svdup_u8(3));
             (void)a;
         }" HAVE_SVE2)
-        if (HAVE_SVE2)
-            add_definitions(-DHAVE_SVE2)
-        endif ()
     endif()
+    if (HAVE_SVE2 OR HAVE_SVE2_BITPERM)
+        add_definitions(-DHAVE_SVE2)
+    endif ()
     if (BUILD_SVE)
         set(CMAKE_C_FLAGS "-march=${GNUCC_ARCH} ${CMAKE_C_FLAGS}")
         CHECK_C_SOURCE_COMPILES("#include <arm_sve.h>
@@ -52,9 +52,9 @@ if (ARCH_AARCH64)
             svuint8_t a = svdup_u8(1);
             (void)a;
         }" HAVE_SVE)
-        if (HAVE_SVE)
-            add_definitions(-DHAVE_SVE)
-        endif ()
+    endif ()
+    if (HAVE_SVE OR HAVE_SVE2 OR HAVE_SVE2_BITPERM)
+        add_definitions(-DHAVE_SVE)
     endif ()
     set(CMAKE_C_FLAGS "${PREV_FLAGS}")
 endif()

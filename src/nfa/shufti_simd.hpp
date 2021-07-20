@@ -270,7 +270,7 @@ static really_inline const u8 *shuftiDoubleMini(SuperVector<S> mask1_lo, SuperVe
     t.print8("t");
 
     typename SuperVector<S>::movemask_type z = t.eqmask(SuperVector<S>::Ones());
-    DEBUG_PRINTF("    z: 0x%08x\n", z);
+    DEBUG_PRINTF(" z: 0x%016llx\n", (u64a)z);
     return firstMatch<S>(buf, z);
 }
 

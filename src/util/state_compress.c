@@ -83,17 +83,6 @@ void loadcompressed64(u64a *x, const void *ptr, const u64a *m, u32 bytes) {
 #endif
 }
 
-#if defined(HAVE_SVE2_BITPERM)
-
-static really_inline
-void bdep64x2(u64a *d, const u64a *x, const m128 *m) {
-    svbool_t pg = svptrue_pat_b64(SV_VL2);
-    svst1(pg, (uint64_t *)d, svbdep(svld1_u64(pg, (const uint64_t *)x),
-                                    svld1_u64(pg, (const uint64_t *)m)));
-}
-
-#endif // HAVE_SVE2_BITPERM
-
 /*
  * 128-bit store/load.
  */

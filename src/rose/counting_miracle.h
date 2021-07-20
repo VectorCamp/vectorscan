@@ -41,64 +41,7 @@
 #define COUNTING_MIRACLE_LEN_MAX 256
 
 #ifdef HAVE_SVE2
-
-static really_inline
-size_t countMatches(svuint8_t chars, svbool_t pg, const u8 *buf) {
-    svuint8_t vec = svld1_u8(pg, buf);
-    return svcntp_b8(svptrue_b8(), svmatch(pg, vec, chars));
-}
-
-static really_inline
-bool countLoopBody(svuint8_t chars, svbool_t pg, const u8 *d,
-                   u32 target_count, u32 *count_inout, const u8 **d_out) {
-    *count_inout += countMatches(chars, pg, d);
-    if (*count_inout >= target_count) {
-        *d_out = d;
-        return true;
-    }
-    return false;
-}
-
-static really_inline
-bool countOnce(svuint8_t chars, const u8 *d, const u8 *d_end,
-               u32 target_count, u32 *count_inout, const u8 **d_out) {
-    assert(d <= d_end);
-    svbool_t pg = svwhilelt_b8_s64(0, d_end - d);
-    return countLoopBody(chars, pg, d, target_count, count_inout, d_out);
-}
-
-static really_inline
-bool roseCountingMiracleScan(u8 c, const u8 *d, const u8 *d_end,
-                             u32 target_count, u32 *count_inout,
-                             const u8 **d_out) {
-    assert(d <= d_end);
-    svuint8_t chars = svdup_u8(c);
-    size_t len = d_end - d;
-    if (len <= svcntb()) {
-        bool rv = countOnce(chars, d, d_end, target_count, count_inout, d_out);
-        return rv;
-    }
-    // peel off first part to align to the vector size
-    const u8 *aligned_d_end = ROUNDDOWN_PTR(d_end, svcntb_pat(SV_POW2));
-    assert(d < aligned_d_end);
-    if (d_end != aligned_d_end) {
-        if (countOnce(chars, aligned_d_end, d_end,
-                      target_count, count_inout, d_out)) return true;
-        d_end = aligned_d_end;
-    }
-    size_t loops = (d_end - d) / svcntb();
-    for (size_t i = 0; i < loops; i++) {
-        d_end -= svcntb();
-        if (countLoopBody(chars, svptrue_b8(), d_end,
-                          target_count, count_inout, d_out)) return true;
-    }
-    if (d != d_end) {
-        if (countOnce(chars, d, d_end,
-                      target_count, count_inout, d_out)) return true;
-    }
-    return false;
-}
-
+#include "counting_miracle_sve.h"
 #else
 
 static really_inline
@@ -146,71 +89,7 @@ char roseCountingMiracleScan(u8 c, const u8 *d, const u8 *d_end,
 #endif
 
 #ifdef HAVE_SVE
-
-static really_inline
-size_t countShuftiMatches(svuint8_t mask_lo, svuint8_t mask_hi,
-                          const svbool_t pg, const u8 *buf) {
-    svuint8_t vec = svld1_u8(pg, buf);
-    svuint8_t c_lo = svtbl(mask_lo, svand_z(svptrue_b8(), vec, (uint8_t)0xf));
-    svuint8_t c_hi = svtbl(mask_hi, svlsr_z(svptrue_b8(), vec, 4));
-    svuint8_t t = svand_z(svptrue_b8(), c_lo, c_hi);
-    return svcntp_b8(svptrue_b8(), svcmpne(pg, t, (uint8_t)0));
-}
-
-static really_inline
-bool countShuftiLoopBody(svuint8_t mask_lo, svuint8_t mask_hi,
-                         const svbool_t pg, const u8 *d, u32 target_count,
-                         u32 *count_inout, const u8 **d_out) {
-    *count_inout += countShuftiMatches(mask_lo, mask_hi, pg, d);
-    if (*count_inout >= target_count) {
-        *d_out = d;
-        return true;
-    }
-    return false;
-}
-
-static really_inline
-bool countShuftiOnce(svuint8_t mask_lo, svuint8_t mask_hi,
-                     const u8 *d, const u8 *d_end, u32 target_count,
-                     u32 *count_inout, const u8 **d_out) {
-    svbool_t pg = svwhilelt_b8_s64(0, d_end - d);
-    return countShuftiLoopBody(mask_lo, mask_hi, pg, d, target_count,
-                               count_inout, d_out);
-}
-
-static really_inline
-bool roseCountingMiracleScanShufti(svuint8_t mask_lo, svuint8_t mask_hi,
-                                   UNUSED u8 poison, const u8 *d,
-                                   const u8 *d_end, u32 target_count,
-                                   u32 *count_inout, const u8 **d_out) {
-    assert(d <= d_end);
-    size_t len = d_end - d;
-    if (len <= svcntb()) {
-        char rv = countShuftiOnce(mask_lo, mask_hi, d, d_end, target_count,
-                                  count_inout, d_out);
-        return rv;
-    }
-    // peel off first part to align to the vector size
-    const u8 *aligned_d_end = ROUNDDOWN_PTR(d_end, svcntb_pat(SV_POW2));
-    assert(d < aligned_d_end);
-    if (d_end != aligned_d_end) {
-        if (countShuftiOnce(mask_lo, mask_hi, aligned_d_end, d_end,
-                            target_count, count_inout, d_out)) return true;
-        d_end = aligned_d_end;
-    }
-    size_t loops = (d_end - d) / svcntb();
-    for (size_t i = 0; i < loops; i++) {
-        d_end -= svcntb();
-        if (countShuftiLoopBody(mask_lo, mask_hi, svptrue_b8(), d_end,
-                                target_count, count_inout, d_out)) return true;
-    }
-    if (d != d_end) {
-        if (countShuftiOnce(mask_lo, mask_hi, d, d_end,
-                            target_count, count_inout, d_out)) return true;
-    }
-    return false;
-}
-
+#include "counting_miracle_shufti_sve.h"
 #else
 
 #define GET_LO_4(chars) and128(chars, low4bits)

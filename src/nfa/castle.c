@@ -46,6 +46,10 @@
 #include "util/partial_store.h"
 #include "ue2common.h"
 
+#ifdef HAVE_SVE2
+#include "castle_sve.h"
+#endif
+
 static really_inline
 const struct SubCastle *getSubCastle(const struct Castle *c, u32 num) {
     assert(num < c->numRepeats);
@@ -553,42 +557,6 @@ char castleScanNVerm(const struct Castle *c, const u8 *buf, const size_t begin,
     return 1;
 }
 
-#ifdef HAVE_SVE2
-
-static really_inline
-char castleScanVerm16(const struct Castle *c, const u8 *buf, const size_t begin,
-                      const size_t end, size_t *loc) {
-    const u8 *ptr = vermicelli16Exec(c->u.verm16.mask, buf + begin, buf + end);
-    if (ptr == buf + end) {
-        DEBUG_PRINTF("no escape found\n");
-        return 0;
-    }
-
-    assert(loc);
-    assert(ptr >= buf && ptr < buf + end);
-    *loc = ptr - buf;
-    DEBUG_PRINTF("escape found at offset %zu\n", *loc);
-    return 1;
-}
-
-static really_inline
-char castleScanNVerm16(const struct Castle *c, const u8 *buf, const size_t begin,
-                       const size_t end, size_t *loc) {
-    const u8 *ptr = nvermicelli16Exec(c->u.verm16.mask, buf + begin, buf + end);
-    if (ptr == buf + end) {
-        DEBUG_PRINTF("no escape found\n");
-        return 0;
-    }
-
-    assert(loc);
-    assert(ptr >= buf && ptr < buf + end);
-    *loc = ptr - buf;
-    DEBUG_PRINTF("escape found at offset %zu\n", *loc);
-    return 1;
-}
-
-#endif // HAVE_SVE2
-
 static really_inline
 char castleScanShufti(const struct Castle *c, const u8 *buf, const size_t begin,
                       const size_t end, size_t *loc) {
@@ -689,42 +657,6 @@ char castleRevScanNVerm(const struct Castle *c, const u8 *buf,
     DEBUG_PRINTF("escape found at offset %zu\n", *loc);
     return 1;
 }
-
-#ifdef HAVE_SVE2
-
-static really_inline
-char castleRevScanVerm16(const struct Castle *c, const u8 *buf,
-                         const size_t begin, const size_t end, size_t *loc) {
-    const u8 *ptr = rvermicelli16Exec(c->u.verm16.mask, buf + begin, buf + end);
-    if (ptr == buf + begin - 1) {
-        DEBUG_PRINTF("no escape found\n");
-        return 0;
-    }
-
-    assert(loc);
-    assert(ptr >= buf && ptr < buf + end);
-    *loc = ptr - buf;
-    DEBUG_PRINTF("escape found at offset %zu\n", *loc);
-    return 1;
-}
-
-static really_inline
-char castleRevScanNVerm16(const struct Castle *c, const u8 *buf,
-                          const size_t begin, const size_t end, size_t *loc) {
-    const u8 *ptr = rnvermicelli16Exec(c->u.verm16.mask, buf + begin, buf + end);
-    if (ptr == buf + begin - 1) {
-        DEBUG_PRINTF("no escape found\n");
-        return 0;
-    }
-
-    assert(loc);
-    assert(ptr >= buf && ptr < buf + end);
-    *loc = ptr - buf;
-    DEBUG_PRINTF("escape found at offset %zu\n", *loc);
-    return 1;
-}
-
-#endif // HAVE_SVE2
 
 static really_inline
 char castleRevScanShufti(const struct Castle *c, const u8 *buf,

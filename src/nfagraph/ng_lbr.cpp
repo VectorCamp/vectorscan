@@ -145,6 +145,10 @@ bytecode_ptr<NFA> makeLbrNfa(NFAEngineType nfa_type, enum RepeatType rtype,
     return nfa;
 }
 
+#ifdef HAVE_SVE2
+#include "ng_lbr_sve.hpp"
+#endif
+
 static
 bytecode_ptr<NFA> buildLbrDot(const CharReach &cr, const depth &repeatMin,
                               const depth &repeatMax, u32 minPeriod,
@@ -210,56 +214,6 @@ bytecode_ptr<NFA> buildLbrNVerm(const CharReach &cr, const depth &repeatMin,
     DEBUG_PRINTF("built negated verm lbr\n");
     return nfa;
 }
-
-#ifdef HAVE_SVE2
-
-static
-bytecode_ptr<NFA> buildLbrVerm16(const CharReach &cr, const depth &repeatMin,
-                                 const depth &repeatMax, u32 minPeriod,
-                                 bool is_reset, ReportID report) {
-    const CharReach escapes(~cr);
-
-    if (escapes.count() > 16) {
-        return nullptr;
-    }
-
-    enum RepeatType rtype = chooseRepeatType(repeatMin, repeatMax, minPeriod,
-                                             is_reset);
-    auto nfa = makeLbrNfa<lbr_verm16>(LBR_NFA_VERM16, rtype, repeatMax);
-    struct lbr_verm16 *lv = (struct lbr_verm16 *)getMutableImplNfa(nfa.get());
-    vermicelli16Build(escapes, (u8 *)&lv->mask);
-
-    fillNfa<lbr_verm16>(nfa.get(), &lv->common, report, repeatMin, repeatMax,
-                        minPeriod, rtype);
-
-    DEBUG_PRINTF("built verm16 lbr\n");
-    return nfa;
-}
-
-static
-bytecode_ptr<NFA> buildLbrNVerm16(const CharReach &cr, const depth &repeatMin,
-                                  const depth &repeatMax, u32 minPeriod,
-                                  bool is_reset, ReportID report) {
-    const CharReach escapes(cr);
-
-    if (escapes.count() > 16) {
-        return nullptr;
-    }
-
-    enum RepeatType rtype = chooseRepeatType(repeatMin, repeatMax, minPeriod,
-                                             is_reset);
-    auto nfa = makeLbrNfa<lbr_verm16>(LBR_NFA_NVERM16, rtype, repeatMax);
-    struct lbr_verm16 *lv = (struct lbr_verm16 *)getMutableImplNfa(nfa.get());
-    vermicelli16Build(escapes, (u8 *)&lv->mask);
-
-    fillNfa<lbr_verm16>(nfa.get(), &lv->common, report, repeatMin, repeatMax,
-                        minPeriod, rtype);
-
-    DEBUG_PRINTF("built negated verm16 lbr\n");
-    return nfa;
-}
-
-#endif // HAVE_SVE2
 
 static
 bytecode_ptr<NFA> buildLbrShuf(const CharReach &cr, const depth &repeatMin,

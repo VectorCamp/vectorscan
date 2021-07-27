@@ -290,6 +290,55 @@ TEST(SuperVectorUtilsTest,pshufb128c) {
     }
 }
 
+
+/*Define LSHIFT128_128 macro*/
+#define TEST_LSHIFT128_128(buf, vec, v, l) {                                              \
+                                           auto v_shifted = SP.lshift128(l);              \
+                                           for (int i=15; i>= l; --i) {                   \
+                                               buf[i] = vec[i-l];                         \
+                                           }                                              \
+                                           for (int i=0; i<l; i++) {                      \
+                                               buf[i] = 0;                                \
+                                           }                                              \
+                                           for(int i=0; i<16; i++) {                      \
+                                               ASSERT_EQ(v_shifted.u.u8[i], buf[i]);      \
+                                           }                                              \
+                                       }
+
+TEST(SuperVectorUtilsTest,LShift128_128c){
+    u8 vec[16];
+    for (int i = 0; i<16; i++ ){ vec[i] = i+1; }
+    auto SP = SuperVector<16>::loadu(vec);
+    u8 buf[16];
+    for (int j = 0; j<16; j++) { 
+        TEST_LSHIFT128_128(buf, vec, SP, j);
+    }   
+}
+
+/*Define RSHIFT128_128 macro*/
+#define TEST_RSHIFT128_128(buf, vec, v, l) {                                              \
+                                           auto v_shifted = SP.rshift128(l);              \
+                                           for (int i=0; i<16-l; i++) {                   \
+                                               buf[i] = vec[i+l];                         \
+                                           }                                              \
+                                           for (int i=16-l; i<16; i++) {                  \
+                                               buf[i] = 0;                                \
+                                           }                                              \
+                                           for(int i=0; i<16; i++) {                      \
+                                               ASSERT_EQ(v_shifted.u.u8[i], buf[i]);      \
+                                           }                                              \
+                                       }
+
+TEST(SuperVectorUtilsTest,RShift128_128c){
+    u8 vec[16];
+    for (int i = 0; i<16; i++ ){ vec[i] = i+1; }
+    auto SP = SuperVector<16>::loadu(vec);
+    u8 buf[16];
+    for (int j = 0; j<16; j++) { 
+        TEST_RSHIFT128_128(buf, vec, SP, j);
+    }
+}
+
 /*Define ALIGNR128 macro*/
 #define TEST_ALIGNR128(v1, v2, buf, l) {                                                 \
                                            auto v_aligned = v2.alignr(v1, l);            \
@@ -538,7 +587,7 @@ TEST(SuperVectorUtilsTest,LShift256c){
     }
 }
 
-/*
+
 TEST(SuperVectorUtilsTest,LShift64_256c){
     u64a vec[4] = {128, 512, 256, 1024};
     auto SP = SuperVector<32>::loadu(vec);
@@ -560,7 +609,7 @@ TEST(SuperVectorUtilsTest,RShift64_256c){
         }
     }   
 }
-*/
+
 
 /*Define RSHIFT256 macro*/
 #define TEST_RSHIFT256(buf, vec, v, l) {                                                  \
@@ -583,6 +632,62 @@ TEST(SuperVectorUtilsTest,RShift256c){
     u8 buf[32];
     for (int j = 0; j<32; j++) { 
         TEST_RSHIFT256(buf, vec, SP, j);
+    }
+}
+
+
+
+
+
+/*Define LSHIFT128_256 macro*/
+#define TEST_LSHIFT128_256(buf, vec, v, l) {                                              \
+                                           auto v_shifted = SP.lshift128(l);              \
+                                           for (int i=16; i>= l; --i) {                   \
+                                               buf[i] = vec[i-l];                         \
+                                               buf[i+16] = vec[(16+i)-l];                 \
+                                           }                                              \
+                                           for (int i=0; i<l; i++) {                      \
+                                               buf[i] = 0;                                \
+                                               buf[i+16]= 0;                              \
+                                           }                                              \
+                                           for(int i=0; i<32; i++) {                      \
+                                               ASSERT_EQ(v_shifted.u.u8[i], buf[i]);      \
+                                           }                                              \
+                                       }
+
+TEST(SuperVectorUtilsTest,LShift128_256c){
+    u8 vec[32];
+    for (int i = 0; i<32; i++) { vec[i]= i+1;}
+    auto SP = SuperVector<32>::loadu(vec);
+    u8 buf[32];
+    for (int j=0; j<16; j++) {
+        TEST_LSHIFT128_256(buf, vec, SP, j);
+    }
+}
+
+/*Define RSHIFT128_128 macro*/
+#define TEST_RSHIFT128_256(buf, vec, v, l) {                                              \
+                                           auto v_shifted = SP.rshift128(l);              \
+                                           for (int i=0; i<16-l; i++) {                   \
+                                               buf[i] = vec[i+l];                         \
+                                               buf[i+16] = vec[(i+16)+l];                 \
+                                           }                                              \
+                                           for (int i=16-l; i<16; i++) {                  \
+                                               buf[i] = 0;                                \
+                                               buf[i+16] = 0;                             \
+                                           }                                              \
+                                           for(int i=0; i<32; i++) {                      \
+                                               ASSERT_EQ(v_shifted.u.u8[i], buf[i]);      \
+                                           }                                              \
+                                       }
+
+TEST(SuperVectorUtilsTest,RShift128_256c){
+    u8 vec[32];
+    for (int i = 0; i<32; i++ ){ vec[i] = i+1; }
+    auto SP = SuperVector<32>::loadu(vec);
+    u8 buf[32];
+    for(int j=0; j<16; j++) {
+        TEST_RSHIFT128_256(buf, vec, SP, j);
     }
 }
 
@@ -772,13 +877,13 @@ TEST(SuperVectorUtilsTest,OPANDNOT512c){
     }
 }
 
-/*
+
 TEST(SuperVectorUtilsTest,Movemask512c){
     srand (time(NULL));
     u8 vec[64] = {0};
     u64a r = rand() % 100 + 1;
     for(int i=0; i<64; i++) {
-        if (r & (1 << i)) {
+        if (r & (1ULL << i)) {
             vec[i] = 0xff;
         }
     }
@@ -786,16 +891,16 @@ TEST(SuperVectorUtilsTest,Movemask512c){
     u8 vec2[64] = {0};
     u64a mask = SP.movemask();
     for(int i=0; i<64; i++) {
-        if (mask & (1 << i)) {
+        if (mask & (1ULL << i)) {
             vec2[i] = 0xff;
         }
     }
     for (int i=0; i<64; i++){
-        printf("%d)  vec =%i , vec2 = %i \n",i,vec[i],vec2[i]);
-        //ASSERT_EQ(vec[i],vec2[i]);
+        //printf("%d)  vec =%i , vec2 = %i \n",i,vec[i],vec2[i]);
+        ASSERT_EQ(vec[i],vec2[i]);
     }
 }
-*/
+
 
 TEST(SuperVectorUtilsTest,Eqmask512c){
     srand (time(NULL));
@@ -858,7 +963,7 @@ TEST(SuperVectorUtilsTest,LShift512c){
     }
 }
 
-/*
+
 TEST(SuperVectorUtilsTest,LShift64_512c){
     u64a vec[8] = {32, 64, 128, 256, 512, 512, 256, 1024};
     auto SP = SuperVector<64>::loadu(vec);
@@ -880,7 +985,7 @@ TEST(SuperVectorUtilsTest,RShift64_512c){
         }
     }   
 }
-*/
+
 
 /*Define RSHIFT512 macro*/
 #define TEST_RSHIFT512(buf, vec, v, l) {                                                  \
@@ -905,6 +1010,67 @@ TEST(SuperVectorUtilsTest,RShift512c){
         TEST_RSHIFT512(buf, vec, SP, j);
     }
 }
+
+
+/*Define RSHIFT128_512 macro*/
+#define TEST_RSHIFT128_512(buf, vec, v, l) {                                              \
+                                           auto v_shifted = SP.rshift128(l);              \
+                                           for (int i=0; i<16-l; i++) {                   \
+                                               buf[i] = vec[i+l];                         \
+                                               buf[i+16] = vec[(i+16)+l];                 \
+                                               buf[i+32] = vec[(i+32)+l];                 \
+                                               buf[i+48] = vec[(i+48)+l];                 \
+                                           }                                              \
+                                           for (int i=16-l; i<16; i++) {                  \
+                                               buf[i] = 0;                                \
+                                               buf[i+16] = 0;                             \
+                                               buf[i+32] = 0;                             \
+                                               buf[i+48] = 0;                             \
+                                           }                                              \
+                                           for(int i=0; i<64; i++) {                      \
+                                               ASSERT_EQ(v_shifted.u.u8[i], buf[i]);      \
+                                           }                                              \
+                                       }
+TEST(SuperVectorUtilsTest,RShift128_512c){
+    u8 vec[64];
+    for (int i = 0; i<64; i++ ){ vec[i] = i+1; }
+    auto SP = SuperVector<64>::loadu(vec);
+    u8 buf[64] = {1};
+    for(int j=0; j<16; j++){
+        TEST_RSHIFT128_512(buf, vec, SP, j)
+    }      
+}
+
+/*Define LSHIFT512 macro*/
+#define TEST_LSHIFT128_512(buf, vec, v, l) {                                              \
+                                           auto v_shifted = SP.lshift128(l);              \
+                                           for (int i=16; i>=l; --i) {                    \
+                                               buf[i] = vec[i-l];                         \
+                                               buf[i+16] = vec[(i+16)-l];                 \
+                                               buf[i+32] = vec[(i+32)-l];                 \
+                                               buf[i+48] = vec[(i+48)-l];                 \
+                                           }                                              \
+                                           for (int i=0; i<l; i++) {                      \
+                                               buf[i] = 0;                                \
+                                               buf[i+16] = 0;                             \
+                                               buf[i+32] = 0;                             \
+                                               buf[i+48] = 0;                             \
+                                           }                                              \
+                                           for(int i=0; i<64; i++) {                      \
+                                               ASSERT_EQ(v_shifted.u.u8[i], buf[i]);      \
+                                           }                                              \
+                                       }
+
+TEST(SuperVectorUtilsTest,LShift128_512c){
+    u8 vec[64];
+    for (int i = 0; i<64; i++) { vec[i]= i+1;}
+    auto SP = SuperVector<64>::loadu(vec);
+    u8 buf[64] = {1};
+    for(int j=0; j<16;j++){
+        TEST_LSHIFT128_512(buf, vec, SP, j);
+    }
+}
+
 
 /*Define ALIGNR512 macro*/
 /*

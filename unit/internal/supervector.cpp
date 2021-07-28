@@ -354,23 +354,9 @@ TEST(SuperVectorUtilsTest,Alignr128c){
     }
     auto SP1 = SuperVector<16>::loadu(vec);
     auto SP2 = SuperVector<16>::loadu(vec+16);
-    TEST_ALIGNR128(SP1, SP2, vec, 0);
-    TEST_ALIGNR128(SP1, SP2, vec, 1);
-    TEST_ALIGNR128(SP1, SP2, vec, 2);
-    TEST_ALIGNR128(SP1, SP2, vec, 3);
-    TEST_ALIGNR128(SP1, SP2, vec, 4);
-    TEST_ALIGNR128(SP1, SP2, vec, 5);
-    TEST_ALIGNR128(SP1, SP2, vec, 6);
-    TEST_ALIGNR128(SP1, SP2, vec, 7);
-    TEST_ALIGNR128(SP1, SP2, vec, 8);
-    TEST_ALIGNR128(SP1, SP2, vec, 9);
-    TEST_ALIGNR128(SP1, SP2, vec, 10);
-    TEST_ALIGNR128(SP1, SP2, vec, 11);
-    TEST_ALIGNR128(SP1, SP2, vec, 12);
-    TEST_ALIGNR128(SP1, SP2, vec, 13);
-    TEST_ALIGNR128(SP1, SP2, vec, 14);
-    TEST_ALIGNR128(SP1, SP2, vec, 15);
-    TEST_ALIGNR128(SP1, SP2, vec, 16);
+    for (int j = 0; j<16; j++){
+        TEST_ALIGNR128(SP1, SP2, vec, j);
+    }
 }
 
 
@@ -693,14 +679,11 @@ TEST(SuperVectorUtilsTest,RShift128_256c){
 
 
 /*Define ALIGNR256 macro*/
-/*
-#define TEST_ALIGNR256(v1, v2, buf, l) {                                                 \
-                                           auto v_aligned = v2.alignr(v1, l);            \
-                                           v_aligned.print8("v_aligned");\
-                                           for (size_t i=0; i<32; i++) {                 \
-                                               printf("vec[%ld] = %02x\n", i+l, vec[i+l]);\
-                                               ASSERT_EQ(v_aligned.u.u8[i], vec[i + l]); \
-                                           }                                             \
+#define TEST_ALIGNR256(v1, v2, buf, l) {                                                  \
+                                           auto v_aligned = v2.alignr(v1, l);             \
+                                           for (size_t i=0; i<32; i++) {                  \
+                                               ASSERT_EQ(v_aligned.u.u8[i], vec[i + l]);  \
+                                           }                                              \
                                        }
 
 TEST(SuperVectorUtilsTest,Alignr256c){
@@ -710,41 +693,10 @@ TEST(SuperVectorUtilsTest,Alignr256c){
     }
     auto SP1 = SuperVector<32>::loadu(vec);
     auto SP2 = SuperVector<32>::loadu(vec+32);
-    TEST_ALIGNR256(SP1, SP2, vec, 0);
-    TEST_ALIGNR256(SP1, SP2, vec, 1);
-    TEST_ALIGNR256(SP1, SP2, vec, 2);
-    TEST_ALIGNR256(SP1, SP2, vec, 3);
-    TEST_ALIGNR256(SP1, SP2, vec, 4);
-    TEST_ALIGNR256(SP1, SP2, vec, 5);
-    TEST_ALIGNR256(SP1, SP2, vec, 6);
-    TEST_ALIGNR256(SP1, SP2, vec, 7);
-    TEST_ALIGNR256(SP1, SP2, vec, 8);
-    TEST_ALIGNR256(SP1, SP2, vec, 9);
-    TEST_ALIGNR256(SP1, SP2, vec, 10);
-    TEST_ALIGNR256(SP1, SP2, vec, 11);
-    TEST_ALIGNR256(SP1, SP2, vec, 12);
-    TEST_ALIGNR256(SP1, SP2, vec, 13);
-    TEST_ALIGNR256(SP1, SP2, vec, 14);
-    TEST_ALIGNR256(SP1, SP2, vec, 15);
-    TEST_ALIGNR256(SP1, SP2, vec, 16);
-    TEST_ALIGNR256(SP1, SP2, vec, 17);
-    TEST_ALIGNR256(SP1, SP2, vec, 18);
-    TEST_ALIGNR256(SP1, SP2, vec, 19);
-    TEST_ALIGNR256(SP1, SP2, vec, 20);
-    TEST_ALIGNR256(SP1, SP2, vec, 21);
-    TEST_ALIGNR256(SP1, SP2, vec, 22);
-    TEST_ALIGNR256(SP1, SP2, vec, 23);
-    TEST_ALIGNR256(SP1, SP2, vec, 24);
-    TEST_ALIGNR256(SP1, SP2, vec, 25);
-    TEST_ALIGNR256(SP1, SP2, vec, 26);
-    TEST_ALIGNR256(SP1, SP2, vec, 27);
-    TEST_ALIGNR256(SP1, SP2, vec, 28);
-    TEST_ALIGNR256(SP1, SP2, vec, 29);
-    TEST_ALIGNR256(SP1, SP2, vec, 30);
-    TEST_ALIGNR256(SP1, SP2, vec, 31);
-    TEST_ALIGNR256(SP1, SP2, vec, 32);
+    for(int j=0; j<32; j++) {
+        TEST_ALIGNR256(SP1, SP2, vec, j);
+    }
 }
-*/
 
 #endif // HAVE_AVX2
 
@@ -1073,9 +1025,8 @@ TEST(SuperVectorUtilsTest,LShift128_512c){
 
 
 /*Define ALIGNR512 macro*/
-/*
 #define TEST_ALIGNR512(v1, v2, buf, l) {                                                 \
-                                           auto v_aligned = v2.alignr(v1, l);            \
+                                           auto v_aligned = v1.alignr(v2, l);            \
                                            for (size_t i=0; i<64; i++) {                 \
                                                ASSERT_EQ(v_aligned.u.u8[i], vec[i + l]); \
                                            }                                             \
@@ -1087,24 +1038,10 @@ TEST(SuperVectorUtilsTest,Alignr512c){
         vec[i]=i;
     }
     auto SP1 = SuperVector<64>::loadu(vec);
-    auto SP2 = SuperVector<64>::loadu(vec+32);
-    TEST_ALIGNR512(SP1, SP2, vec, 0);
-    TEST_ALIGNR512(SP1, SP2, vec, 1);
-    TEST_ALIGNR512(SP1, SP2, vec, 2);
-    TEST_ALIGNR512(SP1, SP2, vec, 3);
-    TEST_ALIGNR512(SP1, SP2, vec, 4);
-    TEST_ALIGNR512(SP1, SP2, vec, 5);
-    TEST_ALIGNR512(SP1, SP2, vec, 6);
-    TEST_ALIGNR512(SP1, SP2, vec, 7);
-    TEST_ALIGNR512(SP1, SP2, vec, 8);
-    TEST_ALIGNR512(SP1, SP2, vec, 9);
-    TEST_ALIGNR512(SP1, SP2, vec, 10);
-    TEST_ALIGNR512(SP1, SP2, vec, 11);
-    TEST_ALIGNR512(SP1, SP2, vec, 12);
-    TEST_ALIGNR512(SP1, SP2, vec, 13);
-    TEST_ALIGNR512(SP1, SP2, vec, 14);
-    TEST_ALIGNR512(SP1, SP2, vec, 15);
-    TEST_ALIGNR512(SP1, SP2, vec, 16);
+    auto SP2 = SuperVector<64>::loadu(vec+64);
+    for(int j=0; j<64; j++){
+        TEST_ALIGNR512(SP1, SP2, vec, j);
+    }
 }
-*/
+
 #endif // HAVE_AVX512

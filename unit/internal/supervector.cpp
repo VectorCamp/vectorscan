@@ -293,7 +293,7 @@ TEST(SuperVectorUtilsTest,pshufb128c) {
 
 /*Define LSHIFT128_128 macro*/
 #define TEST_LSHIFT128_128(buf, vec, v, l) {                                              \
-                                           auto v_shifted = SP.lshift128(l);              \
+                                           auto v_shifted = v.lshift128(l);               \
                                            for (int i=15; i>= l; --i) {                   \
                                                buf[i] = vec[i-l];                         \
                                            }                                              \
@@ -317,7 +317,7 @@ TEST(SuperVectorUtilsTest,LShift128_128c){
 
 /*Define RSHIFT128_128 macro*/
 #define TEST_RSHIFT128_128(buf, vec, v, l) {                                              \
-                                           auto v_shifted = SP.rshift128(l);              \
+                                           auto v_shifted = v.rshift128(l);               \
                                            for (int i=0; i<16-l; i++) {                   \
                                                buf[i] = vec[i+l];                         \
                                            }                                              \
@@ -966,7 +966,7 @@ TEST(SuperVectorUtilsTest,RShift512c){
 
 /*Define RSHIFT128_512 macro*/
 #define TEST_RSHIFT128_512(buf, vec, v, l) {                                              \
-                                           auto v_shifted = SP.rshift128(l);              \
+                                           auto v_shifted = v.rshift128(l);               \
                                            for (int i=0; i<16-l; i++) {                   \
                                                buf[i] = vec[i+l];                         \
                                                buf[i+16] = vec[(i+16)+l];                 \

@@ -1400,3 +1400,8 @@ option(BUILD_EXAMPLES "Build Hyperscan example code (default TRUE)" TRUE)
 if(BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
+
+option(BUILD_BENCHMARKS "Build benchmarks (default TRUE)" TRUE)
+if(BUILD_BENCHMARKS)
+    add_subdirectory(benchmarks)
+endif()

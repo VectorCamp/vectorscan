@@ -47,5 +47,6 @@ void noodle_benchmarks(int size, int M, const char *lit_str, int lit_len, char n
         total_sec += noodExec_elapsed_seconds.count();
     }
     total_sec /= M;
-    std::cout<<"\x1B[35m Case with match in random pos and size: "<<size<<" lit_len: "<<lit_len<<" nocase: "<<(int)nocase<<"\x1B[36m noodExec elapsetime: \x1B[0m"<<total_sec<<std::endl;    
+    std::cout<<"\x1B[35m Case with match in random pos and size: "<<size<<" lit_len: "<<lit_len<<" nocase: "<<(int)nocase<<"\x1B[36m noodExec elapsetime: \x1B[0m"<<total_sec<<" bandwidth"<<(size/total_sec)<<std::endl;    
+    delete [] data;
 }

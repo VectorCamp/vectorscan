@@ -25,7 +25,7 @@ int main(){
             functions[j](sizes[i],iters[i],exp_len[i],true);  
         } 
     }
-
+    
     for(int i=0; i<12; i++){
         if(i==0){
             std::cout<<std::endl <<"\x1B[33m noodle Benchmarks(kbytes) \x1B[0m"<<std::endl;

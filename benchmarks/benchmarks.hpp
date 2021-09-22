@@ -1,4 +1,13 @@
-#include <functional>
+#include "nfa/shufti.h"
+#include "nfa/shufticompile.h"
+#include "nfa/truffle.h"
+#include "nfa/trufflecompile.h"
+#include "hwlm/noodle_build.h"
+#include "hwlm/noodle_engine.h"
+#include "hwlm/noodle_internal.h"
+#include "hwlm/hwlm_literal.h"
+#include "util/bytecode_ptr.h"
+#include "scratch.h"
 
 /*define colour control characters*/
 #define RST  "\x1B[0m"
@@ -10,6 +19,22 @@
 #define KCYN  "\x1B[36m"
 #define KWHT  "\x1B[37m"
 
+class MicroBenchmark
+{
+public:
+  char const *label;
+  size_t size;
 
-void noodle_benchmarks(int size, int M, const char *lit_str, int lit_len, char nocase);
-void run_benchmarks(int size, int loops, int M, bool has_match, std::function <const u8 *(m128, m128, const u8 *, const u8 *)> function);
+  // Shufti/Truffle
+  m128 lo, hi;
+  ue2::CharReach chars;
+  std::vector<u8> buf;
+
+  // Noodle
+  struct hs_scratch scratch;
+  ue2::bytecode_ptr<noodTable> nt;
+
+  MicroBenchmark(char const *label_, size_t size_)
+  :label(label_), size(size_), buf(size_) {
+  };
+};

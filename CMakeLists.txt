@@ -473,14 +473,6 @@ configure_file(${CMAKE_MODULE_PATH}/config.h.in ${PROJECT_BINARY_DIR}/config.h)
 configure_file(src/hs_version.h.in ${PROJECT_BINARY_DIR}/hs_version.h)
 
 
-# expand out library names for pkgconfig static link info
-foreach (LIB ${CMAKE_CXX_IMPLICIT_LINK_LIBRARIES})
-    # this is fragile, but protects us from toolchain specific files
-    if (NOT EXISTS ${LIB})
-        set(PRIVATE_LIBS "${PRIVATE_LIBS} -l${LIB}")
-    endif()
-endforeach()
-
 configure_file(libhs.pc.in libhs.pc @ONLY) # only replace @ quoted vars
 install(FILES ${CMAKE_BINARY_DIR}/libhs.pc
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")

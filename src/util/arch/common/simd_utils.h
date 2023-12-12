@@ -388,6 +388,14 @@ m256 pshufb_m256(m256 a, m256 b) {
     return rv;
 }
 
+static really_inline
+m256 widen128(m128 x) {
+    m256 rv;
+    rv.lo = widenlo128(x);
+    rv.hi = widenhi128(x);
+    return rv;
+}
+
 #endif // HAVE_SIMD_256_BITS
 
 /****

@@ -181,6 +181,10 @@ static really_inline m128 set1_2x64(u64a c) {
     return (m128) vdupq_n_u64(c);
 }
 
+static really_inline m128 insert32_m128(m128 in, u32 val, const int imm) {
+    return (m128) vsetq_lane_u32(val, (uint32x4_t)in, imm);
+}
+
 static really_inline u32 movd(const m128 in) {
     return vgetq_lane_u32((uint32x4_t) in, 0);
 }
@@ -447,6 +451,16 @@ m128 set2x64(u64a hi, u64a lo) {
     uint64_t ALIGN_ATTR(16) data[2] = { lo, hi };
     // cppcheck-suppress cstyleCast
     return (m128) vld1q_u64((uint64_t *) data);
+}
+
+static really_inline
+m128 widenlo128(m128 x) {
+    return (m128) vmovl_u32(vget_low_u32((uint32x4_t)x));
+}
+
+static really_inline
+m128 widenhi128(m128 x) {
+    return (m128) vmovl_u32(vget_high_u32((uint32x4_t)x));
 }
 
 #endif // ARCH_ARM_SIMD_UTILS_H

@@ -124,6 +124,17 @@ m128 sub_2x64(m128 a, m128 b) {
 }
 
 static really_really_inline
+m128 lshift32_m128(m128 a, unsigned b) {
+#if defined(HAVE__BUILTIN_CONSTANT_P)
+    if (__builtin_constant_p(b)) {
+        return _mm_slli_epi32(a, b);
+    }
+#endif
+    m128 x = _mm_cvtsi32_si128(b);
+    return _mm_sll_epi32(a, x);
+}
+
+static really_really_inline
 m128 lshift64_m128(m128 a, unsigned b) {
 #if defined(HAVE__BUILTIN_CONSTANT_P)
     if (__builtin_constant_p(b)) {
@@ -156,6 +167,10 @@ static really_inline m128 set1_4x32(u32 c) {
 
 static really_inline m128 set1_2x64(u64a c) {
     return _mm_set1_epi64x(c);
+}
+
+static really_inline m128 insert32_m128(m128 in, u32 val, const int imm) {
+    return _mm_insert_epi32(in, val, imm);
 }
 
 static really_inline u32 movd(const m128 in) {
@@ -474,6 +489,18 @@ m128 set2x64(u64a hi, u64a lo) {
     return _mm_set_epi64x(hi, lo);
 }
 
+#include "../print_simd.h"
+
+static really_inline
+m128 widenlo128(m128 x) {
+    return _mm_unpacklo_epi32(x, zeroes128());
+}
+
+static really_inline
+m128 widenhi128(m128 x) {
+    return _mm_unpackhi_epi32(x, zeroes128());
+}
+
 /****
  **** 256-bit Primitives
  ****/
@@ -750,6 +777,12 @@ m256 combine2x128(m128 hi, m128 lo) {
     return insert128to256(cast128to256(lo), hi, 1);
 #endif
 }
+
+static really_inline
+m256 widen128(m128 x) {
+    return (m256) _mm256_cvtepu32_epi64(x);
+}
+
 #endif //AVX2
 
 /****

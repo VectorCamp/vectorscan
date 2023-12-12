@@ -169,9 +169,7 @@ static really_inline m128 set1_2x64(u64a c) {
     return _mm_set1_epi64x(c);
 }
 
-static really_inline m128 insert32_m128(m128 in, u32 val, const int imm) {
-    return _mm_insert_epi32(in, val, imm);
-}
+#define insert32_m128(in, val, imm) (m128) (_mm_insert_epi32((m128) in, (m128) val, (m128) imm))
 
 static really_inline u32 movd(const m128 in) {
     return _mm_cvtsi128_si32(in);
@@ -488,8 +486,6 @@ static really_inline
 m128 set2x64(u64a hi, u64a lo) {
     return _mm_set_epi64x(hi, lo);
 }
-
-#include "../print_simd.h"
 
 static really_inline
 m128 widenlo128(m128 x) {

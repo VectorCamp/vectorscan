@@ -37,7 +37,7 @@ static really_really_inline
 hwlm_error_t single_zscan(const struct noodTable *n,const u8 *d, const u8 *buf,
                           typename SuperVector<S>::comparemask_type z, size_t len, const struct cb_info *cbi) {
     while (unlikely(z)) {
-        typename SuperVector<S>::comparemask_type pos = SuperVector<S>::findLSB(z) >> Z_POSSHIFT;
+        typename SuperVector<S>::comparemask_type pos = SuperVector<S>::findLSB(z);
         size_t matchPos = d - buf + pos;
         DEBUG_PRINTF("match pos %zu\n", matchPos);
         hwlmcb_rv_t rv = final(n, buf, len, n->msk_len != 1, cbi, matchPos);
@@ -51,7 +51,7 @@ static really_really_inline
 hwlm_error_t double_zscan(const struct noodTable *n,const u8 *d, const u8 *buf,
                           typename SuperVector<S>::comparemask_type z, size_t len, const struct cb_info *cbi) {
     while (unlikely(z)) {
-        typename SuperVector<S>::comparemask_type pos = SuperVector<S>::findLSB(z) >> Z_POSSHIFT;
+        typename SuperVector<S>::comparemask_type pos = SuperVector<S>::findLSB(z);
         size_t matchPos = d - buf + pos - 1;
         DEBUG_PRINTF("match pos %zu\n", matchPos);
         hwlmcb_rv_t rv = final(n, buf, len, true, cbi, matchPos);

@@ -48,18 +48,6 @@
 
 #include <util/bitutils.h>
 
-#if defined(HAVE_SIMD_512_BITS)
-#define Z_POSSHIFT 0
-#elif defined(HAVE_SIMD_256_BITS)
-#define Z_POSSHIFT 0
-#elif defined(HAVE_SIMD_128_BITS)
-#if !defined(VS_SIMDE_BACKEND) && (defined(ARCH_ARM32) || defined(ARCH_AARCH64))
-#define Z_POSSHIFT 2
-#else
-#define Z_POSSHIFT 0
-#endif
-#endif
-
 // Define a common assume_aligned using an appropriate compiler built-in, if
 // it's available. Note that we need to handle C or C++ compilation.
 #ifdef __cplusplus

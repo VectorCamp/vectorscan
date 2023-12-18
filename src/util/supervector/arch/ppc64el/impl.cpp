@@ -556,6 +556,12 @@ really_inline SuperVector<16> SuperVector<16>::loadu_maskz(void const *ptr, uint
 }
 
 template<>
+really_inline typename SuperVector<16>::comparemask_type SuperVector<16>::findLSB(typename SuperVector<16>::comparemask_type &z)
+{
+  return findAndClearLSB_32(&z);
+}
+
+template<>
 really_inline SuperVector<16> SuperVector<16>::alignr(SuperVector<16> &other, int8_t offset)
 {   
     if (offset == 0) return other;

@@ -86,15 +86,21 @@ hwlm_error_t scanSingleMain(const struct noodTable *n, const u8 *buf,
             DEBUG_PRINTF("d - d0: %ld \n", d - d0);
 #if defined(HAVE_MASKED_LOADS)
             uint8_t l = d - d0;
-            typename SuperVector<S>::comparemask_type mask = ~SuperVector<S>::single_load_mask(l);
+            typename SuperVector<S>::comparemask_type mask = ~SuperVector<S>::load_mask(l);
             SuperVector<S> chars = SuperVector<S>::loadu_maskz(d0, mask) & caseMask;
             typename SuperVector<S>::comparemask_type z = mask1.eqmask(chars);
             DEBUG_PRINTF("mask: %08llx\n", mask);
             hwlm_error_t rv = single_zscan<S>(n, d0, buf, z, len, cbi);
 #else
             uint8_t l = d0 + S - d;
+            DEBUG_PRINTF("l: %d \n", l);
             SuperVector<S> chars = SuperVector<S>::loadu_maskz(d, l) & caseMask;
+            chars.print8("chars");
             typename SuperVector<S>::comparemask_type z = mask1.eqmask(chars);
+            DEBUG_PRINTF("z: %08llx\n", (u64a) z);
+            z = SuperVector<S>::iteration_mask(z);
+            DEBUG_PRINTF("z: %08llx\n", (u64a) z);
+
             hwlm_error_t rv = single_zscan<S>(n, d, buf, z, len, cbi);
 #endif
             chars.print32("chars");
@@ -125,6 +131,8 @@ hwlm_error_t scanSingleMain(const struct noodTable *n, const u8 *buf,
         uint8_t l = buf_end - d;
         SuperVector<S> chars = SuperVector<S>::loadu_maskz(d, l) & caseMask;
         typename SuperVector<S>::comparemask_type z = mask1.eqmask(chars);
+        z = SuperVector<S>::iteration_mask(z);
+
         hwlm_error_t rv = single_zscan<S>(n, d, buf, z, len, cbi);
         RETURN_IF_TERMINATED(rv);
     }
@@ -160,12 +168,12 @@ hwlm_error_t scanDoubleMain(const struct noodTable *n, const u8 *buf,
             const u8 *d0 = ROUNDDOWN_PTR(d, S);
 #if defined(HAVE_MASKED_LOADS)
             uint8_t l = d - d0;
-            typename SuperVector<S>::comparemask_type mask = ~SuperVector<S>::double_load_mask(l);
+            typename SuperVector<S>::comparemask_type mask = ~SuperVector<S>::load_mask(l);
             SuperVector<S> chars = SuperVector<S>::loadu_maskz(d0, mask) & caseMask;
             typename SuperVector<S>::comparemask_type z1 = mask1.eqmask(chars);
             typename SuperVector<S>::comparemask_type z2 = mask2.eqmask(chars);
             typename SuperVector<S>::comparemask_type z = (z1 << SuperVector<S>::mask_width()) & z2;
-            DEBUG_PRINTF("z: %0llx\n", z);
+            z = SuperVector<S>::iteration_mask(z);
             lastz1 = z1 >> (S - 1);
 
             DEBUG_PRINTF("mask: %08llx\n", mask);
@@ -176,8 +184,9 @@ hwlm_error_t scanDoubleMain(const struct noodTable *n, const u8 *buf,
             chars.print8("chars");
             typename SuperVector<S>::comparemask_type z1 = mask1.eqmask(chars);
             typename SuperVector<S>::comparemask_type z2 = mask2.eqmask(chars);
-
             typename SuperVector<S>::comparemask_type z = (z1 << SuperVector<S>::mask_width()) & z2;
+            z = SuperVector<S>::iteration_mask(z);
+
             hwlm_error_t rv = double_zscan<S>(n, d, buf, z, len, cbi);
             lastz1 = z1 >> (l - 1);
 #endif

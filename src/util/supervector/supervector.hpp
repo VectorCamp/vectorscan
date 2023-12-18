@@ -130,7 +130,11 @@ struct BaseVector<16>
   static constexpr bool      is_valid = true;
   static constexpr u16           size = 16;
   using                          type = m128;
+#if defined(ARCH_ARM32) || defined(ARCH_AARCH64)
+  using              comparemask_type = u64a;
+#else
   using              comparemask_type = u32;
+#endif
   static constexpr bool  has_previous = false;
   using                 previous_type = u64a;
   static constexpr u16  previous_size = 8;
@@ -229,8 +233,7 @@ public:
   static typename base_type::comparemask_type
   iteration_mask(typename base_type::comparemask_type mask);
 
-  static typename base_type::comparemask_type single_load_mask(uint8_t const len) { return (((1ULL) << (len)) - 1ULL); }
-  static typename base_type::comparemask_type double_load_mask(uint8_t const len) { return (((1ULL) << (len)) - 1ULL); }
+  static typename base_type::comparemask_type load_mask(uint8_t const len) { return (((1ULL) << (len)) - 1ULL); }
   static typename base_type::comparemask_type findLSB(typename base_type::comparemask_type &z);
   static SuperVector loadu(void const *ptr);
   static SuperVector load(void const *ptr);

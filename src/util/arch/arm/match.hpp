@@ -34,7 +34,6 @@ const u8 *first_non_zero_match<16>(const u8 *buf, SuperVector<16> mask, u16 cons
     uint64_t vmax = vgetq_lane_u64 (vreinterpretq_u64_u32 (vpmaxq_u32(m, m)), 0);
     if (vmax != 0) {
         typename SuperVector<16>::comparemask_type z = mask.comparemask();
-        DEBUG_PRINTF("z %08llx\n", z);
         DEBUG_PRINTF("buf %p z %08llx \n", buf, z);
         u32 pos = ctz64(z) / SuperVector<16>::mask_width();
         DEBUG_PRINTF("match @ pos %u\n", pos);
@@ -54,7 +53,6 @@ const u8 *last_non_zero_match<16>(const u8 *buf, SuperVector<16> mask, u16 const
     if (vmax != 0) {
         typename SuperVector<16>::comparemask_type z = mask.comparemask();
         DEBUG_PRINTF("buf %p z %08llx \n", buf, z);
-        DEBUG_PRINTF("z %08llx\n", z);
         u32 pos = clz64(z) / SuperVector<16>::mask_width();
         DEBUG_PRINTF("match @ pos %u\n", pos);
         return buf + (15 - pos);
@@ -70,7 +68,6 @@ const u8 *first_zero_match_inverted<16>(const u8 *buf, SuperVector<16> mask, u16
     uint64_t vmax = vgetq_lane_u64 (vreinterpretq_u64_u32 (vpmaxq_u32(m, m)), 0);
     if (vmax != 0) {
         typename SuperVector<16>::comparemask_type z = mask.comparemask();
-        DEBUG_PRINTF("z %08llx\n", z);
         DEBUG_PRINTF("buf %p z %08llx \n", buf, z);
         u32 pos = ctz64(z) / SuperVector<16>::mask_width();
         DEBUG_PRINTF("match @ pos %u\n", pos);
@@ -90,7 +87,6 @@ const u8 *last_zero_match_inverted<16>(const u8 *buf, SuperVector<16> mask, u16 
     if (vmax != 0) {
         typename SuperVector<16>::comparemask_type z = mask.comparemask();
         DEBUG_PRINTF("buf %p z %08llx \n", buf, z);
-        DEBUG_PRINTF("z %08llx\n", z);
         u32 pos = clz64(z) / SuperVector<16>::mask_width();
         DEBUG_PRINTF("match @ pos %u\n", pos);
         return buf + (15 - pos);

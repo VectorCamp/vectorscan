@@ -524,7 +524,28 @@ really_inline SuperVector<16> SuperVector<16>::loadu_maskz(void const *ptr, uint
 {
     SuperVector mask = Ones_vshr(16 -len);
     SuperVector v = _mm_loadu_si128((const m128 *)ptr);
-    return mask & v;
+    return v & mask;
+}
+
+template <>
+really_inline SuperVector<16> SuperVector<16>::loadu_maskz(void const *ptr, typename base_type::comparemask_type const mask)
+{
+#ifdef HAVE_AVX512
+    SuperVector<16> v = _mm_maskz_loadu_epi8(mask, (const m128 *)ptr);
+    v.print8("v");
+    return v;
+#else
+    DEBUG_PRINTF("mask = %08x\n", mask);
+    SuperVector v = _mm_loadu_si128((const m128 *)ptr);
+    (void)mask;
+    return v; // FIXME: & mask
+#endif
+}
+
+template<>
+really_inline typename SuperVector<16>::comparemask_type SuperVector<16>::findLSB(typename SuperVector<16>::comparemask_type &z)
+{
+  return findAndClearLSB_32(&z);
 }
 
 template<>
@@ -1126,20 +1147,33 @@ really_inline SuperVector<32> SuperVector<32>::load(void const *ptr)
 template <>
 really_inline SuperVector<32> SuperVector<32>::loadu_maskz(void const *ptr, uint8_t const len)
 {
+    SuperVector mask = Ones_vshr(32 -len);
+    mask.print8("mask");
+    SuperVector<32> v = _mm256_loadu_si256((const m256 *)ptr);
+    v.print8("v");
+    return v & mask;
+}
+
+template <>
+really_inline SuperVector<32> SuperVector<32>::loadu_maskz(void const *ptr, typename base_type::comparemask_type const mask)
+{
+    DEBUG_PRINTF("mask = %08llx\n", mask);
 #ifdef HAVE_AVX512
-    u32 mask = (~0ULL) >> (32 - len);
-    SuperVector<32> v = _mm256_mask_loadu_epi8(Zeroes().u.v256[0], mask, (const m256 *)ptr);
+    SuperVector<32> v = _mm256_maskz_loadu_epi8(mask, (const m256 *)ptr);
     v.print8("v");
     return v;
 #else
-    DEBUG_PRINTF("len = %d", len);
-    SuperVector<32> mask = Ones_vshr(32 -len);
-    mask.print8("mask");
-    (Ones() >> (32 - len)).print8("mask");
     SuperVector<32> v = _mm256_loadu_si256((const m256 *)ptr);
     v.print8("v");
-    return mask & v;
+    (void)mask;
+    return v; // FIXME: & mask
 #endif
+}
+
+template<>
+really_inline typename SuperVector<32>::comparemask_type SuperVector<32>::findLSB(typename SuperVector<32>::comparemask_type &z)
+{
+  return findAndClearLSB_64(&z);
 }
 
 template<>
@@ -1778,9 +1812,24 @@ really_inline SuperVector<64> SuperVector<64>::loadu_maskz(void const *ptr, uint
 {
     u64a mask = (~0ULL) >> (64 - len);
     DEBUG_PRINTF("mask = %016llx\n", mask);
-    SuperVector<64> v = _mm512_mask_loadu_epi8(Zeroes().u.v512[0], mask, (const m512 *)ptr);
+    SuperVector<64> v = _mm512_maskz_loadu_epi8(mask, (const m512 *)ptr);
     v.print8("v");
     return v;
+}
+
+template <>
+really_inline SuperVector<64> SuperVector<64>::loadu_maskz(void const *ptr, typename base_type::comparemask_type const mask)
+{
+    DEBUG_PRINTF("mask = %016llx\n", mask);
+    SuperVector<64> v = _mm512_maskz_loadu_epi8(mask, (const m512 *)ptr);
+    v.print8("v");
+    return v;
+}
+
+template<>
+really_inline typename SuperVector<64>::comparemask_type SuperVector<64>::findLSB(typename SuperVector<64>::comparemask_type &z)
+{
+  return findAndClearLSB_64(&z);
 }
 
 template<>

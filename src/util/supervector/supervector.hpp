@@ -46,34 +46,18 @@
 #endif
 #endif // VS_SIMDE_BACKEND
 
+#include <util/bitutils.h>
+
 #if defined(HAVE_SIMD_512_BITS)
-using Z_TYPE = u64a;
-#define Z_BITS 64
-#define Z_SHIFT 63
 #define Z_POSSHIFT 0
-#define DOUBLE_LOAD_MASK(l)        ((~0ULL) >> (Z_BITS -(l)))
-#define SINGLE_LOAD_MASK(l)        (((1ULL) << (l)) - 1ULL)
 #elif defined(HAVE_SIMD_256_BITS)
-using Z_TYPE = u32;
-#define Z_BITS 32
-#define Z_SHIFT 31
 #define Z_POSSHIFT 0
-#define DOUBLE_LOAD_MASK(l)        (((1ULL) << (l)) - 1ULL)
-#define SINGLE_LOAD_MASK(l)        (((1ULL) << (l)) - 1ULL)
 #elif defined(HAVE_SIMD_128_BITS)
 #if !defined(VS_SIMDE_BACKEND) && (defined(ARCH_ARM32) || defined(ARCH_AARCH64))
-using Z_TYPE = u64a;
-#define Z_BITS 64
 #define Z_POSSHIFT 2
-#define DOUBLE_LOAD_MASK(l) ((~0ULL) >> (Z_BITS - (l)))
 #else
-using Z_TYPE = u32;
-#define Z_BITS 32
 #define Z_POSSHIFT 0
-#define DOUBLE_LOAD_MASK(l) (((1ULL) << (l)) - 1ULL)
 #endif
-#define Z_SHIFT 15
-#define SINGLE_LOAD_MASK(l)        (((1ULL) << (l)) - 1ULL)
 #endif
 
 // Define a common assume_aligned using an appropriate compiler built-in, if
@@ -138,7 +122,7 @@ struct BaseVector<64>
   static constexpr u16  previous_size = 32;
 };
 
-// 128 bit implementation
+// 256 bit implementation
 template <>
 struct BaseVector<32>
 {
@@ -158,7 +142,7 @@ struct BaseVector<16>
   static constexpr bool      is_valid = true;
   static constexpr u16           size = 16;
   using                          type = m128;
-  using              comparemask_type = u64a;
+  using              comparemask_type = u32;
   static constexpr bool  has_previous = false;
   using                 previous_type = u64a;
   static constexpr u16  previous_size = 8;
@@ -257,9 +241,13 @@ public:
   static typename base_type::comparemask_type
   iteration_mask(typename base_type::comparemask_type mask);
 
+  static typename base_type::comparemask_type single_load_mask(uint8_t const len) { return (((1ULL) << (len)) - 1ULL); }
+  static typename base_type::comparemask_type double_load_mask(uint8_t const len) { return (((1ULL) << (len)) - 1ULL); }
+  static typename base_type::comparemask_type findLSB(typename base_type::comparemask_type &z);
   static SuperVector loadu(void const *ptr);
   static SuperVector load(void const *ptr);
   static SuperVector loadu_maskz(void const *ptr, uint8_t const len);
+  static SuperVector loadu_maskz(void const *ptr, typename base_type::comparemask_type const len);
   SuperVector alignr(SuperVector &other, int8_t offset);
 
   template<bool emulateIntel=true>

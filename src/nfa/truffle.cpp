@@ -38,15 +38,48 @@
 #include "util/bitutils.h"
 
 #include "truffle_simd.hpp"
+#ifdef CAN_USE_WIDE_TRUFFLE
+#ifdef HAVE_SVE
+const u8 *truffleExecWide(m256 mask, const u8 *buf,
+                      const u8 *buf_end) {
+    if (svcntb() == 16) {
+        return truffleExecSVE<true, true>(mask, buf, buf_end);
+    } else {
+        return truffleExecSVE<true, false>(mask, buf, buf_end);
+    }
+}
+
+const u8 *rtruffleExecWide(m256 mask, const u8 *buf,
+                       const u8 *buf_end) {
+    if (svcntb() == 16) {
+        return rtruffleExecSVE<true, true>(mask, buf, buf_end);
+    } else {
+        return rtruffleExecSVE<true, false>(mask, buf, buf_end);
+    }
+}
+#else // HAVE_SVE
+#error "Wide truffle enabled for the target architecture but no implementation found"
+#endif // HAVE_SVE
+#endif // CAN_USE_WIDE_TRUFFLE
+
+
 #ifdef HAVE_SVE
 const u8 *truffleExec(m128 mask_lo, m128 mask_hi, const u8 *buf,
                       const u8 *buf_end) {
-    return truffleExecSVE(mask_lo, mask_hi, buf, buf_end);
+    if (svcntb() == 16) {
+        return truffleExecSVE<false, true>({.lo = mask_lo, .hi = mask_hi}, buf, buf_end);
+    } else {
+        return truffleExecSVE<false, false>({.lo = mask_lo, .hi = mask_hi}, buf, buf_end);
+    }
 }
 
 const u8 *rtruffleExec(m128 mask_lo, m128 mask_hi, const u8 *buf,
                        const u8 *buf_end) {
-    return rtruffleExecSVE(mask_lo, mask_hi, buf, buf_end);
+    if (svcntb() == 16) {
+        return rtruffleExecSVE<false, true>({.lo = mask_lo, .hi = mask_hi}, buf, buf_end);
+    } else {
+        return rtruffleExecSVE<false, false>({.lo = mask_lo, .hi = mask_hi}, buf, buf_end);
+    }
 }
 #else
 const u8 *truffleExec(m128 mask_lo, m128 mask_hi, const u8 *buf,

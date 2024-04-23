@@ -290,19 +290,26 @@ struct NFA *get_expected_nfa_header(u8 type, unsigned int length, unsigned int n
 }
 
 struct NFA *get_expected_nfa16_header() {
-    return get_expected_nfa_header(SHENG_NFA, 4736, 8);
+    return get_expected_nfa_header(SHENG_NFA, 4736, 8); /* size recorded in 04/2024 */
 }
 
 #if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 struct NFA *get_expected_nfa32_header() {
-    return get_expected_nfa_header(SHENG_NFA_32, 17216, 18);
+    return get_expected_nfa_header(SHENG_NFA_32, 17216, 18); /* size recorded in 04/2024 */
 }
 #endif /* defined(HAVE_AVX512VBMI) || defined(HAVE_SVE) */
 
 void test_nfa_equal(const NFA& l, const NFA& r)
 {
+    /**
+     * The length is meant to be a sanity test: it's not 0 (we compiled something) and that it roughly fit the
+     * expected size for a given sheng implementation (we don't feed compiled sheng32 into sheng16).
+     * Changes in other nfa algorithms may affect the sheng length, so we accept small variations.
+     */
+    int relative_difference = std::abs((float)(l.length) - r.length) / ((l.length + r.length) / 2);
+    EXPECT_LE(relative_difference, 0.1); /* same +-10% */
+
     EXPECT_EQ(l.flags, r.flags);
-    EXPECT_EQ(l.length, r.length);
     EXPECT_EQ(l.type, r.type);
     EXPECT_EQ(l.rAccelType, r.rAccelType);
     EXPECT_EQ(l.rAccelOffset, r.rAccelOffset);

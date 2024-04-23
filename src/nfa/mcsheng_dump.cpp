@@ -306,6 +306,7 @@ void dumpAccelDot(FILE *f, u16 i, const union AccelAux *accel) {
     case ACCEL_SHUFTI:
     case ACCEL_DSHUFTI:
     case ACCEL_TRUFFLE:
+    case ACCEL_TRUFFLE_WIDE:
         fprintf(f, "%u [ color = darkgreen style=diagonals ];\n", i);
         break;
     default:

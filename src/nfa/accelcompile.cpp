@@ -97,11 +97,20 @@ void buildAccelSingle(const AccelInfo &info, AccelAux *aux) {
 
     if (outs <= ACCEL_MAX_STOP_CHAR) {
         DEBUG_PRINTF("building Truffle for %zu chars\n", outs);
-        aux->accel_type = ACCEL_TRUFFLE;
         aux->truffle.offset = offset;
-        truffleBuildMasks(info.single_stops,
-                          reinterpret_cast<u8 *>(&aux->truffle.mask1),
-                          reinterpret_cast<u8 *>(&aux->truffle.mask2));
+#if defined(CAN_USE_WIDE_TRUFFLE)
+        if(CAN_USE_WIDE_TRUFFLE) {
+            aux->accel_type = ACCEL_TRUFFLE_WIDE;
+            truffleBuildMasksWide(info.single_stops,
+                                  reinterpret_cast<u8 *>(&aux->truffle.mask));
+        } else
+#endif
+        {
+            aux->accel_type = ACCEL_TRUFFLE;
+            truffleBuildMasks(info.single_stops,
+                              reinterpret_cast<u8 *>(&aux->truffle.mask_lo),
+                              reinterpret_cast<u8 *>(&aux->truffle.mask_hi));
+        }
         return;
     }
 

@@ -93,4 +93,33 @@ CharReach truffle2cr(const u8 *highclear, const u8 *highset) {
     return cr;
 }
 
+void truffleBuildMasksWide(const CharReach &cr, u8 *shuf_mask) {
+    memset(shuf_mask, 0, 2*sizeof(m128));
+
+    for (size_t v = cr.find_first(); v != CharReach::npos;
+         v = cr.find_next(v)) {
+        DEBUG_PRINTF("adding 0x%02x to shuf_mask\n", (u8)v);
+        u8 *change_mask = shuf_mask;
+        u8 low_nibble = v & 0x1f;
+        u8 bits_567 = (v & 0xe0) >> 5;
+        change_mask[low_nibble] |= 1 << bits_567;
+    }
+}
+
+/*
+ * Reconstruct the charclass that the truffle masks represent
+ */
+CharReach truffle2crWide(const u8 *shuf_mask) {
+    CharReach cr;
+    for (u8 i = 0; i < 32; i++) {
+        u32 bits_567 = shuf_mask[i];
+        while (bits_567) {
+            u32 pos = findAndClearLSB_32(&bits_567);
+            assert(pos < 8);
+            cr.set(pos << 5 | i);
+        }
+    }
+    return cr;
+}
+
 } // namespc

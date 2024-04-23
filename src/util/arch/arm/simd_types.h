@@ -34,5 +34,9 @@
 typedef int32x4_t m128;
 #endif
 
+#if !defined(m256) && defined(m128)
+typedef struct {m128 lo; m128 hi;} m256;
+#endif
+
 #endif /* SIMD_TYPES_ARM_H */
 

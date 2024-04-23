@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, 2021, VectorCamp PC
+ * Copyright (c) 2023, 2024, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,6 +35,7 @@
 #include <iostream>
 #include <memory>
 
+#include "util/arch.h"
 #include "benchmarks.hpp"
 
 #define MAX_LOOPS 1000000000
@@ -145,11 +147,13 @@ int main(){
                 sizes[i], MAX_LOOPS / sizes[i], matches[m], false, bench,
                 [&](MicroBenchmark &b) {
                     b.chars.set('a');
-                    ue2::shuftiBuildMasks(b.chars, reinterpret_cast<u8 *>(&b.lo), reinterpret_cast<u8 *>(&b.hi));
+                    ue2::shuftiBuildMasks(b.chars,
+                                          reinterpret_cast<u8 *>(&b.truffle_mask_lo),
+                                          reinterpret_cast<u8 *>(&b.truffle_mask_hi));
                     memset(b.buf.data(), 'b', b.size);
                 },
                 [&](MicroBenchmark &b) {
-                    return shuftiExec(b.lo, b.hi, b.buf.data(),
+                    return shuftiExec(b.truffle_mask_lo, b.truffle_mask_hi, b.buf.data(),
                                       b.buf.data() + b.size);
                 });
         }
@@ -160,11 +164,13 @@ int main(){
                 sizes[i], MAX_LOOPS / sizes[i], matches[m], true, bench,
                 [&](MicroBenchmark &b) {
                     b.chars.set('a');
-                    ue2::shuftiBuildMasks(b.chars, reinterpret_cast<u8 *>(&b.lo), reinterpret_cast<u8 *>(&b.hi));
+                    ue2::shuftiBuildMasks(b.chars,
+                                          reinterpret_cast<u8 *>(&b.truffle_mask_lo),
+                                          reinterpret_cast<u8 *>(&b.truffle_mask_hi));
                     memset(b.buf.data(), 'b', b.size);
                 },
                 [&](MicroBenchmark &b) {
-                    return rshuftiExec(b.lo, b.hi, b.buf.data(),
+                    return rshuftiExec(b.truffle_mask_lo, b.truffle_mask_hi, b.buf.data(),
                                        b.buf.data() + b.size);
                 });
         }
@@ -175,11 +181,13 @@ int main(){
                 sizes[i], MAX_LOOPS / sizes[i], matches[m], false, bench,
                 [&](MicroBenchmark &b) {
                     b.chars.set('a');
-                    ue2::truffleBuildMasks(b.chars, reinterpret_cast<u8 *>(&b.lo), reinterpret_cast<u8 *>(&b.hi));
+                    ue2::truffleBuildMasks(b.chars,
+                                           reinterpret_cast<u8 *>(&b.truffle_mask_lo),
+                                           reinterpret_cast<u8 *>(&b.truffle_mask_hi));
                     memset(b.buf.data(), 'b', b.size);
                 },
                 [&](MicroBenchmark &b) {
-                    return truffleExec(b.lo, b.hi, b.buf.data(),
+                    return truffleExec(b.truffle_mask_lo, b.truffle_mask_hi, b.buf.data(),
                                        b.buf.data() + b.size);
                 });
         }
@@ -190,14 +198,47 @@ int main(){
                 sizes[i], MAX_LOOPS / sizes[i], matches[m], true, bench,
                 [&](MicroBenchmark &b) {
                     b.chars.set('a');
-                    ue2::truffleBuildMasks(b.chars, reinterpret_cast<u8 *>(&b.lo), reinterpret_cast<u8 *>(&b.hi));
+                    ue2::truffleBuildMasks(b.chars,
+                                           reinterpret_cast<u8 *>(&b.truffle_mask_lo),
+                                           reinterpret_cast<u8 *>(&b.truffle_mask_hi));
                     memset(b.buf.data(), 'b', b.size);
                 },
                 [&](MicroBenchmark &b) {
-                    return rtruffleExec(b.lo, b.hi, b.buf.data(),
+                    return rtruffleExec(b.truffle_mask_lo, b.truffle_mask_hi, b.buf.data(),
                                         b.buf.data() + b.size);
                 });
         }
+#ifdef CAN_USE_WIDE_TRUFFLE
+        if(CAN_USE_WIDE_TRUFFLE) {
+            for (size_t i = 0; i < std::size(sizes); i++) {
+                MicroBenchmark bench("Truffle Wide", sizes[i]);
+                run_benchmarks(sizes[i], MAX_LOOPS / sizes[i], matches[m], false, bench,
+                    [&](MicroBenchmark &b) {
+                        b.chars.set('a');
+                        ue2::truffleBuildMasksWide(b.chars, reinterpret_cast<u8 *>(&b.truffle_mask));
+                        memset(b.buf.data(), 'b', b.size);
+                    },
+                    [&](MicroBenchmark &b) {
+                        return truffleExecWide(b.truffle_mask, b.buf.data(), b.buf.data() + b.size);
+                    }
+                );
+            }
+
+            for (size_t i = 0; i < std::size(sizes); i++) {
+                MicroBenchmark bench("Reverse Truffle Wide", sizes[i]);
+                run_benchmarks(sizes[i], MAX_LOOPS / sizes[i], matches[m], true, bench,
+                    [&](MicroBenchmark &b) {
+                        b.chars.set('a');
+                        ue2::truffleBuildMasksWide(b.chars, reinterpret_cast<u8 *>(&b.truffle_mask));
+                        memset(b.buf.data(), 'b', b.size);
+                    },
+                    [&](MicroBenchmark &b) {
+                        return rtruffleExecWide(b.truffle_mask, b.buf.data(), b.buf.data() + b.size);
+                    }
+                );
+            }
+        }
+#endif
 
         for (size_t i = 0; i < std::size(sizes); i++) {
             MicroBenchmark bench("Vermicelli", sizes[i]);
@@ -205,7 +246,9 @@ int main(){
                 sizes[i], MAX_LOOPS / sizes[i], matches[m], false, bench,
                 [&](MicroBenchmark &b) {
                     b.chars.set('a');
-                    ue2::truffleBuildMasks(b.chars, reinterpret_cast<u8 *>(&b.lo), reinterpret_cast<u8 *>(&b.hi));
+                    ue2::truffleBuildMasks(b.chars,
+                                           reinterpret_cast<u8 *>(&b.truffle_mask_lo),
+                                           reinterpret_cast<u8 *>(&b.truffle_mask_hi));
                     memset(b.buf.data(), 'b', b.size);
                 },
                 [&](MicroBenchmark &b) {
@@ -220,7 +263,9 @@ int main(){
                 sizes[i], MAX_LOOPS / sizes[i], matches[m], true, bench,
                 [&](MicroBenchmark &b) {
                     b.chars.set('a');
-                    ue2::truffleBuildMasks(b.chars, reinterpret_cast<u8 *>(&b.lo), reinterpret_cast<u8 *>(&b.hi));
+                    ue2::truffleBuildMasks(b.chars,
+                                           reinterpret_cast<u8 *>(&b.truffle_mask_lo),
+                                           reinterpret_cast<u8 *>(&b.truffle_mask_hi));
                     memset(b.buf.data(), 'b', b.size);
                 },
                 [&](MicroBenchmark &b) {

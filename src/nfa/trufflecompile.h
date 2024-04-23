@@ -37,6 +37,12 @@ namespace ue2 {
 void truffleBuildMasks(const CharReach &cr, u8 *mask1, u8 *mask2);
 CharReach truffle2cr(const u8 *lo_in, const u8 *hi_in);
 
+/* The wide version uses 5 bits for the Byte index instead of 4.
+ * It is to be used when TBL can process the whole 256b mask in one instruction
+ */
+void truffleBuildMasksWide(const CharReach &cr, u8 *mask);
+CharReach truffle2crWide(const u8 *mask);
+
 }
 
 #endif /* TRUFFLECOMPILE_H */

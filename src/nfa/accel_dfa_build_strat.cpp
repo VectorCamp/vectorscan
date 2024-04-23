@@ -575,10 +575,19 @@ accel_dfa_build_strat::buildAccel(UNUSED dstate_id_t this_idx,
     }
 
     assert(!info.cr.none());
-    accel->accel_type = ACCEL_TRUFFLE;
-    truffleBuildMasks(info.cr,
-                      reinterpret_cast<u8 *>(&accel->truffle.mask1),
-                      reinterpret_cast<u8 *>(&accel->truffle.mask2));
+#if defined(CAN_USE_WIDE_TRUFFLE)
+    if(CAN_USE_WIDE_TRUFFLE) {
+        accel->accel_type = ACCEL_TRUFFLE_WIDE;
+        truffleBuildMasksWide(info.cr,
+                              reinterpret_cast<u8 *>(&accel->truffle.mask));
+    } else
+#endif
+    {
+        accel->accel_type = ACCEL_TRUFFLE;
+        truffleBuildMasks(info.cr,
+                        reinterpret_cast<u8 *>(&accel->truffle.mask_lo),
+                        reinterpret_cast<u8 *>(&accel->truffle.mask_hi));
+    }
     DEBUG_PRINTF("state %hu is truffle\n", this_idx);
 }
 

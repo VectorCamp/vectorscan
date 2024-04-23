@@ -93,6 +93,8 @@ const char *accelName(u8 accel_type) {
         return "double-shufti";
     case ACCEL_TRUFFLE:
         return "truffle";
+    case ACCEL_TRUFFLE_WIDE:
+        return "truffle wide";
     case ACCEL_RED_TAPE:
         return "red tape";
     default:
@@ -179,6 +181,13 @@ void dumpTruffleCharReach(FILE *f, const u8 *hiset, const u8 *hiclear) {
 }
 
 static
+void dumpWideTruffleCharReach(FILE *f, const u8 *mask) {
+    CharReach cr = truffle2crWide(mask);
+    fprintf(f, "count %zu class %s\n", cr.count(),
+            describeClass(cr).c_str());
+}
+
+static
 void dumpTruffleMasks(FILE *f, const u8 *hiset, const u8 *hiclear) {
     fprintf(f, "lo %s\n", dumpMask(hiset, 128).c_str());
     fprintf(f, "hi %s\n", dumpMask(hiclear, 128).c_str());
@@ -231,10 +240,17 @@ void dumpAccelInfo(FILE *f, const AccelAux &accel) {
         break;
     case ACCEL_TRUFFLE: {
         fprintf(f, "\n");
-        dumpTruffleMasks(f, (const u8 *)&accel.truffle.mask1,
-                         (const u8 *)&accel.truffle.mask2);
-        dumpTruffleCharReach(f, (const u8 *)&accel.truffle.mask1,
-                             (const u8 *)&accel.truffle.mask2);
+        dumpTruffleMasks(f, (const u8 *)&accel.truffle.mask_lo,
+                         (const u8 *)&accel.truffle.mask_hi);
+        dumpTruffleCharReach(f, (const u8 *)&accel.truffle.mask_lo,
+                             (const u8 *)&accel.truffle.mask_hi);
+        break;
+    }
+    case ACCEL_TRUFFLE_WIDE: {
+        fprintf(f, "\n");
+        dumpTruffleMasks(f, (const u8 *)&accel.truffle.mask_lo,
+                         (const u8 *)&accel.truffle.mask_hi);
+        dumpWideTruffleCharReach(f, (const u8 *)&accel.truffle.mask);
         break;
     }
     default:

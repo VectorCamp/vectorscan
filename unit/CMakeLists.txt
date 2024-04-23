@@ -107,6 +107,7 @@ set(unit_internal_SOURCES
     internal/shufti.cpp
     internal/state_compress.cpp
     internal/truffle.cpp
+    internal/truffleWide.cpp
     internal/unaligned.cpp
     internal/unicode_set.cpp
     internal/uniform_ops.cpp

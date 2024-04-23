@@ -181,6 +181,9 @@ void dumpAccelText(FILE *f, const union AccelAux *accel) {
     case ACCEL_TRUFFLE:
         fprintf(f, ":M");
         break;
+    case ACCEL_TRUFFLE_WIDE:
+        fprintf(f, ":MM");
+        break;
     default:
         fprintf(f, ":??");
         break;
@@ -200,6 +203,7 @@ void dumpAccelDot(FILE *f, u16 i, const union AccelAux *accel) {
     case ACCEL_SHUFTI:
     case ACCEL_DSHUFTI:
     case ACCEL_TRUFFLE:
+    case ACCEL_TRUFFLE_WIDE:
         fprintf(f, "%u [ color = darkgreen style=diagonals ];\n", i);
         break;
     default:

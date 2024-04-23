@@ -53,5 +53,11 @@
 #define HAVE_SVE2_BITPERM
 #endif
 
+#if defined(HAVE_SVE2)
+#define CAN_USE_WIDE_TRUFFLE 1
+#elif defined(HAVE_SVE)
+#define CAN_USE_WIDE_TRUFFLE (svcntb() >= 32)
+#endif
+
 #endif // UTIL_ARCH_ARM_H_
 

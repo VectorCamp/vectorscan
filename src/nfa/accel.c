@@ -142,9 +142,18 @@ const u8 *run_accel(const union AccelAux *accel, const u8 *c, const u8 *c_end) {
             return c;
         }
 
-        rv = truffleExec(accel->truffle.mask1, accel->truffle.mask2, c, c_end);
+        rv = truffleExec(accel->truffle.mask_lo, accel->truffle.mask_hi, c, c_end);
         break;
+#ifdef CAN_USE_WIDE_TRUFFLE
+    case ACCEL_TRUFFLE_WIDE:
+        DEBUG_PRINTF("accel Truffle Wide %p %p\n", c, c_end);
+        if (c + 15 >= c_end) {
+            return c;
+        }
 
+        rv = truffleExecWide(accel->truffle.mask, c, c_end);
+        break;
+#endif
     case ACCEL_DSHUFTI:
         DEBUG_PRINTF("accel dshufti %p %p\n", c, c_end);
         if (c + 15 + 1 >= c_end) {

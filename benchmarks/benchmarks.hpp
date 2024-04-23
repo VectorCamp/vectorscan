@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, 2021, VectorCamp PC
+ * Copyright (c) 2024, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -44,7 +45,18 @@ public:
     size_t size;
 
     // Shufti/Truffle
-    m128 lo, hi;
+    union {
+        m256 truffle_mask;
+        struct {
+#if (SIMDE_ENDIAN_ORDER == SIMDE_ENDIAN_LITTLE)
+            m128 truffle_mask_lo;
+            m128 truffle_mask_hi;
+#else
+            m128 truffle_mask_hi;
+            m128 truffle_mask_lo;
+#endif
+        };
+    };
     ue2::CharReach chars;
     std::vector<u8> buf;
 

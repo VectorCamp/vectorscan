@@ -42,6 +42,14 @@ extern "C"
 {
 #endif
 
+#ifdef CAN_USE_WIDE_TRUFFLE
+const u8 *truffleExecWide(m256 mask, const u8 *buf,
+                      const u8 *buf_end);
+
+const u8 *rtruffleExecWide(m256 mask, const u8 *buf,
+                       const u8 *buf_end);
+#endif
+
 const u8 *truffleExec(m128 shuf_mask_lo_highclear, m128 shuf_mask_lo_highset,
                       const u8 *buf, const u8 *buf_end);
 

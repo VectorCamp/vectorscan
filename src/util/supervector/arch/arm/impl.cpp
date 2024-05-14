@@ -525,9 +525,24 @@ really_inline SuperVector<16> SuperVector<16>::load(void const *ptr)
 template <>
 really_inline SuperVector<16> SuperVector<16>::loadu_maskz(void const *ptr, uint8_t const len)
 {
-    SuperVector mask = Ones_vshr(16 -len);
-    SuperVector<16> v = loadu(ptr);
+    SuperVector mask = Ones_vshr(16 - len);
+    SuperVector v = loadu(ptr);
     return mask & v;
+}
+
+template <>
+really_inline SuperVector<16> SuperVector<16>::loadu_maskz(void const *ptr, typename base_type::comparemask_type const mask)
+{
+    DEBUG_PRINTF("mask = %08llx\n", mask);
+    SuperVector v = loadu(ptr);
+    (void)mask;
+    return v; // FIXME: & mask
+}
+
+template<>
+really_inline typename SuperVector<16>::comparemask_type SuperVector<16>::findLSB(typename SuperVector<16>::comparemask_type &z)
+{
+  return findAndClearLSB_64(&z) >> 2;
 }
 
 template<>

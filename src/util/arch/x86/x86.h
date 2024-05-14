@@ -61,6 +61,7 @@
 
 #if defined(__AVX512BW__) && defined(BUILD_AVX512)
 #define HAVE_AVX512
+#define HAVE_MASKED_LOADS
 #define HAVE_SIMD_512_BITS
 #endif
 

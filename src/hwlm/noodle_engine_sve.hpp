@@ -38,8 +38,12 @@ hwlm_error_t checkMatched(const struct noodTable *n, const u8 *buf, size_t len,
         size_t matchPos = basePos + svcntp_b8(svptrue_b8(), brk);
         DEBUG_PRINTF("match pos %zu\n", matchPos);
         assert(matchPos < len);
-        hwlmcb_rv_t rv = final(n, buf, len, needsConfirm, cbi, matchPos);
-        RETURN_IF_TERMINATED(rv);
+        size_t end_of_match_pos = matchPos - cbi->offsetAdj + n->key_offset - 1;
+        // doubleMatched can add a fake \0 at the end of the buffer. This check get rid of any match that might include it
+        if(end_of_match_pos < len) {
+            hwlmcb_rv_t rv = final(n, buf, len, needsConfirm, cbi, matchPos);
+            RETURN_IF_TERMINATED(rv);
+        }
         next_match = svpnext_b8(matched, next_match);
     } while (unlikely(svptest_any(svptrue_b8(), next_match)));
     return HWLM_SUCCESS;
@@ -155,6 +159,9 @@ svbool_t doubleMatched(svuint16_t chars, const u8 *d,
     // d - 1 won't underflow as the first position in buf has been dealt
     // with meaning that d > buf
     svuint16_t vec_rot = svreinterpret_u16(svld1_u8(pg_rot, d - 1));
+    // we reuse u8 predicates for u16 lanes. This means that we may actually check against one
+    // undefined extra character at the end of the buffer (usually \0). We check it later to
+    // reject this spurious match
     *matched = svmatch(pg, vec, chars);
     *matched_rot = svmatch(pg_rot, vec_rot, chars);
     return svorr_z(svptrue_b8(), *matched, *matched_rot);

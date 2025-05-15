@@ -37,8 +37,9 @@ if(NETBSD)
 endif()
 
 if(MACOSX)
-    set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -Wno-deprecated-declarations")
-    set(EXTRA_CXX_FLAGS "${EXTRA_CXX_FLAGS} -Wno-deprecated-declarations")
+    # Boost headers cause such complains on MacOS
+    set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -Wno-deprecated-declarations -Wno-unused-parameter")
+    set(EXTRA_CXX_FLAGS "${EXTRA_CXX_FLAGS} -Wno-deprecated-declarations -Wno-unused-parameter")
 endif()
 
 # these end up in the config file

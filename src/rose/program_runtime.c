@@ -688,7 +688,9 @@ int roseCheckMask(const struct core_info *ci, u64a and_mask, u64a cmp_mask,
                 shift_l = c_len - ci->len;
                 c_len = ci->len;
             }
-            data = partial_load_u64a(ci->buf, c_len);
+            if (c_len) {
+                data = partial_load_u64a(ci->buf, c_len);
+            }
             data <<= h_len << 3;
             data |= data_h;
         }

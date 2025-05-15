@@ -17,6 +17,10 @@ if(CMAKE_SYSTEM_NAME MATCHES "NetBSD")
     set(NETBSD true)
 endif(CMAKE_SYSTEM_NAME MATCHES "NetBSD")
 
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set(MACOSX TRUE)
+endif()
+
 if (ARCH_IA32 OR ARCH_X86_64)
   option(FAT_RUNTIME "Build a library that supports multiple microarchitectures" ON)
 else()

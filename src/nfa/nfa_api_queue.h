@@ -251,7 +251,11 @@ void q_skip_forward_to(struct mq *q, s64a min_loc) {
 // Dump the contents of the given queue.
 static never_inline UNUSED
 void debugQueue(const struct mq *q) {
+#ifdef __cplusplus
     if (q == nullptr) {
+#else
+    if (q == NULL) {
+#endif
        DEBUG_PRINTF("q=NULL!\n");
        return;
     }

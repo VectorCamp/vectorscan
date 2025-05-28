@@ -198,7 +198,11 @@ typedef void (*init_raw_dfa_ptr)(struct ue2::raw_dfa*, const ReportID);
 
 static inline void init_nfa(struct NFA **out_nfa, sheng_compile_ptr compile_function, init_raw_dfa_ptr init_dfa_function) {
     ue2::Grey *g = new ue2::Grey();
+#if defined(HAVE_AVX512VBMI)
+    hs_platform_info plat_info = {0, HS_CPU_FEATURES_AVX512VBMI, 0, 0};
+#else
     hs_platform_info plat_info = {0, 0, 0, 0};
+#endif
     ue2::CompileContext *cc = new ue2::CompileContext(false, false, ue2::target_t(plat_info), *g);
     ue2::ReportManager *rm = new ue2::ReportManager(*g);
     ue2::Report *report = new ue2::Report(ue2::EXTERNAL_CALLBACK, 0);
@@ -522,7 +526,7 @@ TEST(Sheng32, std_compile_header) {
     }
 #endif
     ue2::Grey *g = new ue2::Grey();
-    hs_platform_info plat_info = {0, 0, 0, 0};
+    hs_platform_info plat_info = {0, HS_CPU_FEATURES_AVX512VBMI, 0, 0};
     ue2::CompileContext *cc = new ue2::CompileContext(false, false, ue2::target_t(plat_info), *g);
     ue2::ReportManager *rm = new ue2::ReportManager(*g);
     ue2::Report *report = new ue2::Report(ue2::EXTERNAL_CALLBACK, 0);

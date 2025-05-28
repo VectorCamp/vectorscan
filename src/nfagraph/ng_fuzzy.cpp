@@ -76,7 +76,7 @@ vector<flat_set<NFAVertex>> gatherSuccessorsByDepth(const NGHolder &g,
                 if (v == succr) {
                     continue;
                 }
-                DEBUG_PRINTF("Node %zu depth %u\n", g[succ].index, d + 1);
+                DEBUG_PRINTF("Node %zu depth %u\n", g[succr].index, d + 1);
                 next.insert(succr);
             }
         }
@@ -118,7 +118,7 @@ vector<flat_set<NFAVertex>> gatherPredecessorsByDepth(const NGHolder &g,
                 if (v == predc) {
                     continue;
                 }
-                DEBUG_PRINTF("Node %zu depth %u\n", g[pred].index, d + 1);
+                DEBUG_PRINTF("Node %zu depth %u\n", g[predc].index, d + 1);
                 next.insert(predc);
             }
         }

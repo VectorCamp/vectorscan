@@ -207,8 +207,7 @@ vector<RoseLongLitHashEntry> buildHashTable(
             u32 lit_id = lit_offset.first;
             u32 offset = lit_offset.second;
 
-            DEBUG_PRINTF("hash 0x%08x lit_id %u offset %u bucket %u\n", hash,
-                         lit_id, offset, bucket);
+            DEBUG_PRINTF("hash 0x%08x lit_id %u offset %u bucket %u\n", m.first, lit_id, offset, bucket);
 
             auto &entry = tab[bucket];
             entry.str_offset = verify_u32(litToOffsetVal.at(lit_id));

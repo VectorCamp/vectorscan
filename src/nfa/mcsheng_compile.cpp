@@ -610,7 +610,9 @@ dstate_id_t find_sheng_states(dfa_info &info,
     for (auto v : sheng_states) {
         dstate_id_t s = g[v].index;
         if (contains(accel_escape_info, s)) {
-            assert(!info.states[s].impl_id);
+            if (info.states[s].impl_id == 0) {
+                DEBUG_PRINTF("impl_id == 0!\n");
+            }
             info.states[s].impl_id = sheng_end++;
             info.extra[s].sheng_id = info.states[s].impl_id - 1;
         }

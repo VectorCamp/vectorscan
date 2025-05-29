@@ -763,7 +763,7 @@ void makeRoleSetState(const unordered_map<RoseVertex, u32> &roleStateIndices,
 
 static
 void makePushDelayedInstructions(const RoseLiteralMap &literals,
-                                 ProgramBuild &prog_build,
+                                 ProgramBuild const &prog_build,
                                  const flat_set<u32> &delayed_ids,
                                  RoseProgram &program) {
     vector<RoseInstrPushDelayed> delay_instructions;
@@ -903,7 +903,7 @@ void makeRoleCheckBounds(const RoseBuildImpl &build, RoseVertex v,
 }
 
 static
-void makeRoleGroups(const RoseGraph &g, ProgramBuild &prog_build,
+void makeRoleGroups(const RoseGraph &g, ProgramBuild const &prog_build,
                     RoseVertex v, RoseProgram &program) {
     rose_group groups = g[v].groups;
     if (!groups) {
@@ -1020,7 +1020,7 @@ bool makeRoleMask(const vector<LookEntry> &look, RoseProgram &program) {
 }
 
 static UNUSED
-string convertMaskstoString(u8 *p, int byte_len) {
+string convertMaskstoString(u8 const *p, int byte_len) {
     string s;
     for (int i = 0; i < byte_len; i++) {
         u8 hi = *p >> 4;
@@ -1625,7 +1625,7 @@ bool hasDelayedLiteral(const RoseBuildImpl &build,
 
 static
 RoseProgram makeLitInitialProgram(const RoseBuildImpl &build,
-                                  ProgramBuild &prog_build, u32 lit_id,
+                                  ProgramBuild const &prog_build, u32 lit_id,
                                   const vector<RoseEdge> &lit_edges,
                                   bool is_anchored_replay_program) {
     RoseProgram program;
@@ -2309,7 +2309,7 @@ RoseProgram makeLiteralProgram(const RoseBuildImpl &build,
 }
 
 RoseProgram makeDelayRebuildProgram(const RoseBuildImpl &build,
-                                    ProgramBuild &prog_build,
+                                    ProgramBuild const &prog_build,
                                     const vector<u32> &lit_ids) {
     assert(!lit_ids.empty());
     assert(build.cc.streaming);

@@ -51,7 +51,7 @@ struct hlmMatchEntry {
 std::vector<hlmMatchEntry> ctxt;
 
 static hwlmcb_rv_t hlmSimpleCallback(size_t to, u32 id,
-                                     UNUSED struct hs_scratch *scratch) {
+                                     UNUSED struct hs_scratch *scratch) { // cppcheck-suppress constParameterCallback
     DEBUG_PRINTF("match @%zu = %u\n", to, id);
 
     ctxt.push_back(hlmMatchEntry(to, id));
@@ -152,7 +152,7 @@ int main(){
                                           reinterpret_cast<u8 *>(&b.truffle_mask_hi));
                     memset(b.buf.data(), 'b', b.size);
                 },
-                [&](MicroBenchmark &b) {
+                [&](MicroBenchmark const &b) {
                     return shuftiExec(b.truffle_mask_lo, b.truffle_mask_hi, b.buf.data(),
                                       b.buf.data() + b.size);
                 });
@@ -169,7 +169,7 @@ int main(){
                                           reinterpret_cast<u8 *>(&b.truffle_mask_hi));
                     memset(b.buf.data(), 'b', b.size);
                 },
-                [&](MicroBenchmark &b) {
+                [&](MicroBenchmark const &b) {
                     return rshuftiExec(b.truffle_mask_lo, b.truffle_mask_hi, b.buf.data(),
                                        b.buf.data() + b.size);
                 });
@@ -186,7 +186,7 @@ int main(){
                                            reinterpret_cast<u8 *>(&b.truffle_mask_hi));
                     memset(b.buf.data(), 'b', b.size);
                 },
-                [&](MicroBenchmark &b) {
+                [&](MicroBenchmark const &b) {
                     return truffleExec(b.truffle_mask_lo, b.truffle_mask_hi, b.buf.data(),
                                        b.buf.data() + b.size);
                 });
@@ -203,7 +203,7 @@ int main(){
                                            reinterpret_cast<u8 *>(&b.truffle_mask_hi));
                     memset(b.buf.data(), 'b', b.size);
                 },
-                [&](MicroBenchmark &b) {
+                [&](MicroBenchmark const &b) {
                     return rtruffleExec(b.truffle_mask_lo, b.truffle_mask_hi, b.buf.data(),
                                         b.buf.data() + b.size);
                 });
@@ -218,7 +218,7 @@ int main(){
                         ue2::truffleBuildMasksWide(b.chars, reinterpret_cast<u8 *>(&b.truffle_mask));
                         memset(b.buf.data(), 'b', b.size);
                     },
-                    [&](MicroBenchmark &b) {
+                    [&](MicroBenchmark const &b) {
                         return truffleExecWide(b.truffle_mask, b.buf.data(), b.buf.data() + b.size);
                     }
                 );
@@ -232,7 +232,7 @@ int main(){
                         ue2::truffleBuildMasksWide(b.chars, reinterpret_cast<u8 *>(&b.truffle_mask));
                         memset(b.buf.data(), 'b', b.size);
                     },
-                    [&](MicroBenchmark &b) {
+                    [&](MicroBenchmark const &b) {
                         return rtruffleExecWide(b.truffle_mask, b.buf.data(), b.buf.data() + b.size);
                     }
                 );
@@ -251,7 +251,7 @@ int main(){
                                            reinterpret_cast<u8 *>(&b.truffle_mask_hi));
                     memset(b.buf.data(), 'b', b.size);
                 },
-                [&](MicroBenchmark &b) {
+                [&](MicroBenchmark const &b) {
                     return vermicelliExec('a', 'b', b.buf.data(),
                                           b.buf.data() + b.size);
                 });
@@ -268,7 +268,7 @@ int main(){
                                            reinterpret_cast<u8 *>(&b.truffle_mask_hi));
                     memset(b.buf.data(), 'b', b.size);
                 },
-                [&](MicroBenchmark &b) {
+                [&](MicroBenchmark const &b) {
                     return rvermicelliExec('a', 'b', b.buf.data(),
                                            b.buf.data() + b.size);
                 });
@@ -297,7 +297,7 @@ int main(){
                     b.nt = ue2::noodBuildTable(lit);
                     assert(b.nt.get() != nullptr);
                 },
-                [&](MicroBenchmark &b) {
+                [&](MicroBenchmark &b) { // cppcheck-suppress constParameterReference
                     noodExec(b.nt.get(), b.buf.data(), b.size, 0,
                              hlmSimpleCallback, &b.scratch);
                     return b.buf.data() + b.size;

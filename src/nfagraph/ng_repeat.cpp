@@ -662,7 +662,7 @@ void buildTugTrigger(NGHolder &g, NFAVertex cyclic, NFAVertex v,
 }
 
 static
-NFAVertex createCyclic(NGHolder &g, ReachSubgraph &rsi) {
+NFAVertex createCyclic(NGHolder &g, ReachSubgraph const &rsi) {
     NFAVertex last = rsi.vertices.back();
     NFAVertex cyclic = clone_vertex(g, last);
     add_edge(cyclic, cyclic, g);
@@ -672,7 +672,7 @@ NFAVertex createCyclic(NGHolder &g, ReachSubgraph &rsi) {
 }
 
 static
-NFAVertex createPos(NGHolder &g, ReachSubgraph &rsi) {
+NFAVertex createPos(NGHolder &g, ReachSubgraph const &rsi) {
     NFAVertex pos = add_vertex(g);
     NFAVertex first = rsi.vertices.front();
 

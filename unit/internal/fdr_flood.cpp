@@ -101,7 +101,7 @@ map<u32, int> matchesCounts;
 extern "C" {
 
 static hwlmcb_rv_t countCallback(UNUSED size_t end, u32 id,
-                                 UNUSED struct hs_scratch *scratch) {
+                                 UNUSED struct hs_scratch *scratch) { // cppcheck-suppress constParameterCallback
     matchesCounts[id]++;
     return HWLM_CONTINUE_MATCHING;
 }

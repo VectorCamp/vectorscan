@@ -93,7 +93,7 @@ extern "C" {
 
 static
 hwlmcb_rv_t decentCallback(size_t end, u32 id,
-                           UNUSED struct hs_scratch *scratch) {
+                           UNUSED struct hs_scratch *scratch) {  // cppcheck-suppress constParameterCallback
     DEBUG_PRINTF("match @%zu : %u\n", end, id);
 
     matches.push_back(match(end, id));
@@ -102,7 +102,7 @@ hwlmcb_rv_t decentCallback(size_t end, u32 id,
 
 static
 hwlmcb_rv_t decentCallbackT(size_t end, u32 id,
-                            UNUSED struct hs_scratch *scratch) {
+                            UNUSED struct hs_scratch *scratch) { // cppcheck-suppress constParameterCallback
     matches.push_back(match(end, id));
     return HWLM_TERMINATE_MATCHING;
 }

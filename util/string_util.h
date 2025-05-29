@@ -142,9 +142,9 @@ static really_inline
 char *makeHex(const unsigned char *pat, unsigned patlen) {
     size_t hexlen = patlen * 4;
     char *hexbuf = reinterpret_cast<char *>(malloc(hexlen + 1));
-    unsigned i;
-    char *buf;
-    for (i = 0, buf = hexbuf; i < patlen; i++, buf += 4) {
+    if (!hexbuf) abort();
+    char *buf = hexbuf;
+    for (size_t i = 0; i < patlen; i++, buf += 4) {
         snprintf(buf, 5, "\\x%02x", (unsigned char)pat[i]);
     }
     hexbuf[hexlen] = '\0';

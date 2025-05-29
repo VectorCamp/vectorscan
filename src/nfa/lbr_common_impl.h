@@ -180,7 +180,7 @@ found_top:;
 
         u64a ep = MIN(MIN(end, (s64a)q->length) + offset, first_match);
         if (ep > sp && sp >= offset) {
-            size_t eloc;
+            size_t eloc = 0;
             DEBUG_PRINTF("rev b%llu e%llu/%zu\n", sp - offset, ep - offset,
                          q->length);
             assert(ep - offset <= q->length);

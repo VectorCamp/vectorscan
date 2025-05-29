@@ -861,7 +861,7 @@ void dumpMultipathShufti(ofstream &os, u32 len, const u8 *lo, const u8 *hi,
     os << endl;
 }
 
-           #define PROGRAM_CASE(name)                                                     \
+#define PROGRAM_CASE(name)                                                     \
     case ROSE_INSTR_##name: {                                                  \
         os << "  " << std::setw(4) << std::setfill('0') << (pc - pc_base)      \
            << ": " #name "\n";                                                 \

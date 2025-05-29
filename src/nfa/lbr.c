@@ -307,7 +307,7 @@ char lbrMatchLoop(const struct lbr_common *l, const u64a begin, const u64a end,
 static really_inline
 char lbrRevScanDot(UNUSED const struct NFA *nfa, UNUSED const u8 *buf,
                    UNUSED size_t begin, UNUSED size_t end,
-                   UNUSED size_t *loc) {
+                   UNUSED const size_t *loc) {
     assert(begin <= end);
     assert(nfa->type == LBR_NFA_DOT);
     // Nothing can kill a dot!
@@ -413,7 +413,7 @@ char lbrRevScanTruf(const struct NFA *nfa, const u8 *buf,
 static really_inline
 char lbrFwdScanDot(UNUSED const struct NFA *nfa, UNUSED const u8 *buf,
                    UNUSED size_t begin, UNUSED size_t end,
-                   UNUSED size_t *loc) {
+                   UNUSED const size_t *loc) {
     assert(begin <= end);
     assert(nfa->type == LBR_NFA_DOT);
     // Nothing can kill a dot!

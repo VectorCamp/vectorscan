@@ -100,7 +100,7 @@ const m512 *getDupMaskBase(const struct Teddy *teddy, u8 numMask) {
 }
 
 
-const u8 ALIGN_AVX_DIRECTIVE p_mask_interleave[64] = {
+const u8 ALIGN_CL_DIRECTIVE p_mask_interleave[64] = {
     0, 32, 1, 33, 2, 34, 3, 35, 4, 36, 5, 37, 6, 38, 7, 39,
     8, 40, 9, 41, 10, 42, 11, 43, 12, 44, 13, 45, 14, 46, 15, 47,
     16, 48, 17, 49, 18, 50, 19, 51, 20, 52, 21, 53, 22, 54, 23, 55,

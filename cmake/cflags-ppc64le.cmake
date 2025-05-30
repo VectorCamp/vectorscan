@@ -16,3 +16,12 @@ int main() {
 if (NOT HAVE_VSX)
     message(FATAL_ERROR "VSX support required for Power support")
 endif ()
+
+# fix unit-internal seg fault for freebsd and gcc13
+if (FREEBSD AND CMAKE_COMPILER_IS_GNUCXX)
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "13")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+        set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+    endif ()
+endif ()

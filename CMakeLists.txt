@@ -142,7 +142,7 @@ elseif (ARCH_ARM32 OR ARCH_AARCH64)
 elseif (ARCH_PPC64EL)
     include (${CMAKE_MODULE_PATH}/cflags-ppc64le.cmake)
     
-    # fix unit-internal seg fault
+    # fix unit-internal seg fault for freebsd and gcc13
     if (CMAKE_SYSTEM_NAME MATCHES "FreeBSD" AND CMAKE_CXX_COMPILER_ID MATCHES "GNU")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
         set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-libgcc -static-libstdc++")

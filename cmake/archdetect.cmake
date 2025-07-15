@@ -9,22 +9,35 @@ if (USE_CPU_NATIVE)
         # the flag), so use that for tune.
 
         set(TUNE_FLAG "mtune")
-        set(GNUCC_TUNE "")
+
+        # set the default fallback values for the arch and tune to native, in case we can't parse them properly later
+        set(GNUCC_ARCH "native") 
+        set(GNUCC_TUNE "native")
         message(STATUS "ARCH_FLAG '${ARCH_FLAG}' '${GNUCC_ARCH}', TUNE_FLAG '${TUNE_FLAG}' '${GNUCC_TUNE}' ")
 
         # arg1 might exist if using ccache
         string (STRIP "${CMAKE_C_COMPILER_ARG1}" CC_ARG1)
-        set (EXEC_ARGS ${CC_ARG1} -c -Q --help=target -${ARCH_FLAG}=native -${TUNE_FLAG}=native)
+        set (EXEC_ARGS ${CC_ARG1} -c -Q --help=target -${ARCH_FLAG}=${GNUCC_ARCH} -${TUNE_FLAG}=${GNUCC_TUNE})
         execute_process(COMMAND ${CMAKE_C_COMPILER} ${EXEC_ARGS}
             OUTPUT_VARIABLE _GCC_OUTPUT)
         set(_GCC_OUTPUT_TUNE ${_GCC_OUTPUT})
         string(FIND "${_GCC_OUTPUT}" "${ARCH_FLAG}=" POS)
         string(SUBSTRING "${_GCC_OUTPUT}" ${POS} -1 _GCC_OUTPUT)
-        string(REGEX REPLACE "${ARCH_FLAG}=[ \t]*([^ \n]*)[ \n].*" "\\1" GNUCC_ARCH "${_GCC_OUTPUT}")
+        string(REGEX REPLACE "${ARCH_FLAG}=[ \t]*([^ \n]*)[ \n].*" "\\1" _GNUCC_ARCH "${_GCC_OUTPUT}")
+
+        # Only overwrite arch if non-empty
+        if(NOT _GNUCC_ARCH STREQUAL "")
+            set(GNUCC_ARCH ${_GNUCC_ARCH})
+        endif()
 
         string(FIND "${_GCC_OUTPUT_TUNE}" "${TUNE_FLAG}=" POS_TUNE)
         string(SUBSTRING "${_GCC_OUTPUT_TUNE}" ${POS_TUNE} -1 _GCC_OUTPUT_TUNE)
-        string(REGEX REPLACE "${TUNE_FLAG}=[ \t]*([^ \n]*)[ \n].*" "\\1" GNUCC_TUNE "${_GCC_OUTPUT_TUNE}")
+        string(REGEX REPLACE "${TUNE_FLAG}=[ \t]*([^ \n]*)[ \n].*" "\\1" _GNUCC_TUNE "${_GCC_OUTPUT_TUNE}")
+
+        # Only overwrite tune if non-empty
+        if (NOT _GNUCC_TUNE STREQUAL "")
+            set(GNUCC_TUNE ${_GNUCC_TUNE})
+        endif()
 
         message(STATUS "ARCH_FLAG '${ARCH_FLAG}' '${GNUCC_ARCH}', TUNE_FLAG '${TUNE_FLAG}' '${GNUCC_TUNE}' ")
 

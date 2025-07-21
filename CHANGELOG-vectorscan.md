@@ -2,6 +2,39 @@
 
 This is a list of notable changes to Vectorscan, in reverse chronological order. For Hyperscan Changelog, check CHANGELOG.md
 
+## [5.4.12] 2025-07-21
+
+Multiple changes since last release, this will be the last 100% ABI and API compatible with Hyperscan release.
+Next versions will include major refactors and API extensions, it will be mostly backwards compatible however.
+Without particular order, platform support is now:
+
+* Linux (x86, Arm, Power)
+* FreeBSD 14 (x86, Arm, Power)
+* MacOS 14+ (x86, Arm)
+
+In total more than 200 configurations in the CI are tested for every PR.
+
+Other features:
+- Fat Runtime supported for Arm as well (ASIMD/SVE/SVE2).
+- Initial implementations for Arm SVE/SVE2 algorithms added, thanks to Yoan Picchi from Arm.
+- SIMDe support added, used as an alternative backend for existing platforms, but mostly interesting for allowing Vectorscan to build in new platforms without a supported SIMD engine.
+- Various speedups and optimizations.
+- Cppcheck and clang-tidy fixes throughout the code, both have been added to CI for multiple configurations, but only cppcheck triggers a build failure for now.
+
+Various bugfixes, most important listed:
+- Speed up truffle with 256b TBL instructions (#290)
+- Fix Clang Tidy warnings (#295)
+- Clang 17+ is more restrictive on rebind<T> on MacOS/Boost, remove warning (#332)
+- partial_load_u64 will fail if buf == NULL/c_len == 0 (#331)
+- Bugfix/fix avx512vbmi regressions (#335)
+- fix missing hs_version.h header (closes #198)
+- hs_valid_platform: Fix check for SSE4.2 (#310)
+- Fixed out of bounds read in AVX512VBMI version of fdr_exec_fat_teddy … (#333)
+- Fix noodle SVE2 off by one bug (#313)
+- Make vectorscan accept \0 starting pattern (#312)
+- Fix 5.4.11's config step regression (#327)
+- Fix double shufti's vector end false positive (#325)
+
 ## [5.4.11] 2023-11-19
 
 - Refactor CMake build system to be much more modular.

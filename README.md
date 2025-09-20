@@ -94,12 +94,18 @@ some small but necessary changes were made that might break compatibility with h
 
 ## Install Common Dependencies
 
+### Arch Linux
+A PKGBUILD for [Vectorscan](https://aur.archlinux.org/packages/vectorscan) is available in the [AUR](https://aur.archlinux.org/)
+
 ### Debian/Ubuntu
 In order to build on Debian/Ubuntu make sure you install the following build-dependencies
 
 ```
 $ sudo apt install build-essential cmake ragel pkg-config libsqlite3-dev libpcap-dev
 ```
+
+### OpenWrt
+Vectorscan has been available since [PR#27382](https://github.com/openwrt/packages/pull/27382) was merged. To build it, use the [OpenWrt Build System](https://openwrt.org/docs/guide-developer/toolchain/install-buildsystem) or download a nightly snapshot.
 
 ### Other distributions
 

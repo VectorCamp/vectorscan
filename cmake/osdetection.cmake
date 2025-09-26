@@ -52,3 +52,7 @@ if (FAT_RUNTIME)
         message(FATAL_ERROR "Fat runtime is only built on Release builds")
     endif()
 endif ()
+
+if(MACOSX AND CMAKE_SYSTEM_PROCESSOR MATCHES "ppc|power")
+    set(ARCH_PPC TRUE)
+endif()

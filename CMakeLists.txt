@@ -129,7 +129,7 @@ include (${CMAKE_MODULE_PATH}/platform.cmake)
 # Detect OS and if Fat Runtime is available
 include (${CMAKE_MODULE_PATH}/osdetection.cmake)
 
-if(ARCH_X86_64 AND BUILD_SSE2_SIMDE AND NOT FAT_RUNTIME)
+if((ARCH_X86_64 AND BUILD_SSE2_SIMDE AND NOT FAT_RUNTIME) OR ARCH_PPC)
     set(SIMDE_BACKEND True)
 endif()
 
@@ -147,6 +147,9 @@ endif ()
 
 if (ARCH_PPC64EL)
     set(ARCH_FLAG mcpu)
+elseif (ARCH_PPC)
+    # Avoid mcpu, it can produce broken code on 32-bit ppc.
+    set(ARCH_FLAG mtune)
 else ()
     set(ARCH_FLAG march)
 endif ()

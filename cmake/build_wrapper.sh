@@ -5,6 +5,9 @@ cleanup () {
     rm -f ${SYMSFILE} ${KEEPSYMS}
 }
 
+NM="${NM:-nm}"
+OBJCOPY="${OBJCOPY:-objcopy}"
+
 PREFIX=$1
 KEEPSYMS_IN=$2
 shift 2
@@ -25,12 +28,12 @@ if [ `uname` = "FreeBSD" ]; then
 fi
 cp ${KEEPSYMS_IN} ${KEEPSYMS}
 # get all symbols from libc and turn them into patterns
-nm ${NM_FLAG} p -g -D ${LIBC_SO} | sed 's/\([^ @]*\).*/^\1$/' >> ${KEEPSYMS}
+${NM} ${NM_FLAG} p -g -D ${LIBC_SO} | sed 's/\([^ @]*\).*/^\1$/' >> ${KEEPSYMS}
 # build the object
 "$@"
 # rename the symbols in the object
-nm ${NM_FLAG} p -g ${OUT} | cut -f1 -d' ' | grep -v -f ${KEEPSYMS} | sed -e "s/\(.*\)/\1\ ${PREFIX}_\1/" >> ${SYMSFILE}
+${NM} ${NM_FLAG} p -g ${OUT} | cut -f1 -d' ' | grep -v -f ${KEEPSYMS} | sed -e "s/\(.*\)/\1\ ${PREFIX}_\1/" >> ${SYMSFILE}
 if test -s ${SYMSFILE}
 then
-    objcopy --redefine-syms=${SYMSFILE} ${OUT}
+    ${OBJCOPY} --redefine-syms=${SYMSFILE} ${OUT}
 fi

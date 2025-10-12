@@ -104,6 +104,17 @@ In order to build on Debian/Ubuntu make sure you install the following build-dep
 $ sudo apt install build-essential cmake ragel pkg-config libsqlite3-dev libpcap-dev
 ```
 
+### Fedora
+In order to build on Fedora make sure you install the following build dependencies
+
+```
+$ sudo dnf install gcc gcc-c++ make cmake ragel boost-devel sqlite-devel glibc-devel \
+python3-devel libpcap-devel pcre-devel
+```
+Then continue with the build instructions as outlined below.
+
+Note: On Fedora vectorscan can be installed via dnf (vectorscan or vectorscan-devel)
+
 ### OpenWrt
 Vectorscan has been available since [PR#27382](https://github.com/openwrt/packages/pull/27382) was merged. To build it, use the [OpenWrt Build System](https://openwrt.org/docs/guide-developer/toolchain/install-buildsystem) or download a nightly snapshot.
 

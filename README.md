@@ -17,7 +17,7 @@ all architecture specific -currently Intel- #ifdefs will be removed and abstract
 
 Originally, the ARM porting was intended to be merged into Intel's own Hyperscan, and relevant 
 Pull Requests were made to the project for this reason. Unfortunately, the
-PRs were rejected for now and the forseeable future, thus we have created Vectorscan for 
+PRs were rejected for now and the foreseeable future, thus we have created Vectorscan for
 our own multi-architectural and opensource collaborative needs.
 
 The recent license change of Hyperscan makes Vectorscan even more relevant for the FLOSS ecosystem.
@@ -98,7 +98,7 @@ some small but necessary changes were made that might break compatibility with h
 A PKGBUILD for [Vectorscan](https://aur.archlinux.org/packages/vectorscan) is available in the [AUR](https://aur.archlinux.org/)
 
 ### Debian/Ubuntu
-In order to build on Debian/Ubuntu make sure you install the following build-dependencies
+In order to build on Debian/Ubuntu make sure you install the following build dependencies
 
 ```
 $ sudo apt install build-essential cmake ragel pkg-config libsqlite3-dev libpcap-dev
@@ -123,7 +123,6 @@ Vectorscan has been available since [PR#27382](https://github.com/openwrt/packag
 TBD
 
 ### MacOS X (M1/M2/M3 CPUs only)
-
 Assuming an existing HomeBrew installation:
 
 ```
@@ -257,6 +256,7 @@ The official homepage for Vectorscan is at [www.github.com/VectorCamp/vectorscan
 All development of Vectorscan is done in public. 
 
 # Original Hyperscan links
+
 For reference, the official homepage for Hyperscan is at [www.hyperscan.io](https://www.hyperscan.io).
 
 # Hyperscan Documentation

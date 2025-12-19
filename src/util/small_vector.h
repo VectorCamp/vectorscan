@@ -56,6 +56,8 @@
 
 #if defined(HAVE_BOOST_CONTAINER_SMALL_VECTOR)
 #  include <boost/container/small_vector.hpp>
+#else
+#  include <vector>
 #endif
 
 namespace ue2 {
@@ -67,8 +69,6 @@ template <class T, std::size_t N,
 using small_vector = boost::container::small_vector<T, N, Allocator>;
 
 #else
-
-#include <vector>
 
 // Boost version isn't new enough, fall back to just using std::vector.
 template <class T, std::size_t N, typename Allocator = std::allocator<T>>

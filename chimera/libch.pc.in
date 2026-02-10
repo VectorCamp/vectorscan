@@ -7,6 +7,6 @@ Name: libch
 Description: Intel(R) Chimera Library
 Version: @HS_VERSION@
 Requires.private: libhs
-Libs: -L${libdir} -lchimera
+Libs: -L${libdir} -lchimera @PKGCONFIG_EXTRA_LIBS@
 Libs.private: @PRIVATE_LIBS@
 Cflags: -I${includedir}/hs

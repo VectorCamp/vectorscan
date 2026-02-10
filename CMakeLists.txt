@@ -247,6 +247,7 @@ set(HAVE_SHMGET ${HAVE_SHMGET} CACHE BOOL "shmget()")
 configure_file(${CMAKE_MODULE_PATH}/config.h.in ${PROJECT_BINARY_DIR}/config.h)
 configure_file(src/hs_version.h.in ${PROJECT_BINARY_DIR}/hs_version.h)
 
+set(PKGCONFIG_EXTRA_LIBS "" CACHE STRING "Extra libraries to add to pkg-config Libs")
 configure_file(libhs.pc.in libhs.pc @ONLY) # only replace @ quoted vars
 install(FILES ${CMAKE_BINARY_DIR}/libhs.pc
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")

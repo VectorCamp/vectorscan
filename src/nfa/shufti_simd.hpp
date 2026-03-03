@@ -207,11 +207,13 @@ const u8 *check_last_byte(SuperVector<S> mask2_lo, SuperVector<S> mask2_hi,
                     SuperVector<S> mask, uint8_t mask_len, const u8 *buf_end) {
     uint8_t last_elem = mask.u.u8[mask_len - 1];
 
-    SuperVector<S> reduce = mask2_lo | mask2_hi;
-    for(uint16_t i = S; i > 2; i/=2) {
-        reduce = reduce | reduce.vshr(i/2);
+    SuperVector<S> reduce_lo = mask2_lo;
+    SuperVector<S> reduce_hi = mask2_hi;
+    for(uint16_t i = S; i >= 2; i/=2) {
+        reduce_lo = reduce_lo & reduce_lo.vshr(i/2);
+        reduce_hi = reduce_hi & reduce_hi.vshr(i/2);
     }
-    uint8_t match_inverted = reduce.u.u8[0] | last_elem;
+    uint8_t match_inverted = reduce_lo.u.u8[0] | reduce_hi.u.u8[0] | last_elem;
 
     // if 0xff, then no match
     int match = match_inverted != 0xff;

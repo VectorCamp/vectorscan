@@ -990,6 +990,94 @@ TEST(DoubleShufti, ExecNoOverreadPageBoundary) {
     munmap(pages, page_size);
 }
 
+TEST(DoubleShufti, ExecMatchVectorEdge) {
+    m128 lo1, hi1, lo2, hi2;
+
+    flat_set<pair<u8, u8>> lits;
+    lits.insert(make_pair('a', 'b'));
+
+    bool ret = shuftiBuildDoubleMasks(CharReach(), lits, reinterpret_cast<u8 *>(&lo1), reinterpret_cast<u8 *>(&hi1),
+                                      reinterpret_cast<u8 *>(&lo2), reinterpret_cast<u8 *>(&hi2));
+    ASSERT_TRUE(ret);
+
+    const int len = 80;
+    const int vector_size = 16;
+    for (size_t start = 1; start < vector_size; start++) {
+        char t[len];
+        memset(t, 'z', len);
+        char *buf = t + start;
+        int buf_len = len - start;
+
+        uintptr_t aligned = (reinterpret_cast<uintptr_t>(buf) + vector_size - 1) &
+                            ~static_cast<uintptr_t>(vector_size - 1);
+        ptrdiff_t boundary = reinterpret_cast<const char *>(aligned) - buf;
+
+        if (boundary < 1 || boundary >= buf_len - 1) continue;
+
+        buf[boundary - 1] = 'a';
+        buf[boundary] = 'b';
+
+        const u8 *rv = shuftiDoubleExec(lo1, hi1, lo2, hi2,
+                                        reinterpret_cast<u8 *>(buf),
+                                        reinterpret_cast<u8 *>(buf) + buf_len);
+
+        ASSERT_EQ(reinterpret_cast<const u8 *>(buf + boundary - 1), rv)
+            << "Failed for start=" << start << " boundary=" << boundary;
+    }
+}
+
+TEST(DoubleShufti, ExecNoMatchLastByte) {
+    m128 lo1, hi1, lo2, hi2;
+
+    flat_set<pair<u8, u8>> lits;
+    lits.insert(make_pair('x', 'y'));
+
+    bool ret = shuftiBuildDoubleMasks(CharReach(), lits, reinterpret_cast<u8 *>(&lo1), reinterpret_cast<u8 *>(&hi1),
+                                      reinterpret_cast<u8 *>(&lo2), reinterpret_cast<u8 *>(&hi2));
+    ASSERT_TRUE(ret);
+
+    const int maxlen = 80;
+    char t1[maxlen + 1];
+    for (int len = 17; len < maxlen; len++) {
+        memset(t1, 'b', len + 1);
+        t1[len - 1] = 'x';
+
+        const u8 *rv = shuftiDoubleExec(lo1, hi1, lo2, hi2,
+                                        reinterpret_cast<u8 *>(t1),
+                                        reinterpret_cast<u8 *>(t1) + len);
+
+        ASSERT_EQ(reinterpret_cast<const u8 *>(t1 + len), rv)
+            << "Failed for len=" << len;
+    }
+}
+
+TEST(DoubleShufti, ExecMatchLastByte) {
+    m128 lo1, hi1, lo2, hi2;
+
+    CharReach onebyte;
+    flat_set<pair<u8, u8>> twobyte;
+
+    onebyte.set('a');
+    twobyte.insert(make_pair('x', 'y'));
+
+    bool ret = shuftiBuildDoubleMasks(onebyte, twobyte, reinterpret_cast<u8 *>(&lo1), reinterpret_cast<u8 *>(&hi1),
+                                      reinterpret_cast<u8 *>(&lo2), reinterpret_cast<u8 *>(&hi2));
+    ASSERT_TRUE(ret);
+
+    const int maxlen = 80;
+    char t1[maxlen + 1];
+    for (int len = 17; len < maxlen; len++) {
+        memset(t1, 'b', len + 1);
+        t1[len - 1] = 'a';
+
+        const u8 *rv = shuftiDoubleExec(lo1, hi1, lo2, hi2,
+                                        reinterpret_cast<u8 *>(t1),
+                                        reinterpret_cast<u8 *>(t1) + len);
+
+        ASSERT_EQ(reinterpret_cast<const u8 *>(t1 + len - 1), rv);
+    }
+}
+
 TEST(ReverseShufti, ExecNoMatch1) {
     m128 lo, hi;
 

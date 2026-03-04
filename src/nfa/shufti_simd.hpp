@@ -260,7 +260,6 @@ const u8 *shuftiDoubleExecReal(m128 mask1_lo, m128 mask1_hi, m128 mask2_lo, m128
             first_char_mask.print8("inout_c1 shifted");
         }
 
-        first_char_mask = SuperVector<S>::Ones();
         while(d + S <= buf_end) {
             __builtin_prefetch(d + 64);
             DEBUG_PRINTF("d %p \n", d);

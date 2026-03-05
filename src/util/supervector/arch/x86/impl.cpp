@@ -1601,13 +1601,39 @@ really_inline SuperVector<64> SuperVector<64>::vshl_128(uint8_t const N) const
 template <>
 really_inline SuperVector<64> SuperVector<64>::vshl_256(uint8_t const N) const
 {
-    return vshl_128(N);
+    if (N == 0) return *this;
+    if (N >= 32) return Zeroes();
+    SuperVector<64> result;
+    Unroller<1, 32>::iterator([&,v=this](auto const i) {
+        constexpr uint8_t n = i.value;
+        if (N == n) result = SuperVector<64>(SuperVector<32>(v->u.v256[0]).vshl(n),
+                                             SuperVector<32>(v->u.v256[1]).vshl(n));
+    });
+    return result;
 }
 
 template <>
 really_inline SuperVector<64> SuperVector<64>::vshl_512(uint8_t const N) const
 {
-    return vshl_128(N);
+    if (N == 0) return *this;
+    if (N >= 64) return Zeroes();
+    SuperVector<64> result;
+    Unroller<1, 32>::iterator([&,v=this](auto const i) {
+        constexpr uint8_t n = i.value;
+        if (N == n) {
+            SuperVector<32> lo(v->u.v256[0]);
+            SuperVector<32> hi(v->u.v256[1]);
+            result = SuperVector<64>(lo.vshl(n), hi.vshl(n) | lo.vshr(32 - n));
+        }
+    });
+    Unroller<32, 64>::iterator([&,v=this](auto const i) {
+        constexpr uint8_t n = i.value;
+        if (N == n) {
+            SuperVector<32> lo(v->u.v256[0]);
+            result = SuperVector<64>(SuperVector<32>::Zeroes(), lo.vshl(n - 32));
+        }
+    });
+    return result;
 }
 
 template <>
@@ -1668,13 +1694,39 @@ really_inline SuperVector<64> SuperVector<64>::vshr_128(uint8_t const N) const
 template <>
 really_inline SuperVector<64> SuperVector<64>::vshr_256(uint8_t const N) const
 {
-    return vshr_128(N);
+    if (N == 0) return *this;
+    if (N >= 32) return Zeroes();
+    SuperVector<64> result;
+    Unroller<1, 32>::iterator([&,v=this](auto const i) {
+        constexpr uint8_t n = i.value;
+        if (N == n) result = SuperVector<64>(SuperVector<32>(v->u.v256[0]).vshr(n),
+                                             SuperVector<32>(v->u.v256[1]).vshr(n));
+    });
+    return result;
 }
 
 template <>
 really_inline SuperVector<64> SuperVector<64>::vshr_512(uint8_t const N) const
 {
-    return vshr_128(N);
+    if (N == 0) return *this;
+    if (N >= 64) return Zeroes();
+    SuperVector<64> result;
+    Unroller<1, 32>::iterator([&,v=this](auto const i) {
+        constexpr uint8_t n = i.value;
+        if (N == n) {
+            SuperVector<32> lo(v->u.v256[0]);
+            SuperVector<32> hi(v->u.v256[1]);
+            result = SuperVector<64>(lo.vshr(n) | hi.vshl(32 - n), hi.vshr(n));
+        }
+    });
+    Unroller<32, 64>::iterator([&,v=this](auto const i) {
+        constexpr uint8_t n = i.value;
+        if (N == n) {
+            SuperVector<32> hi(v->u.v256[1]);
+            result = SuperVector<64>(hi.vshr(n - 32), SuperVector<32>::Zeroes());
+        }
+    });
+    return result;
 }
 
 template <>

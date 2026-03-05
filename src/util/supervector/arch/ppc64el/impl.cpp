@@ -221,7 +221,7 @@ really_inline SuperVector<16> SuperVector<16>::operator^(SuperVector<16> const &
 template <>
 really_inline SuperVector<16> SuperVector<16>::operator!() const
 {
-    return  SuperVector<16>(vec_xor(u.v128[0], u.v128[0]));
+    return  SuperVector<16>(vec_xor(u.s8x16[0], vec_splat_s8(-1)));
 }
 
 template <>

@@ -227,7 +227,7 @@ really_inline SuperVector<16> SuperVector<16>::operator>(SuperVector<16> const &
 template <>
 really_inline SuperVector<16> SuperVector<16>::operator>=(SuperVector<16> const &b) const
 {
-    return SuperVector<16>(vcgeq_u8(u.u8x16[0], b.u.u8x16[0]));
+    return SuperVector<16>(vcgeq_s8(u.s8x16[0], b.u.s8x16[0]));
 }
 
 template <>
@@ -239,7 +239,7 @@ really_inline SuperVector<16> SuperVector<16>::operator<(SuperVector<16> const &
 template <>
 really_inline SuperVector<16> SuperVector<16>::operator<=(SuperVector<16> const &b) const
 {
-    return SuperVector<16>(vcgeq_s8(u.s8x16[0], b.u.s8x16[0]));
+    return SuperVector<16>(vcleq_s8(u.s8x16[0], b.u.s8x16[0]));
 }
 
 template <>

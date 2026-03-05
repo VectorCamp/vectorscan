@@ -227,7 +227,7 @@ really_inline SuperVector<16> SuperVector<16>::operator>(SuperVector<16> const &
 template <>
 really_inline SuperVector<16> SuperVector<16>::operator>=(SuperVector<16> const &b) const
 {
-    return SuperVector<16>(vcgeq_u8(u.u8x16[0], b.u.u8x16[0]));
+    return SuperVector<16>(vcgeq_s8(u.s8x16[0], b.u.s8x16[0]));
 }
 
 template <>
@@ -239,7 +239,7 @@ really_inline SuperVector<16> SuperVector<16>::operator<(SuperVector<16> const &
 template <>
 really_inline SuperVector<16> SuperVector<16>::operator<=(SuperVector<16> const &b) const
 {
-    return SuperVector<16>(vcgeq_s8(u.s8x16[0], b.u.s8x16[0]));
+    return SuperVector<16>(vcleq_s8(u.s8x16[0], b.u.s8x16[0]));
 }
 
 template <>
@@ -374,7 +374,7 @@ template <>
 really_inline SuperVector<16> SuperVector<16>::vshl_8  (uint8_t const N) const
 {
     if (N == 0) return *this;
-    if (N == 8) return Zeroes();
+    if (N >= 8) return Zeroes();
     int8x16_t shift_indices = vdupq_n_s8(N);
     return SuperVector<16>(vshlq_s8(u.s8x16[0], shift_indices));
 }
@@ -383,7 +383,7 @@ template <>
 really_inline SuperVector<16> SuperVector<16>::vshl_16 (uint8_t const N) const
 {
     if (N == 0) return *this;
-    if (N == 16) return Zeroes();
+    if (N >= 16) return Zeroes();
     int16x8_t shift_indices = vdupq_n_s16(N);
     return SuperVector<16>(vshlq_s16(u.s16x8[0], shift_indices));
 }
@@ -392,7 +392,7 @@ template <>
 really_inline SuperVector<16> SuperVector<16>::vshl_32 (uint8_t const N) const
 {
     if (N == 0) return *this;
-    if (N == 32) return Zeroes();
+    if (N >= 32) return Zeroes();
     int32x4_t shift_indices = vdupq_n_s32(N);
     return SuperVector<16>(vshlq_s32(u.s32x4[0], shift_indices));
 }
@@ -401,7 +401,7 @@ template <>
 really_inline SuperVector<16> SuperVector<16>::vshl_64 (uint8_t const N) const
 {
     if (N == 0) return *this;
-    if (N == 64) return Zeroes();
+    if (N >= 64) return Zeroes();
     int64x2_t shift_indices = vdupq_n_s64(N);
     return SuperVector<16>(vshlq_s64(u.s64x2[0], shift_indices));
 }
@@ -410,7 +410,7 @@ template <>
 really_inline SuperVector<16> SuperVector<16>::vshl_128(uint8_t const N) const
 {
     if (N == 0) return *this;
-    if (N == 16) return Zeroes();
+    if (N >= 16) return Zeroes();
 #if defined(HAVE__BUILTIN_CONSTANT_P)
     if (__builtin_constant_p(N)) {
         return SuperVector<16>(vextq_u8(vdupq_n_u8(0), u.u8x16[0], 16 - N));
@@ -431,43 +431,43 @@ template <>
 really_inline SuperVector<16> SuperVector<16>::vshr_8  (uint8_t const N) const
 {
     if (N == 0) return *this;
-    if (N == 8) return Zeroes();
+    if (N >= 8) return Zeroes();
     int8x16_t shift_indices = vdupq_n_s8(-N);
-    return SuperVector<16>(vshlq_s8(u.s8x16[0], shift_indices));
+    return SuperVector<16>(vshlq_u8(u.u8x16[0], shift_indices));
 }
 
 template <>
 really_inline SuperVector<16> SuperVector<16>::vshr_16 (uint8_t const N) const
 {
     if (N == 0) return *this;
-    if (N == 16) return Zeroes();
+    if (N >= 16) return Zeroes();
     int16x8_t shift_indices = vdupq_n_s16(-N);
-    return SuperVector<16>(vshlq_s16(u.s16x8[0], shift_indices));
+    return SuperVector<16>(vshlq_u16(u.u16x8[0], shift_indices));
 }
 
 template <>
 really_inline SuperVector<16> SuperVector<16>::vshr_32 (uint8_t const N) const
 {
     if (N == 0) return *this;
-    if (N == 32) return Zeroes();
+    if (N >= 32) return Zeroes();
     int32x4_t shift_indices = vdupq_n_s32(-N);
-    return SuperVector<16>(vshlq_s32(u.s32x4[0], shift_indices));
+    return SuperVector<16>(vshlq_u32(u.u32x4[0], shift_indices));
 }
 
 template <>
 really_inline SuperVector<16> SuperVector<16>::vshr_64 (uint8_t const N) const
 {
     if (N == 0) return *this;
-    if (N == 64) return Zeroes();
+    if (N >= 64) return Zeroes();
     int64x2_t shift_indices = vdupq_n_s64(-N);
-    return SuperVector<16>(vshlq_s64(u.s64x2[0], shift_indices));
+    return SuperVector<16>(vshlq_u64(u.u64x2[0], shift_indices));
 }
 
 template <>
 really_inline SuperVector<16> SuperVector<16>::vshr_128(uint8_t const N) const
 {
     if (N == 0) return *this;
-    if (N == 16) return Zeroes();
+    if (N >= 16) return Zeroes();
 #if defined(HAVE__BUILTIN_CONSTANT_P)
     if (__builtin_constant_p(N)) {
          return SuperVector<16>(vextq_u8(u.u8x16[0], vdupq_n_u8(0), N));

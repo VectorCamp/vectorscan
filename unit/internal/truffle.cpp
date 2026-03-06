@@ -34,6 +34,9 @@
 #include "util/charreach.h"
 #include "util/simd_utils.h"
 
+#include <array>
+#include <cstring>
+
 using namespace ue2;
 
 TEST(Truffle, CompileDot) {
@@ -616,4 +619,476 @@ TEST(ReverseTruffle, ExecMatch5) {
 
         ASSERT_EQ(reinterpret_cast<const u8 *>(t1) + i, rv);
     }
+}
+
+/*
+ * Additional unit tests for truffle accelerator.
+ * These cover edge cases and areas not handled by the original test suite.
+ */
+
+// --- Compile/Roundtrip Tests ---
+
+TEST(Truffle, CompileRanges) {
+    // Test building masks for various character ranges and verify roundtrip
+    m128 mask1, mask2;
+    CharReach chars;
+
+    // Printable ASCII range
+    chars.setRange(0x20, 0x7e);
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&mask1), reinterpret_cast<u8 *>(&mask2));
+    CharReach out = truffle2cr(reinterpret_cast<u8 *>(&mask1), reinterpret_cast<u8 *>(&mask2));
+    ASSERT_EQ(out, chars);
+
+    // High byte range
+    chars.clear();
+    chars.setRange(0x80, 0xff);
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&mask1), reinterpret_cast<u8 *>(&mask2));
+    out = truffle2cr(reinterpret_cast<u8 *>(&mask1), reinterpret_cast<u8 *>(&mask2));
+    ASSERT_EQ(out, chars);
+
+    // Mixed low and high range
+    chars.clear();
+    chars.setRange(0x30, 0x39); // digits
+    chars.setRange(0xC0, 0xDF); // some high bytes
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&mask1), reinterpret_cast<u8 *>(&mask2));
+    out = truffle2cr(reinterpret_cast<u8 *>(&mask1), reinterpret_cast<u8 *>(&mask2));
+    ASSERT_EQ(out, chars);
+}
+
+TEST(Truffle, CompileEmpty) {
+    // Empty character class - no characters set
+    m128 mask1, mask2;
+    CharReach chars; // empty
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&mask1), reinterpret_cast<u8 *>(&mask2));
+    CharReach out = truffle2cr(reinterpret_cast<u8 *>(&mask1), reinterpret_cast<u8 *>(&mask2));
+    ASSERT_EQ(out, chars);
+    ASSERT_TRUE(out.none());
+}
+
+TEST(Truffle, CompileSameNibbleDiffHigh) {
+    // Characters with the same low nibble but different high nibble
+    // e.g., 'V' = 0x56 and 'e' = 0x65 have different nibbles, but
+    // 0x13 and 0x23 share low nibble 0x3 but differ in bits 4-6
+    m128 mask1, mask2;
+    CharReach chars;
+    chars.set(0x13);
+    chars.set(0x23);
+    chars.set(0x43);
+    chars.set(0x93);
+    chars.set(0xA3);
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&mask1), reinterpret_cast<u8 *>(&mask2));
+    CharReach out = truffle2cr(reinterpret_cast<u8 *>(&mask1), reinterpret_cast<u8 *>(&mask2));
+    ASSERT_EQ(out, chars);
+}
+
+// --- Forward Exec: Edge cases ---
+
+TEST(Truffle, ExecSingleByte) {
+    // Buffer of length 1 - matching char
+    m128 lo, hi;
+    CharReach chars;
+    chars.set('Z');
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&lo), reinterpret_cast<u8 *>(&hi));
+
+    u8 buf[1] = { 'Z' };
+    const u8 *rv = truffleExec(lo, hi, buf, buf + 1);
+    ASSERT_EQ(buf, rv);
+}
+
+TEST(Truffle, ExecSingleByteNoMatch) {
+    // Buffer of length 1 - non-matching char
+    m128 lo, hi;
+    CharReach chars;
+    chars.set('Z');
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&lo), reinterpret_cast<u8 *>(&hi));
+
+    u8 buf[1] = { 'A' };
+    const u8 *rv = truffleExec(lo, hi, buf, buf + 1);
+    ASSERT_EQ(buf + 1, rv);
+}
+
+TEST(Truffle, ExecHighByteMatch) {
+    // Test high byte characters (>= 0x80) match correctly
+    m128 lo, hi;
+    CharReach chars;
+    chars.set(0xAB);
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&lo), reinterpret_cast<u8 *>(&hi));
+
+    u8 buf[128];
+    memset(buf, 0x20, sizeof(buf));
+
+    for (size_t pos = 0; pos < 64; pos++) {
+        buf[pos] = 0xAB;
+        const u8 *rv = truffleExec(lo, hi, buf, buf + 128);
+        ASSERT_EQ(buf + pos, rv);
+        buf[pos] = 0x20; // restore
+    }
+}
+
+TEST(Truffle, ExecHighByteNoMatchSameNibble) {
+    // 0xAB and 0x2B share the same low nibble (0xB).
+    // Searching for 0xAB should NOT match 0x2B.
+    m128 lo, hi;
+    CharReach chars;
+    chars.set(0xAB);
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&lo), reinterpret_cast<u8 *>(&hi));
+
+    u8 buf[64];
+    memset(buf, 0x2B, sizeof(buf)); // same low nibble, different high nibble
+    const u8 *rv = truffleExec(lo, hi, buf, buf + 64);
+    ASSERT_EQ(buf + 64, rv);
+}
+
+TEST(Truffle, ExecNulCharMatch) {
+    // Searching for NUL character
+    m128 lo, hi;
+    CharReach chars;
+    chars.set(0x00);
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&lo), reinterpret_cast<u8 *>(&hi));
+
+    u8 buf[80];
+    memset(buf, 0xFF, sizeof(buf));
+    buf[45] = 0x00;
+    const u8 *rv = truffleExec(lo, hi, buf, buf + 80);
+    ASSERT_EQ(buf + 45, rv);
+}
+
+TEST(Truffle, ExecDotMatchAll) {
+    // Dot (all chars) should match the first byte
+    m128 lo, hi;
+    CharReach chars;
+    chars.setall();
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&lo), reinterpret_cast<u8 *>(&hi));
+
+    u8 buf[64];
+    memset(buf, 0x42, sizeof(buf));
+    const u8 *rv = truffleExec(lo, hi, buf, buf + 64);
+    ASSERT_EQ(buf, rv); // first byte always matches
+}
+
+TEST(Truffle, ExecMatchAtBufferEnd) {
+    // Match only at the very last byte of the buffer
+    m128 lo, hi;
+    CharReach chars;
+    chars.set('X');
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&lo), reinterpret_cast<u8 *>(&hi));
+
+    u8 buf[200];
+    memset(buf, '.', sizeof(buf));
+    buf[199] = 'X';
+    const u8 *rv = truffleExec(lo, hi, buf, buf + 200);
+    ASSERT_EQ(buf + 199, rv);
+}
+
+TEST(Truffle, ExecVaryingLengths) {
+    // Test with buffers of many different lengths (1 to 130)
+    m128 lo, hi;
+    CharReach chars;
+    chars.set('q');
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&lo), reinterpret_cast<u8 *>(&hi));
+
+    u8 buf[130];
+    for (size_t len = 1; len <= 130; len++) {
+        memset(buf, '.', len);
+        // No match
+        const u8 *rv = truffleExec(lo, hi, buf, buf + len);
+        ASSERT_EQ(buf + len, rv) << "len=" << len;
+
+        // Match at last position
+        buf[len - 1] = 'q';
+        rv = truffleExec(lo, hi, buf, buf + len);
+        ASSERT_EQ(buf + len - 1, rv) << "len=" << len;
+    }
+}
+
+TEST(Truffle, ExecAlignmentSweep) {
+    // Test match at every offset within a larger buffer to exercise
+    // alignment code paths
+    m128 lo, hi;
+    CharReach chars;
+    chars.set('!');
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&lo), reinterpret_cast<u8 *>(&hi));
+
+    u8 buf[256];
+    memset(buf, '.', sizeof(buf));
+
+    for (size_t offset = 0; offset < 64; offset++) {
+        buf[offset] = '!';
+        const u8 *rv = truffleExec(lo, hi, buf, buf + 256);
+        ASSERT_EQ(buf + offset, rv) << "offset=" << offset;
+        buf[offset] = '.';
+    }
+}
+
+TEST(Truffle, ExecMultipleCharsInClass) {
+    // Test character class with many different characters
+    m128 lo, hi;
+    CharReach chars;
+    // [a-zA-Z0-9]
+    chars.setRange('a', 'z');
+    chars.setRange('A', 'Z');
+    chars.setRange('0', '9');
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&lo), reinterpret_cast<u8 *>(&hi));
+
+    // Buffer of non-matching chars
+    u8 buf[64];
+    memset(buf, '!', sizeof(buf)); // not in character class
+
+    for (u8 c = '0'; c <= '9'; c++) {
+        buf[32] = c;
+        const u8 *rv = truffleExec(lo, hi, buf, buf + 64);
+        ASSERT_EQ(buf + 32, rv) << "char=" << (char)c;
+        buf[32] = '!';
+    }
+    for (u8 c = 'a'; c <= 'z'; c++) {
+        buf[32] = c;
+        const u8 *rv = truffleExec(lo, hi, buf, buf + 64);
+        ASSERT_EQ(buf + 32, rv) << "char=" << (char)c;
+        buf[32] = '!';
+    }
+    for (u8 c = 'A'; c <= 'Z'; c++) {
+        buf[32] = c;
+        const u8 *rv = truffleExec(lo, hi, buf, buf + 64);
+        ASSERT_EQ(buf + 32, rv) << "char=" << (char)c;
+        buf[32] = '!';
+    }
+}
+
+TEST(Truffle, ExecAllSingleCharClasses) {
+    // For every possible character class of size 1, verify match works
+    for (unsigned c = 0; c < 256; c++) {
+        m128 lo, hi;
+        CharReach chars;
+        chars.set((u8)c);
+        truffleBuildMasks(chars, reinterpret_cast<u8 *>(&lo), reinterpret_cast<u8 *>(&hi));
+
+        // Build a buffer that doesn't contain c (use c^1 if possible)
+        u8 filler = (u8)(c ^ 0x01);
+        if (filler == (u8)c) filler = (u8)(c ^ 0x02);
+        u8 buf[64];
+        memset(buf, filler, sizeof(buf));
+
+        // No match
+        const u8 *rv = truffleExec(lo, hi, buf, buf + 64);
+        ASSERT_EQ(buf + 64, rv) << "c=" << c;
+
+        // Place character at position 17
+        buf[17] = (u8)c;
+        rv = truffleExec(lo, hi, buf, buf + 64);
+        ASSERT_EQ(buf + 17, rv) << "c=" << c;
+    }
+}
+
+// --- Reverse Exec: Edge cases ---
+
+TEST(ReverseTruffle, ExecSingleByte) {
+    m128 lo, hi;
+    CharReach chars;
+    chars.set('Z');
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&lo), reinterpret_cast<u8 *>(&hi));
+
+    u8 buf[1] = { 'Z' };
+    const u8 *rv = rtruffleExec(lo, hi, buf, buf + 1);
+    ASSERT_EQ(buf, rv);
+}
+
+TEST(ReverseTruffle, ExecSingleByteNoMatch) {
+    m128 lo, hi;
+    CharReach chars;
+    chars.set('Z');
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&lo), reinterpret_cast<u8 *>(&hi));
+
+    u8 raw[2] = { 0, 'A' };
+    u8 *buf = raw + 1;
+    const u8 *rv = rtruffleExec(lo, hi, buf, buf + 1);
+    ASSERT_EQ(raw, rv);
+}
+
+TEST(ReverseTruffle, ExecHighByteReverse) {
+    // Reverse search for high byte characters
+    m128 lo, hi;
+    CharReach chars;
+    chars.set(0xFE);
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&lo), reinterpret_cast<u8 *>(&hi));
+
+    u8 buf[128];
+    memset(buf, 0x20, sizeof(buf));
+
+    // Place match at various positions and verify reverse finds the last one
+    for (size_t pos = 64; pos < 128; pos++) {
+        memset(buf, 0x20, sizeof(buf));
+        buf[pos] = 0xFE;
+        const u8 *rv = rtruffleExec(lo, hi, buf, buf + 128);
+        ASSERT_EQ(buf + pos, rv) << "pos=" << pos;
+    }
+}
+
+TEST(ReverseTruffle, ExecNulReverse) {
+    // Reverse search for NUL
+    m128 lo, hi;
+    CharReach chars;
+    chars.set(0x00);
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&lo), reinterpret_cast<u8 *>(&hi));
+
+    u8 buf[80];
+    memset(buf, 0xFF, sizeof(buf));
+    buf[10] = 0x00;
+    buf[50] = 0x00;
+    const u8 *rv = rtruffleExec(lo, hi, buf, buf + 80);
+    ASSERT_EQ(buf + 50, rv); // should find the last NUL
+}
+
+TEST(ReverseTruffle, ExecMatchAtBufferStart) {
+    // Match only at the very first byte
+    m128 lo, hi;
+    CharReach chars;
+    chars.set('X');
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&lo), reinterpret_cast<u8 *>(&hi));
+
+    u8 buf[200];
+    memset(buf, '.', sizeof(buf));
+    buf[0] = 'X';
+    const u8 *rv = rtruffleExec(lo, hi, buf, buf + 200);
+    ASSERT_EQ(buf, rv);
+}
+
+TEST(ReverseTruffle, ExecVaryingLengths) {
+    // Test reverse with buffers of many different lengths
+    m128 lo, hi;
+    CharReach chars;
+    chars.set('q');
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&lo), reinterpret_cast<u8 *>(&hi));
+
+    u8 raw[131];
+    u8 *buf = raw + 1;
+    for (size_t len = 1; len <= 130; len++) {
+        memset(buf, '.', len);
+        // No match
+        const u8 *rv = rtruffleExec(lo, hi, buf, buf + len);
+        ASSERT_EQ(raw, rv) << "len=" << len;
+
+        // Match at first position
+        buf[0] = 'q';
+        rv = rtruffleExec(lo, hi, buf, buf + len);
+        ASSERT_EQ(buf, rv) << "len=" << len;
+    }
+}
+
+TEST(ReverseTruffle, ExecLargeBuffer) {
+    // Large buffer reverse test
+    m128 lo, hi;
+    CharReach chars;
+    chars.set('!');
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&lo), reinterpret_cast<u8 *>(&hi));
+
+    u8 buf[4096];
+    memset(buf, '.', sizeof(buf));
+    buf[2048] = '!';
+
+    const u8 *rv = rtruffleExec(lo, hi, buf, buf + 4096);
+    ASSERT_EQ(buf + 2048, rv);
+}
+
+TEST(ReverseTruffle, ExecAlignmentSweep) {
+    // Reverse alignment sweep
+    m128 lo, hi;
+    CharReach chars;
+    chars.set('#');
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&lo), reinterpret_cast<u8 *>(&hi));
+
+    u8 buf[256];
+    memset(buf, '.', sizeof(buf));
+
+    for (size_t offset = 192; offset < 256; offset++) {
+        buf[offset] = '#';
+        const u8 *rv = rtruffleExec(lo, hi, buf, buf + 256);
+        ASSERT_EQ(buf + offset, rv) << "offset=" << offset;
+        buf[offset] = '.';
+    }
+}
+
+TEST(ReverseTruffle, ExecAllSingleCharClasses) {
+    // For every possible single-char class, verify reverse match works
+    for (unsigned c = 0; c < 256; c++) {
+        m128 lo, hi;
+        CharReach chars;
+        chars.set((u8)c);
+        truffleBuildMasks(chars, reinterpret_cast<u8 *>(&lo), reinterpret_cast<u8 *>(&hi));
+
+        u8 filler = (u8)(c ^ 0x01);
+        if (filler == (u8)c) filler = (u8)(c ^ 0x02);
+        u8 raw[65];
+        u8 *buf = raw + 1;
+        memset(buf, filler, 64);
+
+        // No match
+        const u8 *rv = rtruffleExec(lo, hi, buf, buf + 64);
+        ASSERT_EQ(raw, rv) << "c=" << c;
+
+        // Place character at position 40
+        buf[40] = (u8)c;
+        rv = rtruffleExec(lo, hi, buf, buf + 64);
+        ASSERT_EQ(buf + 40, rv) << "c=" << c;
+    }
+}
+
+TEST(ReverseTruffle, ExecMultipleMatches) {
+    // Verify reverse finds the LAST match
+    m128 lo, hi;
+    CharReach chars;
+    chars.set('a');
+    chars.set('b');
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&lo), reinterpret_cast<u8 *>(&hi));
+
+    u8 buf[128];
+    memset(buf, '.', sizeof(buf));
+    buf[10] = 'a';
+    buf[50] = 'b';
+    buf[90] = 'a';
+
+    const u8 *rv = rtruffleExec(lo, hi, buf, buf + 128);
+    ASSERT_EQ(buf + 90, rv);
+
+    // Now check with restricted end
+    rv = rtruffleExec(lo, hi, buf, buf + 60);
+    ASSERT_EQ(buf + 50, rv);
+}
+
+// --- Forward: Boundary between low and high characters ---
+
+TEST(Truffle, ExecBoundaryChars) {
+    // Test characters at the 0x7f/0x80 boundary
+    m128 lo, hi;
+    CharReach chars;
+    chars.set(0x7f);
+    chars.set(0x80);
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&lo), reinterpret_cast<u8 *>(&hi));
+
+    u8 buf[64];
+    memset(buf, 0x41, sizeof(buf));
+
+    buf[20] = 0x80;
+    const u8 *rv = truffleExec(lo, hi, buf, buf + 64);
+    ASSERT_EQ(buf + 20, rv);
+
+    buf[20] = 0x41;
+    buf[15] = 0x7f;
+    rv = truffleExec(lo, hi, buf, buf + 64);
+    ASSERT_EQ(buf + 15, rv);
+}
+
+TEST(ReverseTruffle, ExecBoundaryChars) {
+    m128 lo, hi;
+    CharReach chars;
+    chars.set(0x7f);
+    chars.set(0x80);
+    truffleBuildMasks(chars, reinterpret_cast<u8 *>(&lo), reinterpret_cast<u8 *>(&hi));
+
+    u8 buf[64];
+    memset(buf, 0x41, sizeof(buf));
+
+    buf[40] = 0x7f;
+    buf[50] = 0x80;
+    const u8 *rv = rtruffleExec(lo, hi, buf, buf + 64);
+    ASSERT_EQ(buf + 50, rv);
 }

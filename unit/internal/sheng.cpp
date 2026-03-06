@@ -121,14 +121,14 @@ static void init_raw_dfa16(struct ue2::raw_dfa *dfa, const ReportID rID)
     dfa->alpha_remap['f'] = 6;
     dfa->alpha_remap[256] = 7; /* for some reason there's a check that run on dfa->alpha_size-1 */
 
-                        /* a b c d e o f */
-    dfa->states[0].next = {0,0,0,0,0,0,0};
-    dfa->states[1].next = {2,2,1,1,1,1,1};      /* nothing */
-    dfa->states[2].next = {2,2,3,3,3,1,1};      /* [a,b] */
-    dfa->states[3].next = {2,2,4,4,4,1,1};      /* [a,b][c-e]{1} */
-    dfa->states[4].next = {2,2,5,5,5,1,1};      /* [a,b][c-e]{2} */
-    fill_straight_regex_sequence(dfa, 5, 7, 7); /* [a,b][c-e]{3}o */
-    dfa->states[7].next = {2,2,1,1,1,1,1};      /* [a,b][c-e]{3}of */
+                        /* a b c d e o f _ */
+    dfa->states[0].next = {0,0,0,0,0,0,0,0};
+    dfa->states[1].next = {2,2,1,1,1,1,1,1};      /* nothing */
+    dfa->states[2].next = {2,2,3,3,3,1,1,1};      /* [a,b] */
+    dfa->states[3].next = {2,2,4,4,4,1,1,1};      /* [a,b][c-e]{1} */
+    dfa->states[4].next = {2,2,5,5,5,1,1,1};      /* [a,b][c-e]{2} */
+    fill_straight_regex_sequence(dfa, 5, 7, 8); /* [a,b][c-e]{3}o */
+    dfa->states[7].next = {2,2,1,1,1,1,1,1};      /* [a,b][c-e]{3}of */
 }
 
 #if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
@@ -176,14 +176,14 @@ static void init_raw_dfa32(struct ue2::raw_dfa *dfa, const ReportID rID)
     }
     dfa->alpha_remap[256] = 17; /* for some reason there's a check that run on dfa->alpha_size-1 */
 
-                         /* a b c d e o f 0 1 2 3 4 5 6 7 8 9 */
-    dfa->states[0].next  = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-    dfa->states[1].next  = {2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};  /* nothing */
-    dfa->states[2].next  = {2,2,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1};  /* [a,b] */
-    dfa->states[3].next  = {2,2,4,4,4,1,1,1,1,1,1,1,1,1,1,1,1};  /* [a,b][c-e]{1} */
-    dfa->states[4].next  = {2,2,5,5,5,1,1,1,1,1,1,1,1,1,1,1,1};  /* [a,b][c-e]{2} */
-    fill_straight_regex_sequence(dfa, 5, 17, 17);                /* [a,b][c-e]{3}of012345678 */
-    dfa->states[17].next = {2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};  /* [a,b][c-e]{3}of0123456789 */
+                         /* a b c d e o f 0 1 2 3 4 5 6 7 8 9 _ */
+    dfa->states[0].next  = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    dfa->states[1].next  = {2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};  /* nothing */
+    dfa->states[2].next  = {2,2,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,1};  /* [a,b] */
+    dfa->states[3].next  = {2,2,4,4,4,1,1,1,1,1,1,1,1,1,1,1,1,1};  /* [a,b][c-e]{1} */
+    dfa->states[4].next  = {2,2,5,5,5,1,1,1,1,1,1,1,1,1,1,1,1,1};  /* [a,b][c-e]{2} */
+    fill_straight_regex_sequence(dfa, 5, 17, 18);                /* [a,b][c-e]{3}of012345678 */
+    dfa->states[17].next = {2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};  /* [a,b][c-e]{3}of0123456789 */
 }
 #endif /* defined(HAVE_AVX512VBMI) || defined(HAVE_SVE) */
 

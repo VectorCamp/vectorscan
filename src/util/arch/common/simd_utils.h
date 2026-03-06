@@ -115,7 +115,7 @@ ALIGN_CL_DIRECTIVE static const u8 simd_onebit_masks[] = {
 #if !defined(HAVE_SIMD_256_BITS)
 
 static really_really_inline
-m256 lshift64_m256(m256 a, int b) {
+m256 lshift64_m256(m256 a, unsigned b) {
     m256 rv = a;
     rv.lo = lshift64_m128(rv.lo, b);
     rv.hi = lshift64_m128(rv.hi, b);
@@ -123,7 +123,7 @@ m256 lshift64_m256(m256 a, int b) {
 }
 
 static really_inline
-m256 rshift64_m256(m256 a, int b) {
+m256 rshift64_m256(m256 a, unsigned b) {
     m256 rv = a;
     rv.lo = rshift64_m128(rv.lo, b);
     rv.hi = rshift64_m128(rv.hi, b);
@@ -687,9 +687,7 @@ int diff512(m512 a, m512 b) {
 
 static really_inline
 int isnonzero512(m512 a) {
-    m256 x = or256(a.lo, a.lo);
-    m256 y = or256(a.hi, a.hi);
-    return isnonzero256(or256(x, y));
+    return isnonzero256(or256(a.lo, a.hi));
 }
 
 /**
@@ -715,7 +713,7 @@ u32 diffrich64_512(m512 a, m512 b) {
 // aligned load
 static really_inline
 m512 load512(const void *ptr) {
-    assert(ISALIGNED_N(ptr, alignof(m256)));
+    assert(ISALIGNED_N(ptr, alignof(m512)));
     // cppcheck-suppress cstyleCast
     m512 rv = { load256(ptr), load256((const char *)ptr + 32) };
     return rv;

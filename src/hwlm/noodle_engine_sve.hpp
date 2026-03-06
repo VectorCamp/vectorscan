@@ -50,8 +50,8 @@ hwlm_error_t singleCheckMatched(const struct noodTable *n, const u8 *buf,
                                 size_t len, const struct cb_info *cbi,
                                 const u8 *d, svbool_t matched) {
     if (unlikely(svptest_any(svptrue_b8(), matched))) {
-        hwlmcb_rv_t rv = checkMatched(n, buf, len, cbi, d, matched,
-                                      n->msk_len != 1);
+        hwlm_error_t rv = checkMatched(n, buf, len, cbi, d, matched,
+                                       n->msk_len != 1);
         RETURN_IF_TERMINATED(rv);
     }
     return HWLM_SUCCESS;
@@ -88,7 +88,7 @@ hwlm_error_t scanSingleLoop(const struct noodTable *n, const u8 *buf,
     for (size_t i = 0; i < loops; i++, d += svcntb()) {
         DEBUG_PRINTF("d %p \n", d);
         svbool_t matched = singleMatched(chars, d, svptrue_b8());
-        hwlmcb_rv_t rv = singleCheckMatched(n, buf, len, cbi, d, matched);
+        hwlm_error_t rv = singleCheckMatched(n, buf, len, cbi, d, matched);
         RETURN_IF_TERMINATED(rv);
     }
     DEBUG_PRINTF("d %p e %p \n", d, e);
@@ -120,7 +120,7 @@ hwlm_error_t scanSingle(const struct noodTable *n, const u8 *buf, size_t len,
     const u8 *d1 = ROUNDUP_PTR(d, svcntb_pat(SV_POW2));
     if (d != d1) {
         DEBUG_PRINTF("until aligned %p \n", d1);
-        hwlmcb_rv_t rv = scanSingleOnce(n, buf, len, cbi, chars, d, d1);
+        hwlm_error_t rv = scanSingleOnce(n, buf, len, cbi, chars, d, d1);
         RETURN_IF_TERMINATED(rv);
     }
     return scanSingleLoop(n, buf, len, cbi, chars, d1, e);
@@ -140,8 +140,8 @@ hwlm_error_t doubleCheckMatched(const struct noodTable *n, const u8 *buf,
         // d - 1 won't underflow as the first position in buf has been dealt
         // with meaning that d > buf
         assert(d > buf);
-        hwlmcb_rv_t rv = checkMatched(n, buf, len, cbi, d - 1, matched,
-                                      n->msk_len != 2);
+        hwlm_error_t rv = checkMatched(n, buf, len, cbi, d - 1, matched,
+                                       n->msk_len != 2);
         RETURN_IF_TERMINATED(rv);
     }
     return HWLM_SUCCESS;
@@ -177,7 +177,7 @@ hwlm_error_t scanDoubleOnce(const struct noodTable *n, const u8 *buf,
 
     // we reuse u8 predicates for u16 lanes. This means that we will check against one
     // extra \0 character at the end of the vector.
-    if(unlikely(n->key1 == '\0')) {
+    if (unlikely(n->key1 == '\0')) {
         if (size % 2) {
             // if odd, vec has an odd number of lanes and has the spurious \0
             svbool_t lane_to_disable = svrev_b8(svpfirst(svrev_b8(pg), svpfalse()));
@@ -244,15 +244,15 @@ hwlm_error_t scanDouble(const struct noodTable *n, const u8 *buf, size_t len,
 
     svuint8_t chars = svreinterpret_u8(getCharMaskDouble(n->key0, n->key1, noCase));
 
-    if (scan_len <= svcntb()) {
+    if (e - d <= svcntb()) {
         return scanDoubleOnce(n, buf, len, cbi, chars, d, e);
     }
     // peel off first part to align to the vector size
     const u8 *d1 = ROUNDUP_PTR(d, svcntb_pat(SV_POW2));
     if (d != d1) {
         DEBUG_PRINTF("until aligned %p \n", d1);
-        hwlmcb_rv_t rv = scanDoubleOnce(n, buf, len, cbi, chars,
-                                        d, d1);
+        hwlm_error_t rv = scanDoubleOnce(n, buf, len, cbi, chars,
+                                         d, d1);
         RETURN_IF_TERMINATED(rv);
     }
     return scanDoubleLoop(n, buf, len, cbi, chars, d1, e);

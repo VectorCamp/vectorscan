@@ -247,7 +247,7 @@ const u8 *rtruffleExecSVE(m256 shuf_mask_32, const u8 *buf, const u8 *buf_end){
     if (work_buffer != buf) {
         svuint8_t chars;
         if (buf_end - buf < vect_size_int8) {
-            const svbool_t remaining_lanes = svwhilele_b8(0ll, buf_end - buf);
+            const svbool_t remaining_lanes = svwhilelt_b8(0ll, buf_end - buf);
             chars = svld1(remaining_lanes, buf);
         } else {
             chars = svld1(svptrue_b8(), buf);

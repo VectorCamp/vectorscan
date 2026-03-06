@@ -559,7 +559,7 @@ TEST(NVermicelliExtra, ExactVecSizeLastDiff) {
 
 TEST(RVermicelliExtra, ExactVecSizeNoMatch) {
     std::vector<u8> buf(33, 'b');
-    u8 *data = buf.data() + 1;
+    const u8 *data = buf.data() + 1;
     const u8 *rv = rvermicelliExec('a', 0, data, data + 32);
     EXPECT_EQ(buf.data(), rv);
 }

@@ -115,6 +115,7 @@ set(unit_internal_SOURCES
     internal/utf8_validate.cpp
     internal/util_string.cpp
     internal/vermicelli.cpp
+    internal/vermicelli_extra.cpp
     internal/main.cpp
     )
 if (BUILD_AVX2)

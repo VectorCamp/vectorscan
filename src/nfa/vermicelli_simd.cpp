@@ -175,7 +175,7 @@ static const u8 *nvermicelliExecReal(SuperVector<S> const chars, SuperVector<S> 
 
     if (d != buf_end) {
         SuperVector<S> data = SuperVector<S>::loadu(buf_end - S);
-        rv = vermicelliBlockNeg(data, chars, casemask, buf_end - S, buf_end - d);
+        rv = vermicelliBlockNeg(data, chars, casemask, buf_end - S, S);
         DEBUG_PRINTF("rv %p \n", rv);
         if (rv && rv < buf_end) return rv;
     }

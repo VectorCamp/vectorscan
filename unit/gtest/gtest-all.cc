@@ -7475,12 +7475,12 @@ static int ExecDeathTestChildMain(void* child_arg) {
 // correct answer.
 void StackLowerThanAddress(const void* ptr, bool* result) GTEST_NO_INLINE_;
 void StackLowerThanAddress(const void* ptr, bool* result) {
-  int dummy;
+  int dummy = 0;
   *result = (&dummy < ptr);
 }
 
 bool StackGrowsDown() {
-  int dummy;
+  int dummy = 0;
   bool result;
   StackLowerThanAddress(&dummy, &result);
   return result;

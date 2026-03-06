@@ -173,7 +173,7 @@ svbool_t doubleMatched(svuint8_t mask1_lo, svuint8_t mask1_hi,
     svuint8_t t      = svorr_x(svptrue_b8(), merged_t1, t2);
     *inout_t1 = new_t1;
 
-    return svnot_z(svptrue_b8(), svcmpeq(svptrue_b8(), t, (uint8_t)0xff));
+    return svnot_z(pg, svcmpeq(svptrue_b8(), t, (uint8_t)0xff));
 }
 
 static really_inline

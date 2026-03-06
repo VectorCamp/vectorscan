@@ -1201,3 +1201,189 @@ TEST(ReverseShufti, ExecMatch6) {
         ASSERT_EQ(reinterpret_cast<const u8 *>(t1) + i, rv);
     }
 }
+
+// Test that having the first char of a two-byte pair at the last position of a
+// short buffer (shorter than a SIMD/SVE vector) does not produce a false match.
+// This is a regression test for an SVE bug where inactive vector lanes in
+// doubleMatched() were not properly masked by the predicate, causing false
+// positives when the last byte matched a first-char pattern and the inactive
+// lane (zero-filled) satisfied a null-byte second-char pattern.
+TEST(DoubleShufti, ExecNoMatchLastByteShortBufNullPair) {
+    m128 lo1, hi1, lo2, hi2;
+
+    flat_set<pair<u8, u8>> lits;
+
+    // Use a pattern where the second char is the null byte. This ensures
+    // mask2_lo[0] and mask2_hi[0] both have the bucket bit cleared, which
+    // causes inactive SVE lanes (loaded as 0) to produce t != 0xff.
+    lits.insert(make_pair('a', '\0'));
+
+    bool ret = shuftiBuildDoubleMasks(CharReach(), lits,
+                                      reinterpret_cast<u8 *>(&lo1),
+                                      reinterpret_cast<u8 *>(&hi1),
+                                      reinterpret_cast<u8 *>(&lo2),
+                                      reinterpret_cast<u8 *>(&hi2));
+    ASSERT_TRUE(ret);
+
+    // Use a large backing buffer filled with 'b' to ensure safe memory reads
+    // past buf_end on platforms that use unaligned vector loads (SIMD).
+    const int maxlen = 128;
+    char t1[maxlen];
+    memset(t1, 'b', maxlen);
+
+    // For short buffers (length 2 to 15), place 'a' at the last position.
+    // Since there is no '\0' following it within the buffer, no match should
+    // be reported.
+    for (int len = 2; len <= 15; len++) {
+        memset(t1, 'b', maxlen);
+        t1[len - 1] = 'a';
+
+        const u8 *rv = shuftiDoubleExec(lo1, hi1, lo2, hi2,
+                                        reinterpret_cast<u8 *>(t1),
+                                        reinterpret_cast<u8 *>(t1) + len);
+
+        ASSERT_EQ(reinterpret_cast<const u8 *>(t1 + len), rv)
+            << "False match for len=" << len;
+    }
+}
+
+// Same as above, but also test medium-length buffers (16-80) where the tail
+// portion processed with a partial predicate may expose the same issue.
+TEST(DoubleShufti, ExecNoMatchLastByteNullPairVaryLen) {
+    m128 lo1, hi1, lo2, hi2;
+
+    flat_set<pair<u8, u8>> lits;
+    lits.insert(make_pair('a', '\0'));
+
+    bool ret = shuftiBuildDoubleMasks(CharReach(), lits,
+                                      reinterpret_cast<u8 *>(&lo1),
+                                      reinterpret_cast<u8 *>(&hi1),
+                                      reinterpret_cast<u8 *>(&lo2),
+                                      reinterpret_cast<u8 *>(&hi2));
+    ASSERT_TRUE(ret);
+
+    const int maxlen = 256;
+    char t1[maxlen];
+
+    for (int len = 2; len < maxlen; len++) {
+        memset(t1, 'b', maxlen);
+        t1[len - 1] = 'a';
+
+        const u8 *rv = shuftiDoubleExec(lo1, hi1, lo2, hi2,
+                                        reinterpret_cast<u8 *>(t1),
+                                        reinterpret_cast<u8 *>(t1) + len);
+
+        ASSERT_EQ(reinterpret_cast<const u8 *>(t1 + len), rv)
+            << "False match for len=" << len;
+    }
+}
+
+// Verify that a real match of ('a', '\0') within a short buffer IS found.
+TEST(DoubleShufti, ExecMatchNullPairShortBuf) {
+    m128 lo1, hi1, lo2, hi2;
+
+    flat_set<pair<u8, u8>> lits;
+    lits.insert(make_pair('a', '\0'));
+
+    bool ret = shuftiBuildDoubleMasks(CharReach(), lits,
+                                      reinterpret_cast<u8 *>(&lo1),
+                                      reinterpret_cast<u8 *>(&hi1),
+                                      reinterpret_cast<u8 *>(&lo2),
+                                      reinterpret_cast<u8 *>(&hi2));
+    ASSERT_TRUE(ret);
+
+    const int maxlen = 128;
+    char t1[maxlen];
+
+    for (int len = 3; len <= 15; len++) {
+        memset(t1, 'b', maxlen);
+        // Place the pair ('a', '\0') inside the buffer
+        t1[len - 2] = 'a';
+        t1[len - 1] = '\0';
+
+        const u8 *rv = shuftiDoubleExec(lo1, hi1, lo2, hi2,
+                                        reinterpret_cast<u8 *>(t1),
+                                        reinterpret_cast<u8 *>(t1) + len);
+
+        ASSERT_EQ(reinterpret_cast<const u8 *>(t1 + len - 2), rv)
+            << "Match not found for len=" << len;
+    }
+}
+
+// Test short buffers with a normal two-byte pattern where first char is at the
+// last position. This should not match on any platform.
+TEST(DoubleShufti, ExecNoMatchLastByteShortBuf) {
+    m128 lo1, hi1, lo2, hi2;
+
+    flat_set<pair<u8, u8>> lits;
+    lits.insert(make_pair('x', 'y'));
+
+    bool ret = shuftiBuildDoubleMasks(CharReach(), lits,
+                                      reinterpret_cast<u8 *>(&lo1),
+                                      reinterpret_cast<u8 *>(&hi1),
+                                      reinterpret_cast<u8 *>(&lo2),
+                                      reinterpret_cast<u8 *>(&hi2));
+    ASSERT_TRUE(ret);
+
+    const int maxlen = 128;
+    char t1[maxlen];
+
+    for (int len = 2; len <= 15; len++) {
+        memset(t1, 'b', maxlen);
+        t1[len - 1] = 'x'; // first char at last position, no 'y' follows
+
+        const u8 *rv = shuftiDoubleExec(lo1, hi1, lo2, hi2,
+                                        reinterpret_cast<u8 *>(t1),
+                                        reinterpret_cast<u8 *>(t1) + len);
+
+        ASSERT_EQ(reinterpret_cast<const u8 *>(t1 + len), rv)
+            << "False match for len=" << len;
+    }
+}
+
+// Test short buffers with mixed one-byte and two-byte patterns. A one-byte
+// match at the last position should be correctly reported.
+TEST(DoubleShufti, ExecMatchMixedShortBuf) {
+    m128 lo1, hi1, lo2, hi2;
+
+    CharReach onebyte;
+    flat_set<pair<u8, u8>> twobyte;
+
+    onebyte.set('a');
+    twobyte.insert(make_pair('x', 'y'));
+
+    bool ret = shuftiBuildDoubleMasks(onebyte, twobyte,
+                                      reinterpret_cast<u8 *>(&lo1),
+                                      reinterpret_cast<u8 *>(&hi1),
+                                      reinterpret_cast<u8 *>(&lo2),
+                                      reinterpret_cast<u8 *>(&hi2));
+    ASSERT_TRUE(ret);
+
+    const int maxlen = 128;
+    char t1[maxlen];
+
+    // One-byte 'a' at the last position should be reported
+    for (int len = 2; len <= 15; len++) {
+        memset(t1, 'b', maxlen);
+        t1[len - 1] = 'a';
+
+        const u8 *rv = shuftiDoubleExec(lo1, hi1, lo2, hi2,
+                                        reinterpret_cast<u8 *>(t1),
+                                        reinterpret_cast<u8 *>(t1) + len);
+
+        ASSERT_EQ(reinterpret_cast<const u8 *>(t1 + len - 1), rv)
+            << "One-byte match not found for len=" << len;
+    }
+
+    // No match when target chars are absent
+    for (int len = 2; len <= 15; len++) {
+        memset(t1, 'b', maxlen);
+
+        const u8 *rv = shuftiDoubleExec(lo1, hi1, lo2, hi2,
+                                        reinterpret_cast<u8 *>(t1),
+                                        reinterpret_cast<u8 *>(t1) + len);
+
+        ASSERT_EQ(reinterpret_cast<const u8 *>(t1 + len), rv)
+            << "False match for len=" << len;
+    }
+}

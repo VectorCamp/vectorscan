@@ -30,6 +30,7 @@
 #include "config.h"
 
 #include <set>
+#include <sys/mman.h>
 
 #include "gtest/gtest.h"
 #include "nfa/shufti.h"
@@ -934,6 +935,59 @@ TEST(DoubleShufti, ExecNoMatchVectorEdge) {
 
         ASSERT_EQ(reinterpret_cast<const u8 *>(t1 + len), rv);
     }
+}
+
+// Regression test: shuftiDoubleExecReal used to read a full vector (S bytes)
+// in the tail, which could overread past buf_end. If the buffer ends at a page
+// boundary followed by an unmapped page, this causes a SIGSEGV.
+TEST(DoubleShufti, ExecNoOverreadPageBoundary) {
+    m128 lo1, hi1, lo2, hi2;
+
+    flat_set<pair<u8, u8>> lits;
+    lits.insert(make_pair('a','b'));
+
+    bool ret = shuftiBuildDoubleMasks(CharReach(), lits,
+                                      reinterpret_cast<u8 *>(&lo1), reinterpret_cast<u8 *>(&hi1),
+                                      reinterpret_cast<u8 *>(&lo2), reinterpret_cast<u8 *>(&hi2));
+    ASSERT_TRUE(ret);
+
+    const size_t page_size = 4096;
+    // Map two pages, then unmap the second to create a guard page.
+    u8 *pages = reinterpret_cast<u8 *>(mmap(nullptr, 2 * page_size,
+                           PROT_READ | PROT_WRITE,
+                           MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+    ASSERT_NE(MAP_FAILED, reinterpret_cast<void *>(pages));
+    ASSERT_EQ(0, munmap(pages + page_size, page_size));
+
+    u8 *page_end = pages + page_size;
+
+    // Test various buffer lengths ending right at the page boundary.
+    // Without the fix, lengths that are not a multiple of the vector size will
+    // cause the tail code to read past page_end into the unmapped guard page.
+    for (size_t len = 1; len <= 256; len++) {
+        u8 *buf = page_end - len;
+        memset(buf, 'c', len); // fill with non-matching data
+
+        const u8 *rv = shuftiDoubleExec(lo1, hi1, lo2, hi2, buf, page_end);
+        // No match expected: rv should be at or past buf_end
+        ASSERT_GE((size_t)rv, (size_t)(page_end - 1))
+            << "Unexpected match at len=" << len;
+    }
+
+    // Also test with an actual match near the end.
+    for (size_t len = 2; len <= 256; len++) {
+        u8 *buf = page_end - len;
+        memset(buf, 'c', len);
+        // Place matching pair "ab" near the end of the buffer.
+        buf[len - 2] = 'a';
+        buf[len - 1] = 'b';
+
+        const u8 *rv = shuftiDoubleExec(lo1, hi1, lo2, hi2, buf, page_end);
+        ASSERT_EQ((size_t)(page_end - 2), (size_t)rv)
+            << "Match not found at expected position for len=" << len;
+    }
+
+    munmap(pages, page_size);
 }
 
 TEST(ReverseShufti, ExecNoMatch1) {

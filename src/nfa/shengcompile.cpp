@@ -100,7 +100,9 @@ struct dfa_info {
     }
     dstate &next(dstate_id_t idx, u16 chr) {
         const auto &src = (*this)[idx];
-        auto next_id = src.next[raw.alpha_remap[chr]];
+        const auto idx2 = raw.alpha_remap[chr];
+        if (idx2 >= src.next.size()) return floating;
+        auto next_id = src.next[idx2];
         return states[next_id];
     }
     // get original idx from adjusted idx

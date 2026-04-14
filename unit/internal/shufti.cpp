@@ -951,7 +951,7 @@ TEST(DoubleShufti, ExecNoOverreadPageBoundary) {
                                       reinterpret_cast<u8 *>(&lo2), reinterpret_cast<u8 *>(&hi2));
     ASSERT_TRUE(ret);
 
-    const size_t page_size = 4096;
+    const size_t page_size = sysconf(_SC_PAGE_SIZE);
     // Map two pages, then unmap the second to create a guard page.
     u8 *pages = reinterpret_cast<u8 *>(mmap(nullptr, 2 * page_size,
                            PROT_READ | PROT_WRITE,

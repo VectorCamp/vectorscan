@@ -900,7 +900,7 @@ bool suitableForEod(const RoseInGraph &ig, vector<RoseInVertex> topo,
                     DEBUG_PRINTF("fail due to graph with inf max width\n");
                     return false;
                 }
-                max_width = ig[e].graph_lag + graph_max_width;
+                max_width = static_cast<uint64_t>(ig[e].graph_lag) + graph_max_width;
             } else {
                 max_width = ig[e].maxBound;
                 if (ig[t].type == RIV_LITERAL) {

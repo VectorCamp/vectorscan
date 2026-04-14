@@ -165,7 +165,7 @@ char PROCESS_ACCEPTS_IMPL_FN(const IMPL_NFA_T *limex, const STATE_T *s,
 }
 
 static never_inline
-char PROCESS_ACCEPTS_FN(const IMPL_NFA_T *limex, STATE_T *s,
+char PROCESS_ACCEPTS_FN(const IMPL_NFA_T *limex, const STATE_T *s,
                         const STATE_T *acceptMask,
                         const struct NFAAccept *acceptTable, u64a offset,
                         NfaCallback callback, void *context) {
@@ -173,8 +173,6 @@ char PROCESS_ACCEPTS_FN(const IMPL_NFA_T *limex, STATE_T *s,
     STATE_T squash = ONES_STATE;
     return PROCESS_ACCEPTS_IMPL_FN(limex, s, &squash, acceptMask, acceptTable,
                                    offset, callback, context);
-
-    *s = AND_STATE(*s, squash);
 }
 
 static never_inline

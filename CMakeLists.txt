@@ -1051,15 +1051,20 @@ else ()
         endif() # SHARED
     endif (ARCH_IA32 OR ARCH_X86_64)
     if (ARCH_AARCH64)
+        set(hs_exec_neon_SRCS ${hs_exec_SRCS} ${hs_exec_neon_SRCS})
+        set(hs_exec_sve_SRCS ${hs_exec_SRCS} ${hs_exec_sve_SRCS})
+        set(hs_exec_sve2_SRCS ${hs_exec_SRCS} ${hs_exec_sve2_SRCS})
+
         if (BUILD_STATIC_LIBS)
-            add_fat_component("neon" "hs_exec_neon" "-march=${ARMV8_ARCH}" "${hs_exec_SRCS}" FALSE)
+
+            add_fat_component("neon" "hs_exec_neon" "-march=${ARMV8_ARCH}" "${hs_exec_neon_SRCS}" FALSE)
             list(APPEND RUNTIME_LIBS $<TARGET_OBJECTS:hs_exec_neon>)
 
-	    add_fat_component("sve" "hs_exec_sve" "-march=${SVE_ARCH}" "${hs_exec_SRCS}" FALSE)
+	    add_fat_component("sve" "hs_exec_sve" "-march=${SVE_ARCH}" "${hs_exec_sve_SRCS}" FALSE)
             list(APPEND RUNTIME_LIBS $<TARGET_OBJECTS:hs_exec_sve>)
 
-	    add_fat_component("sve2_bitperm" "hs_exec_sve2_bitperm" "-march=${SVE2_BITPERM_ARCH}" "${hs_exec_SRCS}" FALSE)
-            list(APPEND RUNTIME_LIBS $<TARGET_OBJECTS:hs_exec_sve2_bitperm>)
+	    add_fat_component("sve2" "hs_exec_sve2" "-march=${SVE2_BITPERM_ARCH}" "${hs_exec_sve2_SRCS}" FALSE)
+            list(APPEND RUNTIME_LIBS $<TARGET_OBJECTS:hs_exec_sve2>)
 
             add_library(hs_exec_common OBJECT ${hs_exec_common_SRCS} src/dispatcher.c)
 
@@ -1084,14 +1089,14 @@ else ()
             add_library(hs_compile_shared OBJECT ${hs_compile_SRCS})
             set_target_properties(hs_compile_shared PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
-	    add_fat_component("neon" "hs_exec_shared_neon" "-march=${ARMV8_ARCH}" "${hs_exec_SRCS}" TRUE)
+	    add_fat_component("neon" "hs_exec_shared_neon" "-march=${ARMV8_ARCH}" "${hs_exec_neon_SRCS}" TRUE)
 	    list(APPEND RUNTIME_SHLIBS $<TARGET_OBJECTS:hs_exec_shared_neon>)
 
-	    add_fat_component("sve" "hs_exec_shared_sve" "-march=${SVE_ARCH}" "${hs_exec_SRCS}" TRUE)
+	    add_fat_component("sve" "hs_exec_shared_sve" "-march=${SVE_ARCH}" "${hs_exec_sve_SRCS}" TRUE)
 	    list(APPEND RUNTIME_SHLIBS $<TARGET_OBJECTS:hs_exec_shared_sve>)
 
-	    add_fat_component("sve2_bitperm" "hs_exec_shared_sve2_bitperm" "-march=${SVE2_BITPERM_ARCH}" "${hs_exec_SRCS}" TRUE)
-	    list(APPEND RUNTIME_SHLIBS $<TARGET_OBJECTS:hs_exec_shared_sve2_bitperm>)
+	    add_fat_component("sve2" "hs_exec_shared_sve2" "-march=${SVE2_BITPERM_ARCH}" "${hs_exec_sve2_SRCS}" TRUE)
+	    list(APPEND RUNTIME_SHLIBS $<TARGET_OBJECTS:hs_exec_shared_sve2>)
 
             add_library(hs_exec_common_shared OBJECT ${hs_exec_common_SRCS} src/dispatcher.c)
             set_target_properties(hs_exec_common_shared PROPERTIES

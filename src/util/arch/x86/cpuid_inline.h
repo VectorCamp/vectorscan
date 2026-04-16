@@ -209,25 +209,10 @@ int check_avx512vbmi(void) {
 }
 
 static inline
-int check_ssse3(void) {
-#if defined(VS_SIMDE_NATIVE) && (defined(ARCH_IA32) || defined(ARCH_X86_64))
-    return 1;
-#else
-    unsigned int eax, ebx, ecx, edx;
-    cpuid(1, 0, &eax, &ebx, &ecx, &edx);
-    return !!(ecx & CPUID_SSSE3);
-#endif
-}
-
-static inline
 int check_sse42(void) {
-#if defined(VS_SIMDE_NATIVE) && (defined(ARCH_IA32) || defined(ARCH_X86_64))
-    return 1;
-#else
     unsigned int eax, ebx, ecx, edx;
     cpuid(1, 0, &eax, &ebx, &ecx, &edx);
     return !!(ecx & CPUID_SSE4_2);
-#endif
 }
 
 static inline

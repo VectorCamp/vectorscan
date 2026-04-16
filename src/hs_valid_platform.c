@@ -53,13 +53,14 @@ hs_error_t HS_CDECL hs_valid_platform(void) {
 	return check_sse42()? HS_SUCCESS: HS_ARCH_ERROR;
 #endif
 #elif (defined(ARCH_ARM32) || defined(ARCH_AARCH64))
+    // cppcheck-suppress knownConditionTrueFalse
     return check_neon()? HS_SUCCESS: HS_ARCH_ERROR;
 #endif
 #else
 #if !defined(VS_SIMDE_BACKEND) && (defined(ARCH_IA32) || defined(ARCH_X86_64))
     return check_sse42()? HS_SUCCESS: HS_ARCH_ERROR;
 #elif !defined(VS_SIMDE_BACKEND) && (defined(ARCH_ARM32) || defined(ARCH_AARCH64))
-    //check_neon returns true for now
+    // cppcheck-suppress knownConditionTrueFalse
     return check_neon()? HS_SUCCESS: HS_ARCH_ERROR;
 #elif defined(ARCH_PPC64EL) || defined(VS_SIMDE_BACKEND)
     return HS_SUCCESS;

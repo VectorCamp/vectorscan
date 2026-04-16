@@ -115,7 +115,6 @@ if(DEBUG_OUTPUT)
     set(RELEASE_BUILD FALSE)
 endif(DEBUG_OUTPUT)
 
-
 #for config
 if (RELEASE_BUILD)
     set(HS_OPTIMIZE ON)
@@ -123,14 +122,14 @@ if (RELEASE_BUILD)
 endif()
 
 # Architecture detection
-
 include (${CMAKE_MODULE_PATH}/platform.cmake)
 
 # Detect OS and if Fat Runtime is available
 include (${CMAKE_MODULE_PATH}/osdetection.cmake)
 
-if(ARCH_X86_64 AND BUILD_SSE2_SIMDE AND NOT FAT_RUNTIME)
-    set(SIMDE_BACKEND True)
+if(ARCH_X86_64 AND FAT_RUNTIME AND NOT NO_SIMDE_IN_FAT)
+    include (${CMAKE_MODULE_PATH}/simde.cmake)
+    set(SIMDE_NATIVE True)
 endif()
 
 if(SIMDE_BACKEND)
@@ -957,92 +956,47 @@ if (NOT FAT_RUNTIME)
         set_target_properties(hs_compile_shared PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
     endif()
 else ()
+    include(cmake/build_wrapper.cmake)
+
     if (ARCH_IA32 OR ARCH_X86_64)
-        set(BUILD_WRAPPER "${PROJECT_SOURCE_DIR}/cmake/build_wrapper.sh")
         if (NOT BUILD_AVX512)
             set (DISPATCHER_DEFINE "-DDISABLE_AVX512_DISPATCH")
         endif (NOT BUILD_AVX512)
         if (NOT BUILD_AVX512VBMI)
             set (DISPATCHER_DEFINE "${DISPATCHER_DEFINE} -DDISABLE_AVX512VBMI_DISPATCH")
         endif (NOT BUILD_AVX512VBMI)
-        if(BUILD_SSE2_SIMDE)
-            set (DISPATCHER_DEFINE "${DISPATCHER_DEFINE} -DVS_SIMDE_BACKEND -DVS_SIMDE_NATIVE -march=core2 -msse2")
-        endif(BUILD_SSE2_SIMDE)
+	# Make the dispatcher use the lowest arch denominator
+        set (DISPATCHER_DEFINE "${DISPATCHER_DEFINE} -march=x86-64 -msse2")
         set_source_files_properties(src/dispatcher.c PROPERTIES
             COMPILE_FLAGS "-Wno-unused-parameter -Wno-unused-function ${DISPATCHER_DEFINE}")
-        if(BUILD_SSE2_SIMDE AND NOT BUILD_AVX2 AND NOT BUILD_AVX512 AND NOT BUILD_AVX512VBMI)
-            set_source_files_properties(src/crc32.c PROPERTIES
-                COMPILE_FLAGS "-DVS_SIMDE_BACKEND -DVS_SIMDE_NATIVE -march=core2 -msse2")
-            set_source_files_properties(src/hs.cpp PROPERTIES
-                COMPILE_FLAGS "-DVS_SIMDE_BACKEND -DVS_SIMDE_NATIVE -march=core2 -msse2")
-
-            string(REGEX REPLACE "-msse4.2" "-DVS_SIMDE_BACKEND -DVS_SIMDE_NATIVE -march=core2 -msse2" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-            string(REGEX REPLACE "-msse4.2" "-DVS_SIMDE_BACKEND -DVS_SIMDE_NATIVE -march=core2 -msse2" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-        endif()
 
         if (BUILD_STATIC_LIBS)
 
-            if (BUILD_SSE2_SIMDE)
-              add_library(hs_exec_core2 OBJECT ${hs_exec_SRCS})
-              list(APPEND RUNTIME_LIBS $<TARGET_OBJECTS:hs_exec_core2>)
-              message("Building SIMDE SSE2 version..")
-              include_directories(${PROJECT_SOURCE_DIR}/simde)
-              if (CMAKE_COMPILER_IS_CLANG)
-                set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSIMDE_NO_CHECK_IMMEDIATE_CONSTANT")
-                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMDE_NO_CHECK_IMMEDIATE_CONSTANT")
-              endif()
+	    if (NOT NO_SIMDE_IN_FAT)
+                message(STATUS "Building SIMDE backend in static fat runtime..")
+                include_directories(${PROJECT_SOURCE_DIR}/simde)
+                add_fat_component("simde" "hs_exec_simde" "${SIMDE_FLAGS} -march=x86-64 -msse2" "${hs_exec_SRCS}" FALSE)
+                list(APPEND RUNTIME_LIBS $<TARGET_OBJECTS:hs_exec_simde>)
+            endif()
 
-              set_target_properties(hs_exec_core2 PROPERTIES
-                  string(REGEX REPLACE "-msse4.2" "-msse2" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-                  string(REGEX REPLACE "-msse4.2" "-msse2" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-                  COMPILE_FLAGS "-DVS_SIMDE_BACKEND -DVS_SIMDE_NATIVE -march=core2 -msse2"
-                  RULE_LAUNCH_COMPILE "${BUILD_WRAPPER} core2 ${CMAKE_MODULE_PATH}/keep.syms.in"
-                  )
-            else()
-              add_library(hs_exec_core2 OBJECT ${hs_exec_SRCS})
-              list(APPEND RUNTIME_LIBS $<TARGET_OBJECTS:hs_exec_core2>)
-              set_target_properties(hs_exec_core2 PROPERTIES
-                  COMPILE_FLAGS "-march=core2 -msse4.2"
-                  RULE_LAUNCH_COMPILE "${BUILD_WRAPPER} core2 ${CMAKE_MODULE_PATH}/keep.syms.in"
-                  )
-	    endif(BUILD_SSE2_SIMDE)
-
-            add_library(hs_exec_corei7 OBJECT ${hs_exec_SRCS})
+            add_fat_component("corei7" "hs_exec_corei7" "-march=corei7 -msse4.2" "${hs_exec_SRCS}" FALSE)
             list(APPEND RUNTIME_LIBS $<TARGET_OBJECTS:hs_exec_corei7>)
-            set_target_properties(hs_exec_corei7 PROPERTIES
-                COMPILE_FLAGS "-march=corei7 -msse4.2"
-                RULE_LAUNCH_COMPILE "${BUILD_WRAPPER} corei7 ${CMAKE_MODULE_PATH}/keep.syms.in"
-                )
 
             if (BUILD_AVX2)
-                add_library(hs_exec_avx2 OBJECT ${hs_exec_SRCS} ${hs_exec_avx2_SRCS})
+                set(hs_exec_SRCS ${hs_exec_SRCS} ${hs_exec_avx2_SRCS})
+                add_fat_component("avx2" "hs_exec_avx2" "-march=core-avx2" "${hs_exec_SRCS}" FALSE)
                 list(APPEND RUNTIME_LIBS $<TARGET_OBJECTS:hs_exec_avx2>)
-                set_target_properties(hs_exec_avx2 PROPERTIES
-                    COMPILE_FLAGS "-march=core-avx2 -mavx2"
-                    RULE_LAUNCH_COMPILE "${BUILD_WRAPPER} avx2 ${CMAKE_MODULE_PATH}/keep.syms.in"
-                    )
             endif (BUILD_AVX2)
             if (BUILD_AVX512)
-                add_library(hs_exec_avx512 OBJECT ${hs_exec_SRCS} ${hs_exec_avx2_SRCS})
+                add_fat_component("avx512" "hs_exec_avx512" "${SKYLAKE_FLAG}" "${hs_exec_SRCS}" FALSE)
                 list(APPEND RUNTIME_LIBS $<TARGET_OBJECTS:hs_exec_avx512>)
-                set_target_properties(hs_exec_avx512 PROPERTIES
-                    COMPILE_FLAGS "${SKYLAKE_FLAG}"
-                    RULE_LAUNCH_COMPILE "${BUILD_WRAPPER} avx512 ${CMAKE_MODULE_PATH}/keep.syms.in"
-                    )
             endif (BUILD_AVX512)
             if (BUILD_AVX512VBMI)
-                add_library(hs_exec_avx512vbmi OBJECT ${hs_exec_SRCS} ${hs_exec_avx2_SRCS})
+                add_fat_component("avx512vbmi" "hs_exec_avx512vbmi" "${SKYLAKE_FLAG}" "${hs_exec_SRCS}" FALSE)
                 list(APPEND RUNTIME_LIBS $<TARGET_OBJECTS:hs_exec_avx512vbmi>)
-                set_target_properties(hs_exec_avx512vbmi PROPERTIES
-                    COMPILE_FLAGS "${ICELAKE_FLAG}"
-                    RULE_LAUNCH_COMPILE "${BUILD_WRAPPER} avx512vbmi ${CMAKE_MODULE_PATH}/keep.syms.in"
-                    )
             endif (BUILD_AVX512VBMI)
 
-            add_library(hs_exec_common OBJECT
-                ${hs_exec_common_SRCS}
-                src/dispatcher.c
-                )
+            add_library(hs_exec_common OBJECT ${hs_exec_common_SRCS} src/dispatcher.c)
 
             # hs_version.c is added explicitly to avoid some build systems that refuse to
             # create a lib without any src (I'm looking at you Xcode)
@@ -1059,19 +1013,6 @@ else ()
                 $<TARGET_OBJECTS:hs_exec_common>
                 ${RUNTIME_LIBS})
 
-            if (BUILD_SSE2_SIMDE)
-                set_target_properties(hs_compile PROPERTIES
-                  string(REGEX REPLACE "-msse4.2" "-msse2" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-                  string(REGEX REPLACE "-msse4.2" "-msse2" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-                  COMPILE_FLAGS "-DVS_SIMDE_BACKEND -DVS_SIMDE_NATIVE -march=core2 -msse2"
-                )
-                set_target_properties(hs PROPERTIES
-                  string(REGEX REPLACE "-msse4.2" "-msse2" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-                  string(REGEX REPLACE "-msse4.2" "-msse2" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-                  COMPILE_FLAGS "-DVS_SIMDE_BACKEND -DVS_SIMDE_NATIVE -march=core2 -msse2"
-                )
-            endif (BUILD_SSE2_SIMDE)
-
         endif (BUILD_STATIC_LIBS)
 
         if (BUILD_SHARED_LIBS)
@@ -1079,110 +1020,48 @@ else ()
             add_library(hs_compile_shared OBJECT ${hs_compile_SRCS})
             set_target_properties(hs_compile_shared PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
-            if (BUILD_SSE2_SIMDE)
-              message("Building SIMDE SSE2 version..")
-              add_library(hs_exec_shared_core2 OBJECT ${hs_exec_SRCS})
-              list(APPEND RUNTIME_SHLIBS $<TARGET_OBJECTS:hs_exec_shared_core2>)
-
-              include_directories(${PROJECT_SOURCE_DIR}/simde)
-              if (CMAKE_COMPILER_IS_CLANG)
-                set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSIMDE_NO_CHECK_IMMEDIATE_CONSTANT")
-                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMDE_NO_CHECK_IMMEDIATE_CONSTANT")
-              endif()
-              set_target_properties(hs_exec_shared_core2 PROPERTIES
-                  string(REGEX REPLACE "-msse4.2" "-msse2" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-                  string(REGEX REPLACE "-msse4.2" "-msse2" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-                  COMPILE_FLAGS "-DVS_SIMDE_BACKEND -DVS_SIMDE_NATIVE -march=core2 -msse2"
-                  POSITION_INDEPENDENT_CODE TRUE
-                  RULE_LAUNCH_COMPILE "${BUILD_WRAPPER} core2 ${CMAKE_MODULE_PATH}/keep.syms.in"
-                  )
-              set_target_properties(hs_compile_shared PROPERTIES
-                  string(REGEX REPLACE "-msse4.2" "-msse2" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-                  string(REGEX REPLACE "-msse4.2" "-msse2" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-                  COMPILE_FLAGS "-DVS_SIMDE_BACKEND -DVS_SIMDE_NATIVE -march=core2 -msse2"
-                  )
-            else()
-              add_library(hs_exec_shared_core2 OBJECT ${hs_exec_SRCS})
-              list(APPEND RUNTIME_SHLIBS $<TARGET_OBJECTS:hs_exec_shared_core2>)
-              set_target_properties(hs_exec_shared_core2 PROPERTIES
-                  COMPILE_FLAGS "-march=core2 -msse4.2"
-                  POSITION_INDEPENDENT_CODE TRUE
-                  RULE_LAUNCH_COMPILE "${BUILD_WRAPPER} core2 ${CMAKE_MODULE_PATH}/keep.syms.in"
-                  )
-            endif (BUILD_SSE2_SIMDE)
-
-            add_library(hs_exec_shared_corei7 OBJECT ${hs_exec_SRCS})
-            list(APPEND RUNTIME_SHLIBS $<TARGET_OBJECTS:hs_exec_shared_corei7>)
-            set_target_properties(hs_exec_shared_corei7 PROPERTIES
-                COMPILE_FLAGS "-march=corei7 -msse4.2"
-                POSITION_INDEPENDENT_CODE TRUE
-                RULE_LAUNCH_COMPILE "${BUILD_WRAPPER} corei7 ${CMAKE_MODULE_PATH}/keep.syms.in"
-                )
+            if (NOT NO_SIMDE_IN_FAT)
+                message(STATUS "Building SIMDE backend in shared fat runtime..")
+                include_directories(${PROJECT_SOURCE_DIR}/simde)
+                add_fat_component("simde" "hs_exec_shared_simde" "${SIMDE_FLAGS} -march=x86-64 -msse2" "${hs_exec_SRCS}" TRUE)
+		list(APPEND RUNTIME_SHLIBS $<TARGET_OBJECTS:hs_exec_shared_simde>)
+            endif()
+ 
+            add_fat_component("corei7" "hs_exec_shared_corei7" "-march=corei7 -msse4.2" "${hs_exec_SRCS}" TRUE)
+	    list(APPEND RUNTIME_SHLIBS $<TARGET_OBJECTS:hs_exec_shared_corei7>)
 
             if (BUILD_AVX2)
-                add_library(hs_exec_shared_avx2 OBJECT ${hs_exec_SRCS} ${hs_exec_avx2_SRCS})
-                list(APPEND RUNTIME_SHLIBS $<TARGET_OBJECTS:hs_exec_shared_avx2>)
-                set_target_properties(hs_exec_shared_avx2 PROPERTIES
-                    COMPILE_FLAGS "-march=core-avx2 -mavx2"
-                    POSITION_INDEPENDENT_CODE TRUE
-                    RULE_LAUNCH_COMPILE "${BUILD_WRAPPER} avx2 ${CMAKE_MODULE_PATH}/keep.syms.in"
-                    )
+                set(hs_exec_SRCS ${hs_exec_SRCS} ${hs_exec_avx2_SRCS})
+                add_fat_component("avx2" "hs_exec_shared_avx2" "-march=core-avx2" "${hs_exec_SRCS}" TRUE)
+		list(APPEND RUNTIME_SHLIBS $<TARGET_OBJECTS:hs_exec_shared_avx2>)
             endif (BUILD_AVX2)
             if (BUILD_AVX512)
-                add_library(hs_exec_shared_avx512 OBJECT ${hs_exec_SRCS} ${hs_exec_avx2_SRCS})
-                list(APPEND RUNTIME_SHLIBS $<TARGET_OBJECTS:hs_exec_shared_avx512>)
-                set_target_properties(hs_exec_shared_avx512 PROPERTIES
-                    COMPILE_FLAGS "${SKYLAKE_FLAG}"
-                    POSITION_INDEPENDENT_CODE TRUE
-                    RULE_LAUNCH_COMPILE "${BUILD_WRAPPER} avx512 ${CMAKE_MODULE_PATH}/keep.syms.in"
-                    )
+                add_fat_component("avx512" "hs_exec_shared_avx512" "${SKYLAKE_FLAG}" "${hs_exec_SRCS}" TRUE)
+		list(APPEND RUNTIME_SHLIBS $<TARGET_OBJECTS:hs_exec_shared_avx512>)
             endif (BUILD_AVX512)
             if (BUILD_AVX512VBMI)
-                add_library(hs_exec_shared_avx512vbmi OBJECT ${hs_exec_SRCS} ${hs_exec_avx2_SRCS})
-                list(APPEND RUNTIME_SHLIBS $<TARGET_OBJECTS:hs_exec_shared_avx512vbmi>)
-                set_target_properties(hs_exec_shared_avx512vbmi PROPERTIES
-                    COMPILE_FLAGS "${ICELAKE_FLAG}"
-                    POSITION_INDEPENDENT_CODE TRUE
-                    RULE_LAUNCH_COMPILE "${BUILD_WRAPPER} avx512vbmi ${CMAKE_MODULE_PATH}/keep.syms.in"
-                    )
+                add_fat_component("avx512vbmi" "hs_exec_shared_avx512vbmi" "${SKYLAKE_FLAG}" "${hs_exec_SRCS}" TRUE)
+		list(APPEND RUNTIME_SHLIBS $<TARGET_OBJECTS:hs_exec_shared_avx512vbmi>)
             endif (BUILD_AVX512VBMI)
-            add_library(hs_exec_common_shared OBJECT
-            ${hs_exec_common_SRCS}
-            src/dispatcher.c
-            )
+
+            add_library(hs_exec_common_shared OBJECT ${hs_exec_common_SRCS} src/dispatcher.c)
             set_target_properties(hs_exec_common_shared PROPERTIES
                 OUTPUT_NAME hs_exec_common
                 POSITION_INDEPENDENT_CODE TRUE)
-
         endif() # SHARED
     endif (ARCH_IA32 OR ARCH_X86_64)
     if (ARCH_AARCH64)
-        set(BUILD_WRAPPER "${PROJECT_SOURCE_DIR}/cmake/build_wrapper.sh")
         if (BUILD_STATIC_LIBS)
-            add_library(hs_exec_neon OBJECT ${hs_exec_SRCS} ${hs_exec_neon_SRCS})
+            add_fat_component("neon" "hs_exec_neon" "-march=${ARMV8_ARCH}" "${hs_exec_SRCS}" FALSE)
             list(APPEND RUNTIME_LIBS $<TARGET_OBJECTS:hs_exec_neon>)
-            set_target_properties(hs_exec_neon PROPERTIES
-                COMPILE_FLAGS "-march=${ARMV8_ARCH}"
-                RULE_LAUNCH_COMPILE "${BUILD_WRAPPER} neon ${CMAKE_MODULE_PATH}/keep.syms.in"
-                )
 
-            add_library(hs_exec_sve OBJECT ${hs_exec_SRCS} ${hs_exec_sve_SRCS})
+	    add_fat_component("sve" "hs_exec_sve" "-march=${SVE_ARCH}" "${hs_exec_SRCS}" FALSE)
             list(APPEND RUNTIME_LIBS $<TARGET_OBJECTS:hs_exec_sve>)
-            set_target_properties(hs_exec_sve PROPERTIES
-                COMPILE_FLAGS "-march=${SVE_ARCH}"
-                RULE_LAUNCH_COMPILE "${BUILD_WRAPPER} sve ${CMAKE_MODULE_PATH}/keep.syms.in"
-                )
-            add_library(hs_exec_sve2 OBJECT ${hs_exec_SRCS} ${hs_exec_sve2_SRCS})
-            list(APPEND RUNTIME_LIBS $<TARGET_OBJECTS:hs_exec_sve2>)
-            set_target_properties(hs_exec_sve2 PROPERTIES
-                COMPILE_FLAGS "-march=${SVE2_BITPERM_ARCH}"
-                RULE_LAUNCH_COMPILE "${BUILD_WRAPPER} sve2 ${CMAKE_MODULE_PATH}/keep.syms.in"
-                )
 
-            add_library(hs_exec_common OBJECT
-                ${hs_exec_common_SRCS}
-                src/dispatcher.c
-                )
+	    add_fat_component("sve2_bitperm" "hs_exec_sve2_bitperm" "-march=${SVE2_BITPERM_ARCH}" "${hs_exec_SRCS}" FALSE)
+            list(APPEND RUNTIME_LIBS $<TARGET_OBJECTS:hs_exec_sve2_bitperm>)
+
+            add_library(hs_exec_common OBJECT ${hs_exec_common_SRCS} src/dispatcher.c)
 
             # hs_version.c is added explicitly to avoid some build systems that refuse to
             # create a lib without any src (I'm looking at you Xcode)
@@ -1204,32 +1083,17 @@ else ()
             # build shared libs
             add_library(hs_compile_shared OBJECT ${hs_compile_SRCS})
             set_target_properties(hs_compile_shared PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
-	          add_library(hs_exec_shared_neon OBJECT ${hs_exec_SRCS} ${hs_exec_neon_SRCS})
-            list(APPEND RUNTIME_SHLIBS $<TARGET_OBJECTS:hs_exec_shared_neon>)
-            set_target_properties(hs_exec_shared_neon PROPERTIES
-                COMPILE_FLAGS "-march=${ARMV8_ARCH}"
-                POSITION_INDEPENDENT_CODE TRUE
-                RULE_LAUNCH_COMPILE "${BUILD_WRAPPER} neon ${CMAKE_MODULE_PATH}/keep.syms.in"
-                )
 
-            add_library(hs_exec_shared_sve OBJECT ${hs_exec_SRCS} ${hs_exec_sve_SRCS})
-            list(APPEND RUNTIME_SHLIBS $<TARGET_OBJECTS:hs_exec_shared_sve>)
-            set_target_properties(hs_exec_shared_sve PROPERTIES
-		            COMPILE_FLAGS "-march=${SVE_ARCH}"
-                POSITION_INDEPENDENT_CODE TRUE
-                RULE_LAUNCH_COMPILE "${BUILD_WRAPPER} sve ${CMAKE_MODULE_PATH}/keep.syms.in"
-                )
-            add_library(hs_exec_shared_sve2 OBJECT ${hs_exec_SRCS} ${hs_exec_sve2_SRCS})
-            list(APPEND RUNTIME_SHLIBS $<TARGET_OBJECTS:hs_exec_shared_sve2>)
-            set_target_properties(hs_exec_shared_sve2 PROPERTIES
-                COMPILE_FLAGS "-march=${SVE2_BITPERM_ARCH}"
-                POSITION_INDEPENDENT_CODE TRUE
-                RULE_LAUNCH_COMPILE "${BUILD_WRAPPER} sve2 ${CMAKE_MODULE_PATH}/keep.syms.in"
-                )
-            add_library(hs_exec_common_shared OBJECT
-            ${hs_exec_common_SRCS}
-            src/dispatcher.c
-            )
+	    add_fat_component("neon" "hs_exec_shared_neon" "-march=${ARMV8_ARCH}" "${hs_exec_SRCS}" TRUE)
+	    list(APPEND RUNTIME_SHLIBS $<TARGET_OBJECTS:hs_exec_shared_neon>)
+
+	    add_fat_component("sve" "hs_exec_shared_sve" "-march=${SVE_ARCH}" "${hs_exec_SRCS}" TRUE)
+	    list(APPEND RUNTIME_SHLIBS $<TARGET_OBJECTS:hs_exec_shared_sve>)
+
+	    add_fat_component("sve2_bitperm" "hs_exec_shared_sve2_bitperm" "-march=${SVE2_BITPERM_ARCH}" "${hs_exec_SRCS}" TRUE)
+	    list(APPEND RUNTIME_SHLIBS $<TARGET_OBJECTS:hs_exec_shared_sve2_bitperm>)
+
+            add_library(hs_exec_common_shared OBJECT ${hs_exec_common_SRCS} src/dispatcher.c)
             set_target_properties(hs_exec_common_shared PROPERTIES
                 OUTPUT_NAME hs_exec_common
                 POSITION_INDEPENDENT_CODE TRUE)

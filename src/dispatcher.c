@@ -78,18 +78,22 @@
 #define check_avx512vbmi() (0)
 #endif
 
+#if !defined(VS_SIMDE_BACKEND)
+#define simde_ error_
+#endif
+
 #define CREATE_DISPATCH(RTYPE, NAME, ...)                                      \
+    /* error func */                                                           \
+    static inline RTYPE JOIN(error_, NAME)(__VA_ARGS__) {                      \
+        return (RTYPE)HS_ARCH_ERROR;                                           \
+    }                                                                          \
+                                                                               \
     /* create defns */                                                         \
     RTYPE JOIN(avx512vbmi_, NAME)(__VA_ARGS__);                                \
     RTYPE JOIN(avx512_, NAME)(__VA_ARGS__);                                    \
     RTYPE JOIN(avx2_, NAME)(__VA_ARGS__);                                      \
     RTYPE JOIN(corei7_, NAME)(__VA_ARGS__);                                    \
-    RTYPE JOIN(core2_, NAME)(__VA_ARGS__);                                     \
-                                                                               \
-    /* error func */                                                           \
-    static inline RTYPE JOIN(error_, NAME)(__VA_ARGS__) {                      \
-        return (RTYPE)HS_ARCH_ERROR;                                           \
-    }                                                                          \
+    RTYPE JOIN(simde_, NAME)(__VA_ARGS__);                                     \
                                                                                \
     /* dispatch routing pointer for this function */                           \
     /* initially point it at the resolve function */                           \
@@ -110,12 +114,9 @@
         }                                                                      \
         else if (check_sse42() && check_popcnt()) {                            \
             fat_dispatch_ ## NAME = &JOIN(corei7_, NAME);                      \
-        }                                                                      \
-        else if (check_ssse3()) {                                              \
-            fat_dispatch_ ## NAME = &JOIN(core2_, NAME);                       \
         } else {                                                               \
-            /* anything else is fail */                                        \
-            fat_dispatch_ ## NAME = &JOIN(error_, NAME);                       \
+            /* If no SSE4.2 is available we fallback to SIMDe */               \
+            fat_dispatch_ ## NAME = &JOIN(simde_, NAME);                       \
         }                                                                      \
 
 

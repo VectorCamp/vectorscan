@@ -969,7 +969,7 @@ else ()
             set (DISPATCHER_DEFINE "${DISPATCHER_DEFINE} -DDISABLE_AVX512VBMI_DISPATCH")
         endif (NOT BUILD_AVX512VBMI)
 	# Make the dispatcher use the lowest arch denominator
-        set (DISPATCHER_DEFINE "${DISPATCHER_DEFINE} -march=x86-64 -msse2")
+        set (DISPATCHER_DEFINE "${DISPATCHER_DEFINE} -march=x86-64 -msse2 ${SIMDE_FLAGS}")
         set_source_files_properties(src/dispatcher.c PROPERTIES
             COMPILE_FLAGS "-Wno-unused-parameter -Wno-unused-function ${DISPATCHER_DEFINE}")
 
@@ -1015,6 +1015,8 @@ else ()
                 $<TARGET_OBJECTS:hs_compile>
                 $<TARGET_OBJECTS:hs_exec_common>
                 ${RUNTIME_LIBS})
+            set_source_files_properties(src/hs_valid_platform.c PROPERTIES
+                COMPILE_FLAGS "${SIMDE_FLAGS}")
 
         endif (BUILD_STATIC_LIBS)
 
@@ -1051,6 +1053,8 @@ else ()
             set_target_properties(hs_exec_common_shared PROPERTIES
                 OUTPUT_NAME hs_exec_common
                 POSITION_INDEPENDENT_CODE TRUE)
+            set_source_files_properties(src/hs_valid_platform.c PROPERTIES
+                COMPILE_FLAGS "${SIMDE_FLAGS}")
         endif() # SHARED
     endif (ARCH_IA32 OR ARCH_X86_64)
     if (ARCH_AARCH64)

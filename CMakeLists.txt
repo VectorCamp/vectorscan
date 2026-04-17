@@ -132,7 +132,7 @@ if(ARCH_X86_64 AND FAT_RUNTIME AND NOT NO_SIMDE_IN_FAT)
     set(SIMDE_NATIVE True)
 endif()
 
-if(SIMDE_BACKEND)
+if(BUILD_SIMDE_BACKEND)
     include (${CMAKE_MODULE_PATH}/simde.cmake)
 elseif (ARCH_IA32 OR ARCH_X86_64)
     include (${CMAKE_MODULE_PATH}/cflags-x86.cmake)
@@ -275,7 +275,7 @@ set (hs_exec_common_SRCS
     src/util/arch/common/cpuid_flags.h
     src/util/multibit.c
     )
-if (SIMDE_BACKEND)
+if (BUILD_SIMDE_BACKEND)
 set (hs_exec_common_SRCS
     ${hs_exec_common_SRCS}
     src/util/arch/simde/cpuid_flags.c)
@@ -437,7 +437,7 @@ set (hs_exec_SRCS
     src/database.h
 )
 
-if (SIMDE_BACKEND)
+if (BUILD_SIMDE_BACKEND)
 set (hs_exec_SRCS
     ${hs_exec_SRCS}
     src/nfa/vermicelli_simd.cpp

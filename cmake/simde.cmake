@@ -17,6 +17,7 @@ if (SIMDE_SSE42_H_FOUND)
   endif()
 
   if (ARCH_IA32 OR ARCH_X86_64)
+    set(SIMDE_NATIVE TRUE)
     set(ARCH_C_FLAGS "-msse2")
     set(ARCH_CXX_FLAGS "-msse2")
     set(X86_ARCH "x86-64")

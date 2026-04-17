@@ -129,7 +129,7 @@ include (${CMAKE_MODULE_PATH}/osdetection.cmake)
 
 if(ARCH_X86_64 AND FAT_RUNTIME AND NOT NO_SIMDE_IN_FAT)
     include (${CMAKE_MODULE_PATH}/simde.cmake)
-    set(SIMDE_NATIVE True)
+    set(BUILD_SIMDE_NATIVE True)
 endif()
 
 if(BUILD_SIMDE_BACKEND)

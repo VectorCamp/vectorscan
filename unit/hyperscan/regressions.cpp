@@ -463,3 +463,45 @@ TEST(ArmRegression, NoDotAll_Long) {
     hs_free_scratch(scratch);
     hs_free_database(db);
 }
+
+unsigned countMatchesById(const vector<MatchRecord> &matches, int id) {
+    unsigned count = 0;
+    for (vector<MatchRecord>::const_iterator it = matches.begin();
+         it != matches.end(); ++it) {
+        if (id == it->id) {
+            count++;
+        }
+    }
+    return count;
+}
+
+TEST(utf8, charclass_issue_326) {
+    vector<pattern> patterns = {
+    pattern(R"(\x{ff15}\x{ff10}\x{ff17}\x{ff15}\x{ff10}[\x{ff10}-\x{ff19}]{7})",
+        HS_FLAG_DOTALL | HS_FLAG_PREFILTER | HS_FLAG_MULTILINE | HS_FLAG_CASELESS | HS_FLAG_UCP | HS_FLAG_UTF8, 1),
+    pattern(R"(NL[0-9\x{ff10}-\x{ff19}]{2}[A-Z\x{ff21}-\x{ff3a}a-z\x{ff41}-\x{ff5a}]{4}[0-9\x{ff10}-\x{ff19}]{10})",
+        HS_FLAG_PREFILTER | HS_FLAG_SINGLEMATCH| HS_FLAG_UTF8, 2)
+    };
+    const char *data1 = "５０７５０７８３２４０１";
+    const char *data2 = "NL２０INGB０００１２３４567";
+
+    hs_database_t *db = buildDB(patterns, HS_MODE_NOSTREAM);
+    ASSERT_NE(nullptr, db);
+
+    hs_scratch_t *scratch = nullptr;
+    hs_error_t err = hs_alloc_scratch(db, &scratch);
+    ASSERT_EQ(HS_SUCCESS, err);
+
+    CallBackContext c1, c2;
+    err = hs_scan(db, data1, strlen(data1), 0, scratch, record_cb, (void *)&c1);
+    ASSERT_EQ(HS_SUCCESS, err);
+    
+    err = hs_scan(db, data2, strlen(data2), 0, scratch, record_cb, (void *)&c2);
+    ASSERT_EQ(HS_SUCCESS, err);
+
+    EXPECT_EQ(1, countMatchesById(c1.matches, 1));
+    EXPECT_EQ(1, countMatchesById(c2.matches, 2));
+    err = hs_free_scratch(scratch);
+    ASSERT_EQ(HS_SUCCESS, err);
+    hs_free_database(db);
+}

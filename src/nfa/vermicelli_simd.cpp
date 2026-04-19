@@ -368,9 +368,6 @@ const u8 *rvermicelliDoubleExecReal(char c1, char c2, SuperVector<S> const casem
     assert(buf < buf_end);
     DEBUG_PRINTF("rverm %p len %zu\n", buf, buf_end - buf);
     DEBUG_PRINTF("b %s\n", buf);
-    char s[255];
-    snprintf(s, buf_end - buf + 1, "%s", buf);
-    DEBUG_PRINTF("b %s\n", s);
 
     const u8 *d = buf_end;
     const u8 *rv;

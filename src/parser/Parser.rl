@@ -1099,6 +1099,12 @@ unichar readUtf8CodePoint4c(const char *s) {
                   throwInvalidUtf8();
               };
 
+              # Nested character classes are not supported (issue #210)
+              '[' => { throw LocatedParseError("Nested character classes are not supported"); };
+
+              # Character class intersection/subtraction (Java-style) not supported (issue #210)
+              '&&' => { throw LocatedParseError("Character class intersection/subtraction is not supported"); };
+
               # Literal character
               (any - ']') => {
                   currentCls->add((u8)*ts);

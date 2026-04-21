@@ -157,3 +157,7 @@
 161:/141/C #No logical operation.
 162:/119 & 121/C #Unknown sub-expression id.
 163:/166 & 167/C #Unknown sub-expression id.
+164:/[a-d[m-p]]/ #Nested character classes are not supported at index 4.
+165:/[a-z&&[def]]/ #Character class intersection/subtraction is not supported at index 4.
+166:/[a-z&&[^bc]]/ #Character class intersection/subtraction is not supported at index 4.
+167:/[a-z&&[^m-p]]/ #Character class intersection/subtraction is not supported at index 4.

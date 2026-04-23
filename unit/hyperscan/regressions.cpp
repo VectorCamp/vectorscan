@@ -464,7 +464,12 @@ TEST(ArmRegression, NoDotAll_Long) {
     hs_free_database(db);
 }
 
+
 TEST(utf8, charclass_issue_326) {
+    /*
+     * This is a modified test case from https://github.com/VectorCamp/vectorscan/issues/326
+     * It includes both test patterns mentioned in the issue.
+     */
     vector<pattern> unicode_patterns = {
     pattern(R"(\x{ff15}\x{ff10}\x{ff17}\x{ff15}\x{ff10}[\x{ff10}-\x{ff19}]{7})",
         HS_FLAG_DOTALL | HS_FLAG_PREFILTER | HS_FLAG_MULTILINE | HS_FLAG_CASELESS | HS_FLAG_UCP | HS_FLAG_UTF8, 1),

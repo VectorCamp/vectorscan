@@ -113,7 +113,7 @@ m128 lshift_m128(m128 a, unsigned b) {
     }
 #endif
   int32x4_t shift_indices = vdupq_n_s32(b);
-  return (m128) vshlq_s32(a, shift_indices);
+  return (m128) vshlq_u32((uint32x4_t)a, shift_indices);
 }
 
 static really_really_inline
@@ -124,7 +124,7 @@ m128 rshift_m128(m128 a, unsigned b) {
     }
 #endif
   int32x4_t shift_indices = vdupq_n_s32(-b);
-  return (m128) vshlq_s32(a, shift_indices);
+  return (m128) vshlq_u32((uint32x4_t)a, shift_indices);
 }
 
 static really_really_inline
@@ -135,7 +135,7 @@ m128 lshift64_m128(m128 a, unsigned b) {
     }
 #endif
   int64x2_t shift_indices = vdupq_n_s64(b);
-  return (m128) vshlq_s64((int64x2_t) a, shift_indices);
+  return (m128) vshlq_u64((uint64x2_t) a, shift_indices);
 }
 
 static really_really_inline
@@ -146,7 +146,7 @@ m128 rshift64_m128(m128 a, unsigned b) {
     }
 #endif
   int64x2_t shift_indices = vdupq_n_s64(-b);
-  return (m128) vshlq_s64((int64x2_t) a, shift_indices);
+  return (m128) vshlq_u64((uint64x2_t) a, shift_indices);
 }
 
 static really_inline m128 eq128(m128 a, m128 b) {

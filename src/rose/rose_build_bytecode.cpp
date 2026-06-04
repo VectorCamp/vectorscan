@@ -2994,9 +2994,8 @@ void buildFragmentPrograms(const RoseBuildImpl &build,
         if (pfrag.included_delay_frag_id != INVALID_FRAG_ID &&
             !rebuild_prog.empty()) {
             const auto &cfrag = fragments[pfrag.included_delay_frag_id];
-            /** assert(pfrag.s.length() >= cfrag.s.length() && **/
-            assert(pfrag.s.length() == cfrag.s.length() &&
-                   !pfrag.s.any_nocase() != !cfrag.s.any_nocase());
+            // cppcheck-suppress comparisonOfTwoFuncsReturningBoolError
+            assert(pfrag.s.length() >= cfrag.s.length() && !pfrag.s.any_nocase() >= !cfrag.s.any_nocase());
             u32 child_offset = cfrag.delay_program_offset;
             DEBUG_PRINTF("child %u offset %u\n", cfrag.fragment_id,
                          child_offset);

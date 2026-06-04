@@ -499,3 +499,10 @@ TEST(utf8, charclass_issue_326) {
     ASSERT_EQ(HS_SUCCESS, err);
     hs_free_database(db);
 }
+
+TEST(bug339, delayed_fragment_assert) {
+    hs_database_t *db = buildDB(R"((?:1\d|3[01])(?:0[1-9]|1[01])\d)", 0, 0, HS_MODE_STREAM);
+    ASSERT_NE(nullptr, db);
+
+    hs_free_database(db);
+}

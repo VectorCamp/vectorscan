@@ -213,8 +213,10 @@ const u8 *check_last_byte(SuperVector<S> mask2_lo, SuperVector<S> mask2_hi,
     }
     uint8_t match_inverted = reduce.u.u8[0] | last_elem;
 
-    // if 0xff, then no match
-    int match = match_inverted != 0xff;
+    // Also stop when the last byte is the first char of a double (last_elem): its
+    // second char may be in the next stream chunk. This returns a resume point, not
+    // a match, so it adds no false positives but fixes cross-chunk false negatives.
+    int match = (match_inverted != 0xff) || (last_elem != 0xff);
     if(match) {
         return buf_end - 1;
     }

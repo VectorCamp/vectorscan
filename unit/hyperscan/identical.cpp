@@ -194,4 +194,73 @@ void PrintTo(const PatternInfo &p, ::std::ostream *os) {
     *os << p.expr << ":" << p.flags << ", " << p.corpus;
 }
 
+// Regression: a double-class shufti accelerator must report identical matches in
+// block and streaming mode, including when a two-char anchor straddles a chunk
+// boundary (the trailing first-char byte must not be skipped). For each pattern
+// the block match set is the oracle; streaming must reproduce it at every split.
+static const PatternInfo accelStreamSplitPatterns[] = {
+    { "[0-9]{1,2}c[a-f]*", 0,
+      ".q3q..y1y.cz13czx0c31bc2 1z2bz1_qq2 12yebxz.yd.f.cy__ .ybezd112cz", 0 },
+    { "[b-d]{1,3}[cd]+\\d*", 0,
+      "xf2a2b .3a21xbzz0 eq1qdxayyy20dadaa_ a22qbe..cxycx1 301.bd3", 0 },
+    { "[a-c]{1,3}[ac][ab]*", 0,
+      "f1fzxq.qedb31dxa0d .2xc0 .3yy3_f01yxa01a3c ya1e. az.qdaa", 0 },
+    { "[ac]{1,3}[cd]+", 0, "f2z0c_xxzd23cabe_bdczd0xqeb0fcc", 0 },
+};
+
+TEST(DoubleShuftiStreaming, SplitInvariant) {
+    const size_t num = sizeof(accelStreamSplitPatterns) /
+                       sizeof(accelStreamSplitPatterns[0]);
+    for (size_t p = 0; p < num; p++) {
+        const PatternInfo &info = accelStreamSplitPatterns[p];
+        SCOPED_TRACE(info.expr);
+
+        hs_database_t *bdb =
+            buildDB(pattern(info.expr, info.flags, 0), HS_MODE_BLOCK);
+        ASSERT_NE(nullptr, bdb);
+        hs_database_t *sdb =
+            buildDB(pattern(info.expr, info.flags, 0), HS_MODE_STREAM);
+        ASSERT_NE(nullptr, sdb);
+
+        hs_scratch_t *scratch = nullptr;
+        ASSERT_EQ(HS_SUCCESS, hs_alloc_scratch(bdb, &scratch));
+        ASSERT_EQ(HS_SUCCESS, hs_alloc_scratch(sdb, &scratch));
+
+        // Block-mode oracle: the set of match end-offsets.
+        CallBackContext block_cb;
+        ASSERT_EQ(HS_SUCCESS,
+                  hs_scan(bdb, info.corpus.c_str(), info.corpus.size(), 0,
+                          scratch, record_cb, &block_cb));
+        std::set<unsigned long long> oracle;
+        for (size_t i = 0; i < block_cb.matches.size(); i++) {
+            oracle.insert(block_cb.matches[i].to);
+        }
+
+        const size_t len = info.corpus.size();
+        for (size_t k = 1; k < len; k++) {
+            CallBackContext cb;
+            hs_stream_t *stream = nullptr;
+            ASSERT_EQ(HS_SUCCESS, hs_open_stream(sdb, 0, &stream));
+            ASSERT_EQ(HS_SUCCESS,
+                      hs_scan_stream(stream, info.corpus.c_str(), k, 0, scratch,
+                                     record_cb, &cb));
+            ASSERT_EQ(HS_SUCCESS,
+                      hs_scan_stream(stream, info.corpus.c_str() + k, len - k, 0,
+                                     scratch, record_cb, &cb));
+            ASSERT_EQ(HS_SUCCESS,
+                      hs_close_stream(stream, scratch, record_cb, &cb));
+
+            std::set<unsigned long long> got;
+            for (size_t i = 0; i < cb.matches.size(); i++) {
+                got.insert(cb.matches[i].to);
+            }
+            ASSERT_EQ(oracle, got) << "stream split at offset " << k;
+        }
+
+        ASSERT_EQ(HS_SUCCESS, hs_free_scratch(scratch));
+        hs_free_database(bdb);
+        hs_free_database(sdb);
+    }
+}
+
 } // namespace

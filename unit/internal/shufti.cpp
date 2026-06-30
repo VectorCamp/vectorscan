@@ -900,12 +900,9 @@ TEST(DoubleShufti, ExecMatchMixed3) {
         const u8 *rv = shuftiDoubleExec(lo1, hi1, lo2, hi2,
                                         reinterpret_cast<u8 *>(t2), reinterpret_cast<u8 *>(t2) + len);
 
-        if(i < 2) {
-            // i=0 is "xy" out of buffer. i=1 is "x" in buffer but not "y"
-            ASSERT_EQ(reinterpret_cast<const u8 *>(t2 + len), rv);
-        }else {
-            ASSERT_EQ(reinterpret_cast<const u8 *>(&t2[len - i]), rv);
-        }
+        // Same form as the single-char loop above: i==0 is buf_end, i==1 a resume
+        // point (first char on the last byte), i>=2 the real match.
+        ASSERT_EQ(reinterpret_cast<const u8 *>(&t2[len - i]), rv);
     }
 }
 
@@ -933,7 +930,8 @@ TEST(DoubleShufti, ExecNoMatchVectorEdge) {
         const u8 *rv = shuftiDoubleExec(lo1, hi1, lo2, hi2,
                                         reinterpret_cast<u8 *>(t1), reinterpret_cast<u8 *>(t1) + len);
 
-        ASSERT_EQ(reinterpret_cast<const u8 *>(t1 + len), rv);
+        // i==1: first char 'a' is the last byte, so accel stops at buf_end-1
+        ASSERT_EQ(i == 1 ? reinterpret_cast<const u8 *>(t1 + len - 1) : reinterpret_cast<const u8 *>(t1 + len), rv);
     }
 }
 
@@ -1046,7 +1044,7 @@ TEST(DoubleShufti, ExecNoMatchLastByte) {
                                         reinterpret_cast<u8 *>(t1),
                                         reinterpret_cast<u8 *>(t1) + len);
 
-        ASSERT_EQ(reinterpret_cast<const u8 *>(t1 + len), rv)
+        ASSERT_EQ(reinterpret_cast<const u8 *>(t1 + len - 1), rv)
             << "Failed for len=" << len;
     }
 }
@@ -1330,8 +1328,8 @@ TEST(DoubleShufti, ExecNoMatchLastByteShortBufNullPair) {
                                         reinterpret_cast<u8 *>(t1),
                                         reinterpret_cast<u8 *>(t1) + len);
 
-        ASSERT_EQ(reinterpret_cast<const u8 *>(t1 + len), rv)
-            << "False match for len=" << len;
+        ASSERT_EQ(reinterpret_cast<const u8 *>(t1 + len - 1), rv)
+            << "Failed for len=" << len;
     }
 }
 
@@ -1361,8 +1359,8 @@ TEST(DoubleShufti, ExecNoMatchLastByteNullPairVaryLen) {
                                         reinterpret_cast<u8 *>(t1),
                                         reinterpret_cast<u8 *>(t1) + len);
 
-        ASSERT_EQ(reinterpret_cast<const u8 *>(t1 + len), rv)
-            << "False match for len=" << len;
+        ASSERT_EQ(reinterpret_cast<const u8 *>(t1 + len - 1), rv)
+            << "Failed for len=" << len;
     }
 }
 
@@ -1424,8 +1422,8 @@ TEST(DoubleShufti, ExecNoMatchLastByteShortBuf) {
                                         reinterpret_cast<u8 *>(t1),
                                         reinterpret_cast<u8 *>(t1) + len);
 
-        ASSERT_EQ(reinterpret_cast<const u8 *>(t1 + len), rv)
-            << "False match for len=" << len;
+        ASSERT_EQ(reinterpret_cast<const u8 *>(t1 + len - 1), rv)
+            << "Failed for len=" << len;
     }
 }
 

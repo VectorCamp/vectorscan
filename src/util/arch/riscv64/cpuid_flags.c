@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2015-2020, Intel Corporation
- * Copyright (c) 2023, VectorCamp PC
+ * Copyright (c) 2015-2017, Intel Corporation
+ * Copyright (c) 2020-2026, VectorCamp PC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,55 +27,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file
- * \brief SIMD types and primitive operations.
- */
-
-#ifndef SIMD_UTILS_H
-#define SIMD_UTILS_H
-
-#include "config.h"
+#include "util/arch/common/cpuid_flags.h"
+#include "ue2common.h"
+#include "hs_compile.h" // for HS_MODE_ flags
 #include "util/arch.h"
 
-// Define a common assume_aligned using an appropriate compiler built-in, if
-// it's available. Note that we need to handle C or C++ compilation.
-#ifdef __cplusplus
-#  ifdef HAVE_CXX_BUILTIN_ASSUME_ALIGNED
-#    define vectorscan_assume_aligned(x, y) __builtin_assume_aligned((x), (y))
-#  endif
-#else
-#  ifdef HAVE_CC_BUILTIN_ASSUME_ALIGNED
-#    define vectorscan_assume_aligned(x, y) __builtin_assume_aligned((x), (y))
-#  endif
-#endif
-
-// Fallback to identity case.
-#ifndef vectorscan_assume_aligned
-#define vectorscan_assume_aligned(x, y) (x)
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern const char vbs_mask_data[];
-#ifdef __cplusplus
+u64a cpuid_flags(void) {
+     return 0;
 }
-#endif
 
-#if defined(VS_SIMDE_BACKEND)
-#include "util/arch/x86/simd_utils.h"
-#else
-#if defined(ARCH_IA32) || defined(ARCH_X86_64)
-#include "util/arch/x86/simd_utils.h"
-#elif defined(ARCH_ARM32) || defined(ARCH_AARCH64)
-#include "util/arch/arm/simd_utils.h"
-#elif defined(ARCH_PPC64EL)
-#include "util/arch/ppc64el/simd_utils.h"
-#elif defined(ARCH_RISCV64)
-#include "util/arch/riscv64/simd_utils.h"
-#endif
-#endif
-
-#include "util/arch/common/simd_utils.h"
-
-#endif // SIMD_UTILS_H
+u32 cpuid_tune(void) {
+    return HS_TUNE_FAMILY_GENERIC;
+}

@@ -683,6 +683,9 @@ TEST(SimdUtilsTest, movq) {
 #if defined(__clang__) && (__clang_major__ >= 15)
 #pragma clang diagnostic pop
 #endif // defined(__clang__) && (__clang_major__ == 15)
+#elif defined(ARCH_RISCV64)
+    simd.d[0] = 0x123456789abcdefULL;
+    simd.d[1] = ~0ULL;
 #endif
 #endif
     r = movq(simd);

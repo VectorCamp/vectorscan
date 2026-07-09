@@ -58,6 +58,8 @@ const u8 *last_zero_match_inverted(const u8 *buf, SuperVector<S> v, u16 len = S)
 #include "util/arch/arm/match.hpp"
 #elif defined(ARCH_PPC64EL)
 #include "util/arch/ppc64el/match.hpp"
+#elif defined(ARCH_RISCV64)
+#include "util/arch/riscv64/match.hpp"
 #endif
 #endif
 

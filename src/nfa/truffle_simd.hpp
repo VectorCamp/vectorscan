@@ -68,6 +68,8 @@ const SuperVector<S> blockSingleMask(SuperVector<S> shuf_mask_lo_highclear, Supe
 #include "arm/truffle.hpp"
 #elif defined(ARCH_PPC64EL)
 #include "ppc64el/truffle.hpp"
+#elif defined(ARCH_RISCV64)
+#include "riscv64/truffle.hpp"
 #endif
 #endif
 

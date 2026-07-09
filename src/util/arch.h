@@ -42,6 +42,8 @@
 #include "util/arch/arm/arm.h"
 #elif defined(ARCH_PPC64EL)
 #include "util/arch/ppc64el/ppc64el.h"
+#elif defined(ARCH_RISCV64)
+#include "util/arch/riscv64/riscv64.h"
 #endif
 #ifdef __NetBSD__
 #include <strings.h>

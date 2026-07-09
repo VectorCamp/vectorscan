@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2015-2020, Intel Corporation
- * Copyright (c) 2023, VectorCamp PC
+ * Copyright (c) 2017-2020, Intel Corporation
+ * Copyright (c) 2020-2026, VectorCamp PC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,55 +27,44 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file
- * \brief SIMD types and primitive operations.
- */
+#ifndef CPUID_INLINE_RISCV64_H_
+#define CPUID_INLINE_RISCV64_H_
 
-#ifndef SIMD_UTILS_H
-#define SIMD_UTILS_H
+#include "ue2common.h"
+#include "util/arch/common/cpuid_flags.h"
 
-#include "config.h"
-#include "util/arch.h"
-
-// Define a common assume_aligned using an appropriate compiler built-in, if
-// it's available. Note that we need to handle C or C++ compilation.
 #ifdef __cplusplus
-#  ifdef HAVE_CXX_BUILTIN_ASSUME_ALIGNED
-#    define vectorscan_assume_aligned(x, y) __builtin_assume_aligned((x), (y))
-#  endif
+extern "C"
+{
+#endif
+
+/* RISC-V does not have CPUID; feature detection is done at compile time
+ * via predefined macros (__riscv_v, __riscv_zbb, etc.) or at runtime
+ * via HWCAP on Linux (getauxval). */
+
+/* Runtime RVV detection via HWCAP on Linux */
+#if defined(__linux__) && defined(__riscv)
+#include <sys/auxv.h>
+#define HWCAP_RVV (1 << 12) /* COMPAT_HWCAP_ISA_V */
+
+static inline
+int check_rvv(void) {
+    unsigned long hwcap = getauxval(AT_HWCAP);
+    return !!(hwcap & HWCAP_RVV);
+}
 #else
-#  ifdef HAVE_CC_BUILTIN_ASSUME_ALIGNED
-#    define vectorscan_assume_aligned(x, y) __builtin_assume_aligned((x), (y))
-#  endif
+static inline
+int check_rvv(void) {
+#if defined(__riscv_v_intrinsic) || defined(__riscv_vector)
+    return 1;
+#else
+    return 0;
 #endif
-
-// Fallback to identity case.
-#ifndef vectorscan_assume_aligned
-#define vectorscan_assume_aligned(x, y) (x)
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern const char vbs_mask_data[];
-#ifdef __cplusplus
 }
 #endif
 
-#if defined(VS_SIMDE_BACKEND)
-#include "util/arch/x86/simd_utils.h"
-#else
-#if defined(ARCH_IA32) || defined(ARCH_X86_64)
-#include "util/arch/x86/simd_utils.h"
-#elif defined(ARCH_ARM32) || defined(ARCH_AARCH64)
-#include "util/arch/arm/simd_utils.h"
-#elif defined(ARCH_PPC64EL)
-#include "util/arch/ppc64el/simd_utils.h"
-#elif defined(ARCH_RISCV64)
-#include "util/arch/riscv64/simd_utils.h"
-#endif
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
 
-#include "util/arch/common/simd_utils.h"
-
-#endif // SIMD_UTILS_H
+#endif /* CPUID_INLINE_RISCV64_H_ */

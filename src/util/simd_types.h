@@ -52,6 +52,8 @@ typedef simde__m128i m128;
 #include "util/arch/arm/simd_types.h"
 #elif defined(ARCH_PPC64EL)
 #include "util/arch/ppc64el/simd_types.h"
+#elif defined(ARCH_RISCV64)
+#include "util/arch/riscv64/simd_types.h"
 #endif
 
 

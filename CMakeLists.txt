@@ -140,6 +140,8 @@ elseif (ARCH_ARM32 OR ARCH_AARCH64)
     include (${CMAKE_MODULE_PATH}/cflags-arm.cmake)
 elseif (ARCH_PPC64EL)
     include (${CMAKE_MODULE_PATH}/cflags-ppc64le.cmake)
+elseif (ARCH_RISCV64)
+    include (${CMAKE_MODULE_PATH}/cflags-riscv64.cmake)
 else ()
     message(FATAL_ERROR "Unsupported platform")
 endif ()
@@ -162,7 +164,11 @@ if (NOT FAT_RUNTIME)
         message(STATUS "GNUCC_TUNE is set")
         set(ARCH_C_FLAGS "-${ARCH_FLAG}=${GNUCC_ARCH} -${TUNE_FLAG}=${GNUCC_TUNE}")
         set(ARCH_CXX_FLAGS "-${ARCH_FLAG}=${GNUCC_ARCH} -${TUNE_FLAG}=${GNUCC_TUNE}")
-    else()
+    elseif (ARCH_RISCV64)
+        message(STATUS "GNUCC_TUNE is not set")
+        set(ARCH_C_FLAGS "-${ARCH_FLAG}=${GNUCC_ARCH}")
+        set(ARCH_CXX_FLAGS "-${ARCH_FLAG}=${GNUCC_ARCH}")
+        else()
         message(STATUS "GNUCC_TUNE is not set")
         set(ARCH_C_FLAGS "-${ARCH_FLAG}=${GNUCC_ARCH} -mtune=${TUNE_FLAG} ${ARCH_C_FLAGS}")
         set(ARCH_CXX_FLAGS "-${ARCH_FLAG}=${GNUCC_ARCH} -mtune=${TUNE_FLAG} ${ARCH_CXX_FLAGS}")
@@ -293,6 +299,10 @@ elseif (ARCH_PPC64EL)
 set (hs_exec_common_SRCS
     ${hs_exec_common_SRCS}
     src/util/arch/ppc64el/cpuid_flags.c)
+elseif (ARCH_RISCV64)
+set (hs_exec_common_SRCS
+    ${hs_exec_common_SRCS}
+    src/util/arch/riscv64/cpuid_flags.c)    
 endif ()
 
 set (hs_exec_SRCS
@@ -456,6 +466,11 @@ set (hs_exec_SRCS
     ${hs_exec_SRCS}
     src/nfa/vermicelli_simd.cpp
     src/util/supervector/arch/ppc64el/impl.cpp)
+elseif (ARCH_RISCV64)
+set (hs_exec_SRCS
+    ${hs_exec_SRCS}
+    src/nfa/vermicelli_simd.cpp
+    src/util/supervector/arch/riscv64/impl.cpp)
 endif()
 
 
@@ -936,6 +951,8 @@ if (NOT FAT_RUNTIME)
         else()
             set(hs_exec_SRCS ${hs_exec_SRCS} ${hs_exec_neon_SRCS})
         endif()
+    elseif (ARCH_RISCV64)
+        set(hs_exec_SRCS ${hs_exec_SRCS} ${hs_exec_neon_SRCS})        
     endif()
 
     if (BUILD_STATIC_LIBS)

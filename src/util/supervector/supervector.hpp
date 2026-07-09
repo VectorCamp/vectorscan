@@ -43,6 +43,8 @@
 #include "util/supervector/arch/arm/types.hpp"
 #elif defined(ARCH_PPC64EL)
 #include "util/supervector/arch/ppc64el/types.hpp"
+#elif defined(ARCH_RISCV64)
+#include "util/supervector/arch/riscv64/types.hpp"
 #endif
 #endif // VS_SIMDE_BACKEND
 
@@ -395,6 +397,8 @@ struct Unroller<End, End>
 #include "util/supervector/arch/arm/impl.cpp"
 #elif defined(ARCH_PPC64EL)
 #include "util/supervector/arch/ppc64el/impl.cpp"
+#elif defined(ARCH_RISCV64)
+#include "util/supervector/arch/riscv64/impl.cpp"
 #endif
 #endif
 #endif

@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2015-2020, Intel Corporation
- * Copyright (c) 2023, VectorCamp PC
+ * Copyright (c) 2015-2017, Intel Corporation
+ * Copyright (c) 2020-2026, VectorCamp PC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,54 +28,23 @@
  */
 
 /** \file
- * \brief SIMD types and primitive operations.
+ * \brief Truffle: character class acceleration.
+ *
  */
 
-#ifndef SIMD_UTILS_H
-#define SIMD_UTILS_H
+template <uint16_t S>
+static really_inline
+const SuperVector<S> blockSingleMask(SuperVector<S> shuf_mask_lo_highclear, SuperVector<S> shuf_mask_lo_highset, SuperVector<S> chars) {
 
-#include "config.h"
-#include "util/arch.h"
+    SuperVector<S> highconst = SuperVector<S>::dup_u8(0x80);
+    SuperVector<S> shuf_mask_hi = SuperVector<S>::dup_u64(0x8040201008040201);
 
-// Define a common assume_aligned using an appropriate compiler built-in, if
-// it's available. Note that we need to handle C or C++ compilation.
-#ifdef __cplusplus
-#  ifdef HAVE_CXX_BUILTIN_ASSUME_ALIGNED
-#    define vectorscan_assume_aligned(x, y) __builtin_assume_aligned((x), (y))
-#  endif
-#else
-#  ifdef HAVE_CC_BUILTIN_ASSUME_ALIGNED
-#    define vectorscan_assume_aligned(x, y) __builtin_assume_aligned((x), (y))
-#  endif
-#endif
+    SuperVector<S> shuf1 = shuf_mask_lo_highclear.pshufb(chars);
+    SuperVector<S> t1 = chars ^ highconst;
+    SuperVector<S> shuf2 = shuf_mask_lo_highset.pshufb(t1);
+    SuperVector<S> t2 = highconst.opandnot(chars.template vshr_64_imm<4>());
+    SuperVector<S> shuf3 = shuf_mask_hi.pshufb(t2);
+    SuperVector<S> res = (shuf1 | shuf2) & shuf3;
 
-// Fallback to identity case.
-#ifndef vectorscan_assume_aligned
-#define vectorscan_assume_aligned(x, y) (x)
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern const char vbs_mask_data[];
-#ifdef __cplusplus
+    return res.eq(SuperVector<S>::Zeroes());
 }
-#endif
-
-#if defined(VS_SIMDE_BACKEND)
-#include "util/arch/x86/simd_utils.h"
-#else
-#if defined(ARCH_IA32) || defined(ARCH_X86_64)
-#include "util/arch/x86/simd_utils.h"
-#elif defined(ARCH_ARM32) || defined(ARCH_AARCH64)
-#include "util/arch/arm/simd_utils.h"
-#elif defined(ARCH_PPC64EL)
-#include "util/arch/ppc64el/simd_utils.h"
-#elif defined(ARCH_RISCV64)
-#include "util/arch/riscv64/simd_utils.h"
-#endif
-#endif
-
-#include "util/arch/common/simd_utils.h"
-
-#endif // SIMD_UTILS_H

@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2015-2020, Intel Corporation
- * Copyright (c) 2023, VectorCamp PC
+ * Copyright (c) 2017-2020, Intel Corporation
+ * Copyright (c) 2020-2026, VectorCamp PC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,54 +28,53 @@
  */
 
 /** \file
- * \brief SIMD types and primitive operations.
+ * \brief Per-platform architecture definitions for RISC-V 64-bit
  */
 
-#ifndef SIMD_UTILS_H
-#define SIMD_UTILS_H
+#ifndef UTIL_ARCH_RISCV64_H_
+#define UTIL_ARCH_RISCV64_H_
 
-#include "config.h"
-#include "util/arch.h"
-
-// Define a common assume_aligned using an appropriate compiler built-in, if
-// it's available. Note that we need to handle C or C++ compilation.
-#ifdef __cplusplus
-#  ifdef HAVE_CXX_BUILTIN_ASSUME_ALIGNED
-#    define vectorscan_assume_aligned(x, y) __builtin_assume_aligned((x), (y))
-#  endif
-#else
-#  ifdef HAVE_CC_BUILTIN_ASSUME_ALIGNED
-#    define vectorscan_assume_aligned(x, y) __builtin_assume_aligned((x), (y))
-#  endif
+#if defined(__riscv) && __riscv_xlen == 64
+#define HAVE_RISCV64
 #endif
 
-// Fallback to identity case.
-#ifndef vectorscan_assume_aligned
-#define vectorscan_assume_aligned(x, y) (x)
+#if defined(__riscv_v_intrinsic) || defined(__riscv_vector)
+#define HAVE_RVV
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern const char vbs_mask_data[];
-#ifdef __cplusplus
-}
+#if defined(HAVE_RVV)
+#define HAVE_SIMD_128_BITS
+#define CHUNKSIZE 128
+#define VECTORSIZE 16
 #endif
 
-#if defined(VS_SIMDE_BACKEND)
-#include "util/arch/x86/simd_utils.h"
-#else
-#if defined(ARCH_IA32) || defined(ARCH_X86_64)
-#include "util/arch/x86/simd_utils.h"
-#elif defined(ARCH_ARM32) || defined(ARCH_AARCH64)
-#include "util/arch/arm/simd_utils.h"
-#elif defined(ARCH_PPC64EL)
-#include "util/arch/ppc64el/simd_utils.h"
-#elif defined(ARCH_RISCV64)
-#include "util/arch/riscv64/simd_utils.h"
-#endif
+#if defined(HAVE_RVV) && defined(__riscv_v_elen) && (__riscv_v_elen >= 256)
+#define HAVE_SIMD_256_BITS
 #endif
 
-#include "util/arch/common/simd_utils.h"
+/* RISC-V Bitmanip extension (Zbb) provides ctz/clz/popcount */
+#if defined(__riscv_zbb)
+#define HAVE_ZBB
+#endif
 
-#endif // SIMD_UTILS_H
+/* RISC-V Carryless Multiply extension (Zbc) */
+#if defined(__riscv_zbc)
+#define HAVE_ZBC
+#endif
+
+/* RISC-V Zvbb - Vector Bitmanip */
+#if defined(__riscv_zvbb)
+#define HAVE_ZVBB
+#endif
+
+/* RISC-V Zvbc - Vector Carryless Multiply */
+#if defined(__riscv_zvbc)
+#define HAVE_ZVBC
+#endif
+
+/* RISC-V Zicsr extension */
+#if defined(__riscv_zicsr)
+#define HAVE_ZICSR
+#endif
+
+#endif // UTIL_ARCH_RISCV64_H_

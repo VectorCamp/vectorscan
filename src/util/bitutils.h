@@ -52,6 +52,8 @@
 #include "util/arch/arm/bitutils.h"
 #elif defined(ARCH_PPC64EL)
 #include "util/arch/ppc64el/bitutils.h"
+#elif defined(ARCH_RISCV64)
+#include "util/arch/riscv64/bitutils.h"
 #endif
 #else
 #include "util/arch/common/bitutils.h"

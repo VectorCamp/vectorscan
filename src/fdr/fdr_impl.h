@@ -115,5 +115,7 @@ const ALIGN_CL_DIRECTIVE u8 zone_or_mask[ITER_BYTES+1][ITER_BYTES] = {
 #include "arm/fdr_impl.h"
 #elif defined(ARCH_PPC64EL)
 #include "ppc64le/fdr_impl.h"
+#elif defined(ARCH_RISCV64)
+#include "riscv64/fdr_impl.h"
 #endif
 #endif

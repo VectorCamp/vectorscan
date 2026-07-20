@@ -38,8 +38,6 @@
 #endif
 #endif
 
-#include <stdio.h>
-
 HS_PUBLIC_API
 hs_error_t HS_CDECL hs_valid_platform(void) {
     /* Vectorscan requires SSE4.2, anything else is a bonus */
@@ -49,7 +47,7 @@ hs_error_t HS_CDECL hs_valid_platform(void) {
 	// Now that we have SIMDe fallback we can always return success.
     return HS_SUCCESS;
 #else
-	printf("checking SSE42 support\n");
+	DEBUG_PRINTF("checking SSE42 support\n");
 	return check_sse42()? HS_SUCCESS: HS_ARCH_ERROR;
 #endif
 #elif (defined(ARCH_ARM32) || defined(ARCH_AARCH64))

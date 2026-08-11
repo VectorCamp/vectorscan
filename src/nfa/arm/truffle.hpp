@@ -250,9 +250,9 @@ const SuperVector<S> blockSingleMask(SuperVector<S> shuf_mask_lo_highclear, Supe
     t1.print8("t1");
     SuperVector<S> shuf2 = shuf_mask_lo_highset.pshufb(t1);
     shuf2.print8("shuf2");
-    SuperVector<S> t2 = highconst.opandnot(chars.template vshr_64_imm<4>());
+    SuperVector<S> t2 = chars.template vshr_8_imm<4>();
     t2.print8("t2");
-    SuperVector<S> shuf3 = shuf_mask_hi.pshufb(t2);
+    SuperVector<S> shuf3 = shuf_mask_hi.template pshufb<false>(t2);
     shuf3.print8("shuf3");
     SuperVector<S> res = (shuf1 | shuf2) & shuf3;
     res.print8("(shuf1 | shuf2) & shuf3");

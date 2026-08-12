@@ -57,6 +57,8 @@
 #define CAN_USE_WIDE_TRUFFLE 1
 #elif defined(HAVE_SVE)
 #define CAN_USE_WIDE_TRUFFLE (svcntb() >= 32)
+#elif defined(HAVE_NEON) && defined(ARCH_AARCH64) && !defined(VS_SIMDE_BACKEND)
+#define CAN_USE_WIDE_TRUFFLE 1
 #endif
 
 #endif // UTIL_ARCH_ARM_H_

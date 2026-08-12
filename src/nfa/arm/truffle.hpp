@@ -230,6 +230,34 @@ svuint8_t blockSingleMaskWide(svuint8_t shuf_mask_lo_highclear, svuint8_t shuf_m
 #endif //HAVE_SVE2
 #endif //HAVE_SVE
 
+#if defined(CAN_USE_WIDE_TRUFFLE) && !defined(HAVE_SVE)
+/* require wide truffle compilation. The 256b mask is split between the two parameters */
+
+template <uint16_t S>
+static really_inline
+const SuperVector<S> blockSingleMaskWide(SuperVector<S> shuf_mask_lo_highclear, SuperVector<S> shuf_mask_lo_highset, SuperVector<S> chars) {
+    chars.print8("chars");
+    shuf_mask_lo_highclear.print8("shuf_mask_lo_highclear");
+
+    uint8x16x2_t tbl = {{shuf_mask_lo_highclear.u.u8x16[0], shuf_mask_lo_highset.u.u8x16[0]}};
+
+    SuperVector<S> idx = chars & SuperVector<S>::dup_u8(31);
+    idx.print8("idx");
+    SuperVector<S> byte_select = SuperVector<S>(vqtbl2q_u8(tbl, idx.u.u8x16[0]));
+    byte_select.print8("byte_select");
+
+    SuperVector<S> bits = chars.template vshr_8_imm<5>();
+    bits.print8("bits");
+    SuperVector<S> bit_select = SuperVector<S>(
+        vshlq_u8(vdupq_n_u8(1), vreinterpretq_s8_u8(bits.u.u8x16[0])));
+    bit_select.print8("bit_select");
+
+    SuperVector<S> res = bit_select & byte_select;
+    res.print8("bit_select & byte_select");
+    return !res.eq(SuperVector<S>::Zeroes());
+}
+
+#endif
 /* require normal truffle compilation. The 256b mask is split between the two parameters */
 template <uint16_t S>
 static really_inline

@@ -6,11 +6,12 @@ Build-Depends: cmake,
                libboost-dev,
                libpcap-dev,
                libsqlite3-dev,
-               pkg-config,
+               pkgconf,
                po-debconf,
                python3,
-               ragel
-Standards-Version: 4.6.2
+               ragel,
+               libsimde-dev [!arm64 !ppc64el]
+Standards-Version: 4.7.4
 Section: libs
 Rules-Requires-Root: no
 Homepage: https://vectorcamp.gr/vectorscan

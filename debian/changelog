@@ -1,3 +1,9 @@
+vectorscan (5.4.13-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Konstantinos Margaritis <markos@debian.org>  Sun, 23 Aug 2026 13:54:07 +0300
+
 vectorscan (5.4.11-2) unstable; urgency=medium
 
   * Make build reproducible: Closes: #1056649

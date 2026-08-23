@@ -2,10 +2,10 @@ Description: Make the build reproducible
 Author: Chris Lamb <lamby@debian.org>
 Last-Update: 2023-11-24
 
---- vectorscan-5.4.11.orig/CMakeLists.txt
-+++ vectorscan-5.4.11/CMakeLists.txt
+--- vectorscan-5.4.13.orig/CMakeLists.txt
++++ vectorscan-5.4.13/CMakeLists.txt
 @@ -7,7 +7,7 @@ set (HS_MINOR_VERSION 4)
- set (HS_PATCH_VERSION 11)
+ set (HS_PATCH_VERSION 13)
  set (HS_VERSION ${HS_MAJOR_VERSION}.${HS_MINOR_VERSION}.${HS_PATCH_VERSION})
  
 -string (TIMESTAMP BUILD_DATE "%Y-%m-%d")

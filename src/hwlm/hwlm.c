@@ -97,16 +97,16 @@ void do_accel_block(const union AccelAux *aux, const u8 *buf, size_t len,
     const u8 *ptr = buf + *start;
     const u8 *end = buf + len;
     const u8 offset = aux->generic.offset;
-    ptr = run_hwlm_accel(aux, ptr, end);
+    const u8 *rv = run_hwlm_accel(aux, ptr, end);
 
     if (offset) {
-        ptr -= offset;
-        if (ptr < buf) {
-            ptr = buf;
+        rv -= offset;
+        if (rv < buf) {
+            rv = buf;
         }
     }
-    assert(ptr >= buf);
-    *start = ptr - buf;
+    assert(rv >= buf);
+    *start = rv - buf;
 }
 
 static really_inline

@@ -2,6 +2,93 @@
 
 This is a list of notable changes to Vectorscan, in reverse chronological order. For Hyperscan Changelog, check CHANGELOG.md
 
+## [5.4.13] 2026-08-21
+
+This is an release that has long been long overdue. Many changes from many contributors, whom we have to thank.
+It was a release that should have happened long time ago, but we were struggling to find funding/sponsorship for the project.
+Thankfully this has been solved and news about this will be announced in the beginning of September along with an updated Roadmap for the project. 
+
+In addition, following the platform support listed in 5.4.12, there are some updates with regards to supported platforms.
+In particular, we have no problem supporting a platform that requires only minimal changes to the codebase/makefile. This does not include new architectures or totally different OSes that need special build setups (like RISC-V, Loongson, etc).
+
+The following platforms have been removed from CI and will be re-added only with a support contract. The project may still compile fine on these platforms but there is no guarantee or support.
+
+* MacOS X x86
+* FreeBSD
+
+The changes in detail:
+
+Byeonguk Jeong (12):
+      sve2: Test SVE2 availability with both HWCAP_SVE and HWCAP2_SVE2 (#363)
+      state-compress: fix compiler error in storecompressed128_64bit (#379)
+      accel: Fix offset clamping in do_accel_block to not go before start (#365)
+      Supervector fixes v3 (#373)
+      fix: correct SVE accelerator bugs in shufti, truffle, and noodle (#377)
+      vermicelli: correct AVX-512 nvermicelli tail scan masking bug (#378)
+      simd: convert rshift64 macros to functions and fix simd_utils bugs (#376)
+      test: add comprehensive unit tests for vermicelli and noodle accelerators (#380)
+      shufti-double: fix regressions from #325 (#368)
+      Right Shift in rshift64_m128 fallback path (ARM NEON) (#396)
+      sse4.2: Suppress redundant SSE42 checking log (#404)
+      avx512vbmi: Fix CFLAGS for AVX512VBMI (#407)
+
+Gabe DiFiore (1):
+      Fix stack buffer overflow in `rvermicelliDoubleExecReal()` (#392)
+
+JT (1):
+      Add Fedora Build/Installation Documentation v1 (#354)
+
+Jeremy Linton (1):
+      update python/sphinx to use non deprecated api (#362)
+
+Josef Schlehofer (1):
+      gcc does not recognize armv7a, but it recognizes armv7-a (#348)
+
+Konstantinos Margaritis (9):
+      Feature/refactor fdr (#251)
+      Fix compiler errors with clang21, gcc15/gcc16. (#383)
+      bug 328: fix integer overflow (#388)
+      bug 349: remove dead code (#387)
+      do not assume page_size is 4k, fails on Apple Silicon (#389)
+      SIMDe is considered a valid platform (#390)
+      Bug #210: Throw error at invalid character classes (#393)
+      Bump version
+      include .mailmap to fix multiple addresses in commits
+
+Not So Chiken (1):
+      Add unit tests for bug with arm64 HS_FLAG_DOTALL causing false negatives (#391)
+
+Olivia Trewin (1):
+      Fix #399 by correcting assert in buildFragmentPrograms (#400)
+
+Raúl Marín (1):
+      Fix broken include in small_vector.h (#359)
+
+Tomer Lev (2):
+      cmake: remove ifunc requirement from cmake build (#360)
+      cmake: add PKGCONFIG_EXTRA_LIBS option for pkg-config (#361)
+
+Yonatan Goldschmidt (1):
+      Fix out-of-bounds read in shuftiDoubleExecReal tail handling (#381)
+
+artem dmitriev (1):
+      truffle: small optimization for the NEON path (#405)
+
+graysky (1):
+      README: update for Arch Linux and OpenWrt (#347)
+
+mccakit (1):
+      libcxx fix (#385)
+
+tnias (1):
+      Improve the (cross-)build experience especially with LLVM (#353)
+
+wnwu (1):
+      fix mingw compile error by resolving std::min type mismatch (#346)
+
+yoavwizstein (1):
+      Fix double-shufti accelerator missing matches across stream chunk boundaries (#402)
+
 ## [5.4.12] 2025-07-21
 
 Multiple changes since last release, this will be the last 100% ABI and API compatible with Hyperscan release.

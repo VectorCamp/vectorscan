@@ -92,6 +92,41 @@ TEST(SuperVectorUtilsTest,Equal128c){
     }
 }
 
+TEST(SuperVectorUtilsTest,NotEqual128c) {
+    u8 a[16], b[16];
+    for (int i = 0; i < 16; i++) { a[i] = static_cast<u8>(i); b[i] = static_cast<u8>(i); }
+    b[0] = 0xFF;
+    b[7] = 0xFF;
+    auto va = SuperVector<16>::loadu(a);
+    auto vb = SuperVector<16>::loadu(b);
+    auto ne = (va != vb);
+    for (int i = 0; i < 16; i++) {
+        if (a[i] != b[i]) {
+            ASSERT_EQ(ne.u.u8[i], 0xFF) << "byte " << i;
+        } else {
+            ASSERT_EQ(ne.u.u8[i], 0x00) << "byte " << i;
+        }
+    }
+}
+
+TEST(SuperVectorUtilsTest,Not128c) {
+    auto notZ = !SuperVector<16>::Zeroes();
+    for (int i = 0; i < 16; i++) {
+        ASSERT_EQ(notZ.u.u8[i], 0xFF);
+    }
+    auto notO = !SuperVector<16>::Ones();
+    for (int i = 0; i < 16; i++) {
+        ASSERT_EQ(notO.u.u8[i], 0x00);
+    }
+    u8 vec[16];
+    for (int i = 0; i < 16; i++) { vec[i] = static_cast<u8>(i * 17); }
+    auto v = SuperVector<16>::loadu(vec);
+    auto nv = !v;
+    for (int i = 0; i < 16; i++) {
+        ASSERT_EQ(nv.u.u8[i], static_cast<u8>(~vec[i]));
+    }
+}
+
 TEST(SuperVectorUtilsTest,And128c){
     auto SPResult = SuperVector<16>::Zeroes() & SuperVector<16>::Ones();
     for (int i=0; i<16; i++) {
@@ -353,6 +388,99 @@ TEST(SuperVectorUtilsTest,RShift128_128c){
     }
 }
 
+TEST(SuperVectorUtilsTest,OnesLShift_128c) {
+    for (int n = 0; n <= 16; n++) {
+        auto m = SuperVector<16>::Ones_vshl(static_cast<u8>(n));
+        for (int i = 0; i < 16; i++) {
+            if (i < n) {
+                ASSERT_EQ(m.u.u8[i], 0x00) << "n=" << n << " i=" << i;
+            } else {
+                ASSERT_EQ(m.u.u8[i], 0xFF) << "n=" << n << " i=" << i;
+            }
+        }
+    }
+}
+
+TEST(SuperVectorUtilsTest,OnesLShiftVsRShift_128c) {
+    for (int n = 1; n < 16; n++) {
+        auto vl = SuperVector<16>::Ones_vshl(static_cast<u8>(n));
+        auto vr = SuperVector<16>::Ones_vshr(static_cast<u8>(n));
+        bool differ = false;
+        for (int i = 0; i < 16; i++) {
+            if (vl.u.u8[i] != vr.u.u8[i]) { differ = true; break; }
+        }
+        ASSERT_TRUE(differ) << "Ones_vshl and Ones_vshr identical at n=" << n;
+    }
+}
+
+TEST(SuperVectorUtilsTest,LShift32_128c) {
+    u32 data[4] = {0x12345678, 0xAABBCCDD, 0x01020304, 0xDEADBEEF};
+    auto v = SuperVector<16>::loadu(data);
+    auto shifted = v.vshl_32(20);
+    for (int i = 0; i < 4; i++) {
+        ASSERT_EQ(shifted.u.u32[i], data[i] << 20) << "i=" << i;
+    }
+    shifted = v.vshl_32(31);
+    for (int i = 0; i < 4; i++) {
+        ASSERT_EQ(shifted.u.u32[i], data[i] << 31) << "i=" << i;
+    }
+    shifted = v.vshl_32(32);
+    for (int i = 0; i < 4; i++) {
+        ASSERT_EQ(shifted.u.u32[i], 0u) << "i=" << i;
+    }
+}
+
+TEST(SuperVectorUtilsTest, RShift32_128c) {
+    u32 data[4] = {0x12345678, 0xAABBCCDD, 0x01020304, 0xDEADBEEF};
+    auto v = SuperVector<16>::loadu(data);
+    auto shifted = v.vshr_32(20);
+    for (int i = 0; i < 4; i++) {
+        ASSERT_EQ(shifted.u.u32[i], data[i] >> 20) << "i=" << i;
+    }
+    shifted = v.vshr_32(31);
+    for (int i = 0; i < 4; i++) {
+        ASSERT_EQ(shifted.u.u32[i], data[i] >> 31) << "i=" << i;
+    }
+    shifted = v.vshr_32(32);
+    for (int i = 0; i < 4; i++) {
+        ASSERT_EQ(shifted.u.u32[i], 0u) << "i=" << i;
+    }
+}
+
+TEST(SuperVectorUtilsTest,Lshift64_128c) {
+    u64a data[2] = {0x123456789ABCDEF0ULL, 0xFEDCBA9876543210ULL};
+    auto v = SuperVector<16>::loadu(data);
+    auto shifted = v.vshl_64(32);
+    for (int i = 0; i < 2; i++) {
+        ASSERT_EQ(shifted.u.u64[i], data[i] << 32) << "i=" << i;
+    }
+    shifted = v.vshl_64(63);
+    for (int i = 0; i < 2; i++) {
+        ASSERT_EQ(shifted.u.u64[i], data[i] << 63) << "i=" << i;
+    }
+    shifted = v.vshl_64(64);
+    for (int i = 0; i < 2; i++) {
+        ASSERT_EQ(shifted.u.u64[i], 0ULL) << "i=" << i;
+    }
+}
+
+TEST(SuperVectorUtilsTest,Rshift64_128c) {
+    u64a data[2] = {0x123456789ABCDEF0ULL, 0xFEDCBA9876543210ULL};
+    auto v = SuperVector<16>::loadu(data);
+    auto shifted = v.vshr_64(32);
+    for (int i = 0; i < 2; i++) {
+        ASSERT_EQ(shifted.u.u64[i], data[i] >> 32) << "i=" << i;
+    }
+    shifted = v.vshr_64(63);
+    for (int i = 0; i < 2; i++) {
+        ASSERT_EQ(shifted.u.u64[i], data[i] >> 63) << "i=" << i;
+    }
+    shifted = v.vshr_64(64);
+    for (int i = 0; i < 2; i++) {
+        ASSERT_EQ(shifted.u.u64[i], 0ULL) << "i=" << i;
+    }
+}
+
 /*Define ALIGNR128 macro*/
 #define TEST_ALIGNR128(v1, v2, buf, l) {                                                 \
                                            auto v_aligned = v2.alignr(v1, l);            \
@@ -430,6 +558,41 @@ TEST(SuperVectorUtilsTest,Equal256c){
     auto SPResult = SP1.eq(SP2);
     for (int i=0; i<32; i++) {
         ASSERT_EQ(SPResult.u.s8[i],buf[i]);
+    }
+}
+
+TEST(SuperVectorUtilsTest,NotEqual256c) {
+    u8 a[32], b[32];
+    for (int i = 0; i < 32; i++) { a[i] = static_cast<u8>(i); b[i] = static_cast<u8>(i); }
+    b[0] = 0xFF;
+    b[31] = 0xFF;
+    auto va = SuperVector<32>::loadu(a);
+    auto vb = SuperVector<32>::loadu(b);
+    auto ne = (va != vb);
+    for (int i = 0; i < 32; i++) {
+        if (a[i] != b[i]) {
+            ASSERT_EQ(ne.u.u8[i], 0xFF) << "byte " << i;
+        } else {
+            ASSERT_EQ(ne.u.u8[i], 0x00) << "byte " << i;
+        }
+    }
+}
+
+TEST(SuperVectorUtilsTest,Not256c) {
+    auto notZ = !SuperVector<32>::Zeroes();
+    for (int i = 0; i < 32; i++) {
+        ASSERT_EQ(notZ.u.u8[i], 0xFF);
+    }
+    auto notO = !SuperVector<32>::Ones();
+    for (int i = 0; i < 32; i++) {
+        ASSERT_EQ(notO.u.u8[i], 0x00);
+    }
+    u8 vec[32];
+    for (int i = 0; i < 32; i++) { vec[i] = static_cast<u8>(i * 7 + 3); }
+    auto v = SuperVector<32>::loadu(vec);
+    auto nv = !v;
+    for (int i = 0; i < 32; i++) {
+        ASSERT_EQ(nv.u.u8[i], static_cast<u8>(~vec[i]));
     }
 }
 
@@ -605,6 +768,24 @@ TEST(SuperVectorUtilsTest,LShift64_256c){
     }   
 }
 
+TEST(SuperVectorUtilsTest,LShift64_256c_LargeShift) {
+    u64a data[4] = {0x1111111111111111ULL, 0x2222222222222222ULL,
+                    0x3333333333333333ULL, 0x4444444444444444ULL};
+    auto v = SuperVector<32>::loadu(data);
+    auto shifted = v.vshl_64(48);
+    for (int i = 0; i < 4; i++) {
+        ASSERT_EQ(shifted.u.u64[i], data[i] << 48) << "i=" << i;
+    }
+    shifted = v.vshl_64(63);
+    for (int i = 0; i < 4; i++) {
+        ASSERT_EQ(shifted.u.u64[i], data[i] << 63) << "i=" << i;
+    }
+    shifted = v.vshl_64(64);
+    for (int i = 0; i < 4; i++) {
+        ASSERT_EQ(shifted.u.u64[i], 0ULL) << "i=" << i;
+    }
+}
+
 TEST(SuperVectorUtilsTest,RShift64_256c){
     u64a vec[4] = {128, 512, 256, 1024};
     auto SP = SuperVector<32>::loadu(vec);
@@ -616,6 +797,23 @@ TEST(SuperVectorUtilsTest,RShift64_256c){
     }   
 }
 
+TEST(SuperVectorUtilsTest,RShift64_256c_LargeShift) {
+    u64a data[4] = {0x1111111111111111ULL, 0x2222222222222222ULL,
+                    0x3333333333333333ULL, 0x4444444444444444ULL};
+    auto v = SuperVector<32>::loadu(data);
+    auto shifted = v.vshr_64(48);
+    for (int i = 0; i < 4; i++) {
+        ASSERT_EQ(shifted.u.u64[i], data[i] >> 48) << "i=" << i;
+    }
+    shifted = v.vshr_64(63);
+    for (int i = 0; i < 4; i++) {
+        ASSERT_EQ(shifted.u.u64[i], data[i] >> 63) << "i=" << i;
+    }
+    shifted = v.vshr_64(64);
+    for (int i = 0; i < 4; i++) {
+        ASSERT_EQ(shifted.u.u64[i], 0ULL) << "i=" << i;
+    }
+}
 
 /*Define RSHIFT256 macro*/
 #define TEST_RSHIFT256(buf, vec, v, l) {                                                  \
@@ -695,6 +893,49 @@ TEST(SuperVectorUtilsTest,RShift128_256c){
     for(int j=0; j<16; j++) {
         TEST_RSHIFT128_256(buf, vec, SP, j);
     }
+}
+
+TEST(SuperVectorUtilsTest,OnesLShift_256c) {
+    for (int n = 0; n <= 32; n++) {
+        auto m = SuperVector<32>::Ones_vshl(static_cast<u8>(n));
+        for (int i = 0; i < 32; i++) {
+            if (i < n) {
+                ASSERT_EQ(m.u.u8[i], 0x00) << "n=" << n << " i=" << i;
+            } else {
+                ASSERT_EQ(m.u.u8[i], 0xFF) << "n=" << n << " i=" << i;
+            }
+        }
+    }
+}
+
+TEST(SuperVectorUtilsTest,RShiftImm256c) {
+    u8 vec[32];
+    for (int i = 0; i < 32; i++) { vec[i] = static_cast<u8>(i + 1); }
+    auto v = SuperVector<32>::loadu(vec);
+
+    auto r1 = v.template vshr_imm<1>();
+    auto r2 = v >> 1;
+    for (int i = 0; i < 32; i++) {
+        ASSERT_EQ(r1.u.u8[i], r2.u.u8[i]) << "byte " << i;
+    }
+    for (int i = 0; i < 31; i++) {
+        ASSERT_EQ(r1.u.u8[i], vec[i + 1]) << "byte " << i;
+    }
+    ASSERT_EQ(r1.u.u8[31], 0);
+}
+
+TEST(SuperVectorUtilsTest,RShiftVsLShiftImm256c) {
+    u8 vec[32];
+    for (int i = 0; i < 32; i++) { vec[i] = static_cast<u8>(i + 1); }
+    auto v = SuperVector<32>::loadu(vec);
+
+    auto shl = v.template vshl_imm<1>();
+    auto shr = v.template vshr_imm<1>();
+    bool differ = false;
+    for (int i = 0; i < 32; i++) {
+        if (shl.u.u8[i] != shr.u.u8[i]) { differ = true; break; }
+    }
+    ASSERT_TRUE(differ);
 }
 
 /*Define ALIGNR256 macro*/
@@ -777,6 +1018,41 @@ TEST(SuperVectorUtilsTest,Equal512c){
     auto SPResult = SP1.eq(SP2);
     for (int i=0; i<64; i++) {
         ASSERT_EQ(SPResult.u.s8[i],buf[i]);
+    }
+}
+
+TEST(SuperVectorUtilsTest,NotEqual512c) {
+    u8 a[64], b[64];
+    for (int i = 0; i < 64; i++) { a[i] = static_cast<u8>(i); b[i] = static_cast<u8>(i); }
+    b[0] = 0xFF;
+    b[63] = 0xFF;
+    auto va = SuperVector<64>::loadu(a);
+    auto vb = SuperVector<64>::loadu(b);
+    auto ne = (va != vb);
+    for (int i = 0; i < 64; i++) {
+        if (a[i] != b[i]) {
+            ASSERT_EQ(ne.u.u8[i], 0xFF) << "byte " << i;
+        } else {
+            ASSERT_EQ(ne.u.u8[i], 0x00) << "byte " << i;
+        }
+    }
+}
+
+TEST(SuperVectorUtilsTest,Not512c) {
+    auto notZ = !SuperVector<64>::Zeroes();
+    for (int i = 0; i < 64; i++) {
+        ASSERT_EQ(notZ.u.u8[i], 0xFF);
+    }
+    auto notO = !SuperVector<64>::Ones();
+    for (int i = 0; i < 64; i++) {
+        ASSERT_EQ(notO.u.u8[i], 0x00);
+    }
+    u8 vec[64];
+    for (int i = 0; i < 64; i++) { vec[i] = static_cast<u8>(i * 3 + 1); }
+    auto v = SuperVector<64>::loadu(vec);
+    auto nv = !v;
+    for (int i = 0; i < 64; i++) {
+        ASSERT_EQ(nv.u.u8[i], static_cast<u8>(~vec[i]));
     }
 }
 
@@ -960,6 +1236,29 @@ TEST(SuperVectorUtilsTest,RShift64_512c){
     }   
 }
 
+TEST(SuperVectorUtilsTest,RShift64_512c_LargeShift) {
+    u64a data[8] = {0x1111111111111111ULL, 0x2222222222222222ULL,
+                    0x3333333333333333ULL, 0x4444444444444444ULL,
+                    0x5555555555555555ULL, 0x6666666666666666ULL,
+                    0x7777777777777777ULL, 0x8888888888888888ULL};
+    auto v = SuperVector<64>::loadu(data);
+    auto shifted = v.vshr_64(16);
+    for (int i = 0; i < 8; i++) {
+        ASSERT_EQ(shifted.u.u64[i], data[i] >> 16) << "i=" << i;
+    }
+    shifted = v.vshr_64(48);
+    for (int i = 0; i < 8; i++) {
+        ASSERT_EQ(shifted.u.u64[i], data[i] >> 48) << "i=" << i;
+    }
+    shifted = v.vshr_64(63);
+    for (int i = 0; i < 8; i++) {
+        ASSERT_EQ(shifted.u.u64[i], data[i] >> 63) << "i=" << i;
+    }
+    shifted = v.vshr_64(64);
+    for (int i = 0; i < 8; i++) {
+        ASSERT_EQ(shifted.u.u64[i], 0ULL) << "i=" << i;
+    }
+}
 
 /*Define RSHIFT512 macro*/
 #define TEST_RSHIFT512(buf, vec, v, l) {                                                  \
@@ -1043,6 +1342,61 @@ TEST(SuperVectorUtilsTest,LShift128_512c){
     for(int j=0; j<16;j++){
         TEST_LSHIFT128_512(buf, vec, SP, j);
     }
+}
+
+TEST(SuperVectorUtilsTest,OnesLShift512c) {
+    for (int n = 0; n <= 64; n++) {
+        auto m = SuperVector<64>::Ones_vshl(static_cast<u8>(n));
+        for (int i = 0; i < 64; i++) {
+            if (i < n) {
+                ASSERT_EQ(m.u.u8[i], 0x00) << "n=" << n << " i=" << i;
+            } else {
+                ASSERT_EQ(m.u.u8[i], 0xFF) << "n=" << n << " i=" << i;
+            }
+        }
+    }
+}
+
+TEST(SuperVectorUtilsTest,LShiftImm512c) {
+    u8 vec[64];
+    for (int i = 0; i < 64; i++) { vec[i] = static_cast<u8>(i + 1); }
+    auto v = SuperVector<64>::loadu(vec);
+
+    auto imm = v.template vshl_imm<1>();
+    auto op  = v << 1;
+    for (int i = 0; i < 64; i++) {
+        ASSERT_EQ(imm.u.u8[i], op.u.u8[i]) << "byte " << i;
+    }
+    ASSERT_EQ(imm.u.u8[0], 0);
+    ASSERT_EQ(imm.u.u8[1], 1);
+}
+
+TEST(SuperVectorUtilsTest,RShiftImm512c) {
+    u8 vec[64];
+    for (int i = 0; i < 64; i++) { vec[i] = static_cast<u8>(i + 1); }
+    auto v = SuperVector<64>::loadu(vec);
+
+    auto imm = v.template vshr_imm<1>();
+    auto op  = v >> 1;
+    for (int i = 0; i < 64; i++) {
+        ASSERT_EQ(imm.u.u8[i], op.u.u8[i]) << "byte " << i;
+    }
+    ASSERT_EQ(imm.u.u8[0], 2);
+    ASSERT_EQ(imm.u.u8[63], 0);
+}
+
+TEST(SuperVectorUtilsTest,LShiftVsRShiftImm512c) {
+    u8 vec[64];
+    for (int i = 0; i < 64; i++) { vec[i] = static_cast<u8>(i + 1); }
+    auto v = SuperVector<64>::loadu(vec);
+
+    auto shl = v.template vshl_imm<1>();
+    auto shr = v.template vshr_imm<1>();
+    bool differ = false;
+    for (int i = 0; i < 64; i++) {
+        if (shl.u.u8[i] != shr.u.u8[i]) { differ = true; break; }
+    }
+    ASSERT_TRUE(differ);
 }
 
 /*Define ALIGNR512 macro*/

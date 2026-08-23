@@ -41,7 +41,7 @@ const SuperVector<S> blockSingleMask(SuperVector<S> mask_lo, SuperVector<S> mask
     c_lo = mask_lo.template pshufb<false>(c_lo);
     c_hi = mask_hi.template pshufb<false>(c_hi);
 
-    return (c_lo & c_hi) > (SuperVector<S>::Zeroes());
+    return (c_lo & c_hi) != (SuperVector<S>::Zeroes());
 }
 
 template <uint16_t S>

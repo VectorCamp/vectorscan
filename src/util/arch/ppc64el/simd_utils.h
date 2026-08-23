@@ -429,6 +429,16 @@ m128 set2x64(u64a hi, u64a lo) {
     return (m128) v;
 }
 
+static really_inline
+m128 widenlo128(m128 x) {
+    return (m128) vec_mergel((m128)x, zeroes128());
+}
+
+static really_inline
+m128 widenhi128(m128 x) {
+    return (m128) vec_mergeh((m128)x, zeroes128());
+}
+
 #if defined(__clang__) && (__clang_major__ == 15)
 #pragma clang diagnostic pop
 #endif // defined(__clang__) && (__clang_major__ == 15)

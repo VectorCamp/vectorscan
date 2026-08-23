@@ -34,7 +34,7 @@ add_custom_target(dev-reference
     DEPENDS dev-reference-doxygen
     COMMENT "Building HTML dev reference with Sphinx")
 
-add_custom_target(dev-reference-man
+add_custom_target(dev-reference-man ALL
     ${SPHINX_BUILD}
         -b man
         -c "${CMAKE_CURRENT_BINARY_DIR}"
@@ -43,4 +43,7 @@ add_custom_target(dev-reference-man
         "${SPHINX_MAN_DIR}"
     DEPENDS dev-reference-doxygen
     COMMENT "Building man page reference with Sphinx")
+
+install(FILES ${CMAKE_BINARY_DIR}/doc/dev-reference/man/vectorscan.7
+    DESTINATION "${CMAKE_INSTALL_MANDIR}/man7/")
 endif()

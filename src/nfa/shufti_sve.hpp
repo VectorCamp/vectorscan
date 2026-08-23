@@ -173,7 +173,7 @@ svbool_t doubleMatched(svuint8_t mask1_lo, svuint8_t mask1_hi,
     svuint8_t t      = svorr_x(svptrue_b8(), merged_t1, t2);
     *inout_t1 = new_t1;
 
-    return svnot_z(svptrue_b8(), svcmpeq(svptrue_b8(), t, (uint8_t)0xff));
+    return svnot_z(pg, svcmpeq(svptrue_b8(), t, (uint8_t)0xff));
 }
 
 static really_inline
@@ -182,7 +182,10 @@ const u8 *check_last_byte(svuint8_t mask2_lo, svuint8_t mask2_hi,
     uint8_t wild_lo = svorv(svptrue_b8(), mask2_lo);
     uint8_t wild_hi = svorv(svptrue_b8(), mask2_hi);
     uint8_t match_inverted = wild_lo | wild_hi | last_elem;
-    int match = match_inverted != 0xff;
+    // Also stop when the last byte is the first char of a double (last_elem): its
+    // second char may be in the next stream chunk. This returns a resume point, not
+    // a match, so it adds no false positives but fixes cross-chunk false negatives.
+    int match = (match_inverted != 0xff) || (last_elem != 0xff);
     if(match) {
         return buf_end - 1;
     }

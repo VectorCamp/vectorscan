@@ -6,5 +6,5 @@ includedir=@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@
 Name: libhs
 Description: A portable fork of the high-performance regular expression matching library
 Version: @HS_VERSION@
-Libs: -L${libdir} -lhs
+Libs: -L${libdir} -lhs @PKGCONFIG_EXTRA_LIBS@
 Cflags: -I${includedir}/hs

@@ -160,11 +160,12 @@ const u8 *run_accel(const union AccelAux *accel, const u8 *c, const u8 *c_end) {
             return c;
         }
 
-        /* need to stop one early to get an accurate end state */
+        /* Shufti double handles its own ending boundary checks internally
+         * to correctly identify matches at the last byte. */
         rv = shuftiDoubleExec(accel->dshufti.lo1,
                               accel->dshufti.hi1,
                               accel->dshufti.lo2,
-                              accel->dshufti.hi2, c, c_end - 1);
+                              accel->dshufti.hi2, c, c_end);
         break;
 
     case ACCEL_RED_TAPE:

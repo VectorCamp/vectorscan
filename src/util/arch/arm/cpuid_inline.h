@@ -60,7 +60,7 @@ int check_sve(void) {
 static inline
 int check_sve2(void) {
     unsigned long hwcap2 = getauxval(AT_HWCAP2);
-    if (hwcap2 & HWCAP2_SVE2) {
+    if (check_sve() && (hwcap2 & HWCAP2_SVE2)) {
         return 1;
     }
     return 0;

@@ -208,13 +208,15 @@ const u8 *check_last_byte(SuperVector<S> mask2_lo, SuperVector<S> mask2_hi,
     uint8_t last_elem = mask.u.u8[mask_len - 1];
 
     SuperVector<S> reduce = mask2_lo | mask2_hi;
-    for(uint16_t i = S; i > 2; i/=2) {
+    for(uint16_t i = S; i >= 2; i/=2) {
         reduce = reduce | reduce.vshr(i/2);
     }
     uint8_t match_inverted = reduce.u.u8[0] | last_elem;
 
-    // if 0xff, then no match
-    int match = match_inverted != 0xff;
+    // Also stop when the last byte is the first char of a double (last_elem): its
+    // second char may be in the next stream chunk. This returns a resume point, not
+    // a match, so it adds no false positives but fixes cross-chunk false negatives.
+    int match = (match_inverted != 0xff) || (last_elem != 0xff);
     if(match) {
         return buf_end - 1;
     }
@@ -260,7 +262,6 @@ const u8 *shuftiDoubleExecReal(m128 mask1_lo, m128 mask1_hi, m128 mask2_lo, m128
             first_char_mask.print8("inout_c1 shifted");
         }
 
-        first_char_mask = SuperVector<S>::Ones();
         while(d + S <= buf_end) {
             __builtin_prefetch(d + 64);
             DEBUG_PRINTF("d %p \n", d);
@@ -272,18 +273,33 @@ const u8 *shuftiDoubleExecReal(m128 mask1_lo, m128 mask1_hi, m128 mask2_lo, m128
         }
     }
 
-    ptrdiff_t last_mask_len = S;
     DEBUG_PRINTF("tail d %p e %p \n", d, buf_end);
     // finish off tail
 
     if (d != buf_end) {
-        SuperVector<S> chars = SuperVector<S>::loadu(d);
-        rv = fwdBlockDouble(wide_mask1_lo, wide_mask1_hi, wide_mask2_lo, wide_mask2_hi, &first_char_mask, chars, d);
+        SuperVector<S> chars;
+        const u8 *tail_buf;
+        if (buf_end - buf < S) {
+            // Buffer is shorter than one vector width: copy valid bytes into
+            // a zeroed vector to avoid reading past the buffer.
+            chars = SuperVector<S>::Zeroes();
+            memcpy(&chars.u, buf, buf_end - buf);
+            tail_buf = buf;
+        } else {
+            // Read the last S bytes of the buffer (may overlap with the
+            // previous main-loop block, but stays in bounds).
+            chars = SuperVector<S>::loadu(buf_end - S);
+            tail_buf = buf_end - S;
+        }
+        // Reset first_char_mask: the backward read re-covers enough context
+        // for any cross-boundary two-char match to be found within this block.
+        first_char_mask = SuperVector<S>::Ones();
+        rv = fwdBlockDouble(wide_mask1_lo, wide_mask1_hi, wide_mask2_lo, wide_mask2_hi, &first_char_mask, chars, tail_buf);
         DEBUG_PRINTF("rv %p \n", rv);
         if (rv && rv < buf_end - 1) return rv;
-        last_mask_len = buf_end - d;
     }
 
+    ptrdiff_t last_mask_len = (buf_end - buf < S) ? (buf_end - buf) : S;
     rv = check_last_byte(wide_mask2_lo, wide_mask2_hi, first_char_mask, last_mask_len, buf_end);
     if (rv) return rv;
     return buf_end;

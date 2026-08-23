@@ -125,11 +125,10 @@ void storecompressed128_64bit(void *ptr, m128 xvec, m128 mvec) {
     u32 ALIGN_ATTR(16) bits[2] = { popcount64(m[0]), popcount64(m[1]) };
 
     // Compress each 64-bit chunk individually.
-    xvec = compress128(xvec, mvec);
-    store128(x, xvec);
+    u64a v[2] = { compress64(x[0], m[0]), compress64(x[1], m[1]) };
 
     // Write packed data out.
-    pack_bits_64(ptr, x, bits, 2);
+    pack_bits_64(ptr, v, bits, 2);
 }
 #endif
 

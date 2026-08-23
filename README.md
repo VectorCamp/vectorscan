@@ -17,7 +17,7 @@ all architecture specific -currently Intel- #ifdefs will be removed and abstract
 
 Originally, the ARM porting was intended to be merged into Intel's own Hyperscan, and relevant 
 Pull Requests were made to the project for this reason. Unfortunately, the
-PRs were rejected for now and the forseeable future, thus we have created Vectorscan for 
+PRs were rejected for now and the foreseeable future, thus we have created Vectorscan for
 our own multi-architectural and opensource collaborative needs.
 
 The recent license change of Hyperscan makes Vectorscan even more relevant for the FLOSS ecosystem.
@@ -94,19 +94,35 @@ some small but necessary changes were made that might break compatibility with h
 
 ## Install Common Dependencies
 
+### Arch Linux
+A PKGBUILD for [Vectorscan](https://aur.archlinux.org/packages/vectorscan) is available in the [AUR](https://aur.archlinux.org/)
+
 ### Debian/Ubuntu
-In order to build on Debian/Ubuntu make sure you install the following build-dependencies
+In order to build on Debian/Ubuntu make sure you install the following build dependencies
 
 ```
 $ sudo apt install build-essential cmake ragel pkg-config libsqlite3-dev libpcap-dev
 ```
+
+### Fedora
+In order to build on Fedora make sure you install the following build dependencies
+
+```
+$ sudo dnf install gcc gcc-c++ make cmake ragel boost-devel sqlite-devel glibc-devel \
+python3-devel libpcap-devel pcre-devel
+```
+Then continue with the build instructions as outlined below.
+
+Note: On Fedora vectorscan can be installed via dnf (vectorscan or vectorscan-devel)
+
+### OpenWrt
+Vectorscan has been available since [PR#27382](https://github.com/openwrt/packages/pull/27382) was merged. To build it, use the [OpenWrt Build System](https://openwrt.org/docs/guide-developer/toolchain/install-buildsystem) or download a nightly snapshot.
 
 ### Other distributions
 
 TBD
 
 ### MacOS X (M1/M2/M3 CPUs only)
-
 Assuming an existing HomeBrew installation:
 
 ```
@@ -217,8 +233,8 @@ Common options for Cmake are:
 
 ## SIMDe options
 
-* `SIMDE_BACKEND=[On|Off]` Enable SIMDe backend. If this is chosen all native (SSE/AVX/AVX512/Neon/SVE/VSX) backends will be disabled and a SIMDe SSE4.2 emulation backend will be enabled. This will enable Vectorscan to build and run on architectures without SIMD.
-* `SIMDE_NATIVE=[On|Off]` Enable SIMDe native emulation of x86 SSE4.2 intrinsics on the building platform. That is, SSE4.2 intrinsics will be emulated using Neon on an Arm platform, or VSX on a Power platform, etc.
+* `BUILD_SIMDE_BACKEND=[On|Off]` Enable SIMDe backend. If this is chosen all native (SSE/AVX/AVX512/Neon/SVE/VSX) backends will be disabled and a SIMDe SSE4.2 emulation backend will be enabled. This will enable Vectorscan to build and run on architectures without SIMD.
+* `BUILD_SIMDE_NATIVE=[On|Off]` Enable SIMDe native emulation of x86 SSE4.2 intrinsics on the building platform. That is, SSE4.2 intrinsics will be emulated using Neon on an Arm platform, or VSX on a Power platform, etc.
 
 ## Build
 
@@ -240,6 +256,7 @@ The official homepage for Vectorscan is at [www.github.com/VectorCamp/vectorscan
 All development of Vectorscan is done in public. 
 
 # Original Hyperscan links
+
 For reference, the official homepage for Hyperscan is at [www.hyperscan.io](https://www.hyperscan.io).
 
 # Hyperscan Documentation

@@ -124,6 +124,17 @@ m128 sub_2x64(m128 a, m128 b) {
 }
 
 static really_really_inline
+m128 lshift32_m128(m128 a, unsigned b) {
+#if defined(HAVE__BUILTIN_CONSTANT_P)
+    if (__builtin_constant_p(b)) {
+        return _mm_slli_epi32(a, b);
+    }
+#endif
+    m128 x = _mm_cvtsi32_si128(b);
+    return _mm_sll_epi32(a, x);
+}
+
+static really_really_inline
 m128 lshift64_m128(m128 a, unsigned b) {
 #if defined(HAVE__BUILTIN_CONSTANT_P)
     if (__builtin_constant_p(b)) {
@@ -135,7 +146,17 @@ m128 lshift64_m128(m128 a, unsigned b) {
     return _mm_sll_epi64(a, x);
 }
 
-#define rshift64_m128(a, b) _mm_srli_epi64((a), (b))
+static really_really_inline
+m128 rshift64_m128(m128 a, unsigned b) {
+#if defined(HAVE__BUILTIN_CONSTANT_P)
+    if (__builtin_constant_p(b)) {
+        return _mm_srli_epi64(a, b);
+    }
+#endif
+    m128 x = _mm_cvtsi32_si128(b);
+    return _mm_srl_epi64(a, x);
+}
+
 #define eq128(a, b)         _mm_cmpeq_epi8((a), (b))
 #define eq64_m128(a, b)     _mm_cmpeq_epi64((a), (b))
 #define movemask128(a)      ((u32)_mm_movemask_epi8((a)))
@@ -157,6 +178,8 @@ static really_inline m128 set1_4x32(u32 c) {
 static really_inline m128 set1_2x64(u64a c) {
     return _mm_set1_epi64x(c);
 }
+
+#define insert32_m128(in, val, imm) (m128) (_mm_insert_epi32((m128) in, (m128) val, (m128) imm))
 
 static really_inline u32 movd(const m128 in) {
     return _mm_cvtsi128_si32(in);
@@ -474,6 +497,16 @@ m128 set2x64(u64a hi, u64a lo) {
     return _mm_set_epi64x(hi, lo);
 }
 
+static really_inline
+m128 widenlo128(m128 x) {
+    return _mm_unpacklo_epi32(x, zeroes128());
+}
+
+static really_inline
+m128 widenhi128(m128 x) {
+    return _mm_unpackhi_epi32(x, zeroes128());
+}
+
 /****
  **** 256-bit Primitives
  ****/
@@ -496,7 +529,16 @@ m256 lshift64_m256(m256 a, unsigned b) {
     return _mm256_sll_epi64(a, x);
 }
 
-#define rshift64_m256(a, b) _mm256_srli_epi64((a), (b))
+static really_really_inline
+m256 rshift64_m256(m256 a, unsigned b) {
+#if defined(HAVE__BUILTIN_CONSTANT_P)
+    if (__builtin_constant_p(b)) {
+        return _mm256_srli_epi64(a, b);
+    }
+#endif
+    m128 x = _mm_cvtsi32_si128(b);
+    return _mm256_srl_epi64(a, x);
+}
 
 static really_inline m256 set1_4x64(u64a c) {
     return _mm256_set1_epi64x(c);
@@ -750,6 +792,12 @@ m256 combine2x128(m128 hi, m128 lo) {
     return insert128to256(cast128to256(lo), hi, 1);
 #endif
 }
+
+static really_inline
+m256 widen128(m128 x) {
+    return (m256) _mm256_cvtepu32_epi64(x);
+}
+
 #endif //AVX2
 
 /****
@@ -915,7 +963,17 @@ m512 lshift64_m512(m512 a, unsigned b) {
     return _mm512_sll_epi64(a, x);
 }
 
-#define rshift64_m512(a, b) _mm512_srli_epi64((a), (b))
+static really_really_inline
+m512 rshift64_m512(m512 a, unsigned b) {
+#if defined(HAVE__BUILTIN_CONSTANT_P)
+    if (__builtin_constant_p(b)) {
+        return _mm512_srli_epi64(a, b);
+    }
+#endif
+    m128 x = _mm_cvtsi32_si128(b);
+    return _mm512_srl_epi64(a, x);
+}
+
 #define rshift128_m512(a, count_immed) _mm512_bsrli_epi128(a, count_immed)
 #define lshift128_m512(a, count_immed) _mm512_bslli_epi128(a, count_immed)
 

@@ -36,11 +36,9 @@ if(NETBSD)
     set(EXTRA_CXX_FLAGS "${EXTRA_CXX_FLAGS} -DHAVE_BUILTIN_POPCOUNT")
 endif()
 
-if(MACOSX)
-    # Boost headers cause such complains on MacOS
-    set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -Wno-deprecated-declarations -Wno-unused-parameter")
-    set(EXTRA_CXX_FLAGS "${EXTRA_CXX_FLAGS} -Wno-deprecated-declarations -Wno-unused-parameter")
-endif()
+# Boost headers cause such complains on MacOS or when building with LLVM toolchains
+set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -Wno-deprecated-declarations -Wno-unused-parameter")
+set(EXTRA_CXX_FLAGS "${EXTRA_CXX_FLAGS} -Wno-deprecated-declarations -Wno-unused-parameter")
 
 # these end up in the config file
 CHECK_C_COMPILER_FLAG(-fvisibility=hidden HAS_C_HIDDEN)

@@ -535,6 +535,7 @@ const u8 *dvermSearchAlignedMasked(m128 chars1, m128 chars2,
     return NULL;
 }
 
+// TODO: implement with SVE
 static really_inline
 const u8 *vermicelliDoubleMaskedExec(char c1, char c2, char m1, char m2,
                                      const u8 *buf, const u8 *buf_end) {

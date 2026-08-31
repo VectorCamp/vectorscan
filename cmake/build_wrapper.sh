@@ -12,7 +12,19 @@ PREFIX=$1
 KEEPSYMS_IN=$2
 shift 2
 # $@ contains the actual build command
-OUT=$(echo "$@" | rev | cut -d ' ' -f 2- | rev | sed 's/.* -o \(.*\.o\).*/\1/')
+# The output object is the argument following the last -o.
+OUT=
+_prev=
+for _arg in "$@"; do
+    if [ "${_prev}" = "-o" ]; then
+        OUT=${_arg}
+    fi
+    _prev=${_arg}
+done
+if [ -z "${OUT}" ]; then
+    echo "$0: could not determine the output object from the build command" >&2
+    exit 1
+fi
 trap cleanup INT QUIT EXIT
 SYMSFILE=$(mktemp -p /tmp ${PREFIX}_rename.syms.XXXXX)
 KEEPSYMS=$(mktemp -p /tmp keep.syms.XXXXX)

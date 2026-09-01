@@ -7,7 +7,7 @@ set (HS_MINOR_VERSION 4)
 set (HS_PATCH_VERSION 13)
 set (HS_VERSION ${HS_MAJOR_VERSION}.${HS_MINOR_VERSION}.${HS_PATCH_VERSION})
 
-string (TIMESTAMP BUILD_DATE "%Y-%m-%d")
+string (TIMESTAMP BUILD_DATE "%Y-%m-%d" UTC)
 message(STATUS "Build date: ${BUILD_DATE}")
 
 # Dependencies check

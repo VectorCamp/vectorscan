@@ -166,7 +166,7 @@ DfaPrevInfo::DfaPrevInfo(raw_dfa &rdfa)
         }
         if (!rdfa.states[i].reports.empty()
             || !rdfa.states[i].reports_eod.empty()) {
-            DEBUG_PRINTF("accept raw state: %ld\n", i);
+            DEBUG_PRINTF("accept raw state: %llu\n", i);
             accepts.insert(i);
         }
     }
@@ -1188,7 +1188,7 @@ bool check_property1(const DfaPrevInfo &info, const u16 impl_alpha_size,
 
     for (symbol_t sym = 0; sym < impl_alpha_size; sym++) {
         num_prev += info.states[curr_id].prev_vec[sym].size();
-        DEBUG_PRINTF("Check symbol: %u, with its vector size: %lu\n", sym,
+        DEBUG_PRINTF("Check symbol: %u, with its vector size: %llu\n", sym,
                      info.states[curr_id].prev_vec[sym].size());
         if (num_prev == 1 && !test_p1) {
             test_p1 = true;

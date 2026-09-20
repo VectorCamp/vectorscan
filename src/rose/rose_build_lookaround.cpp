@@ -583,7 +583,7 @@ bool trimMultipathLeftfix(const RoseBuildImpl &build, const RoseVertex v,
     size_t path_count = 0;
     for (auto &look : looks) {
         ++path_count;
-        DEBUG_PRINTF("Path #%ld\n", path_count);
+        DEBUG_PRINTF("Path #%llu\n", path_count);
 
         assert(!look.empty());
         trimLiterals(build, v, look);
@@ -688,7 +688,7 @@ bool checkShuftiBuckets(const vector<map<s32, CharReach>> &looks,
             }
         }
     }
-    DEBUG_PRINTF("shufti has %lu bucket(s)\n", bucket.size());
+    DEBUG_PRINTF("shufti has %llu bucket(s)\n", bucket.size());
     return bucket.size() <= bucket_size;
 }
 

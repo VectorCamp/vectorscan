@@ -37,6 +37,7 @@ endif()
 # Add ccache to speed builds
 find_program(CCACHE_FOUND ccache)
 if(CCACHE_FOUND)
+    message(STATUS "CCache found, will use for compiling")
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
 endif(CCACHE_FOUND)
@@ -126,6 +127,12 @@ include (${CMAKE_MODULE_PATH}/platform.cmake)
 
 # Detect OS and if Fat Runtime is available
 include (${CMAKE_MODULE_PATH}/osdetection.cmake)
+
+if (WINDOWS)
+    message(STATUS "This is a Windows build")
+    set(BUILD_SIMDE_BACKEND False)
+    set(BUILD_SIMDE_NATIVE False)
+endif()
 
 if(ARCH_X86_64 AND FAT_RUNTIME AND NOT NO_SIMDE_IN_FAT)
     include (${CMAKE_MODULE_PATH}/simde.cmake)
@@ -420,7 +427,6 @@ set (hs_exec_SRCS
     src/util/fatbit.h
     src/util/join.h
     src/util/multibit.h
-    src/util/multibit.c
     src/util/multibit_compress.h
     src/util/multibit_internal.h
     src/util/pack_bits.h
@@ -963,9 +969,11 @@ else ()
 
     if (ARCH_IA32 OR ARCH_X86_64)
         if (NOT BUILD_AVX512)
-            set (DISPATCHER_DEFINE "-DDISABLE_AVX512_DISPATCH")
+            message(STATUS "Excluding AVX512 from Fat runtime")
+	    set (DISPATCHER_DEFINE "${DISPATCHER_DEFINE} -DDISABLE_AVX512_DISPATCH")
         endif (NOT BUILD_AVX512)
         if (NOT BUILD_AVX512VBMI)
+            message(STATUS "Excluding AVX512VBMI from Fat runtime")
             set (DISPATCHER_DEFINE "${DISPATCHER_DEFINE} -DDISABLE_AVX512VBMI_DISPATCH")
         endif (NOT BUILD_AVX512VBMI)
 	# Make the dispatcher use the lowest arch denominator

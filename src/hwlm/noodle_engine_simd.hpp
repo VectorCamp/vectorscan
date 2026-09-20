@@ -68,7 +68,7 @@ hwlm_error_t scanSingleShort(const struct noodTable *n, const u8 *buf,
     const u8 *d = buf + start;
     DEBUG_PRINTF("start %zu end %zu\n", start, end);
     const size_t l = end - start;
-    DEBUG_PRINTF("l = %ld\n", l);
+    DEBUG_PRINTF("l = %llu\n", l);
     //assert(l <= 64);
     if (!l) {
         return HWLM_SUCCESS;
@@ -99,7 +99,7 @@ hwlm_error_t scanSingleUnaligned(const struct noodTable *n, const u8 *buf,
     const u8 *d = buf + offset;
     DEBUG_PRINTF("start %zu end %zu offset %zu\n", start, end, offset);
     const size_t l = end - start;
-    DEBUG_PRINTF("l = %ld\n", l);
+    DEBUG_PRINTF("l = %llu\n", l);
     assert(l <= 64);
     if (!l) {
         return HWLM_SUCCESS;
@@ -194,7 +194,7 @@ hwlm_error_t scanSingleMain(const struct noodTable *n, const u8 *buf,
         d = d1;
 
         size_t loops = (end - (d - buf)) / S;
-        DEBUG_PRINTF("loops %ld \n", loops);
+        DEBUG_PRINTF("loops %llu \n", loops);
 
         for (size_t i = 0; i < loops; i++, d+= S) {
             DEBUG_PRINTF("d %p \n", d);
@@ -252,7 +252,7 @@ hwlm_error_t scanDoubleMain(const struct noodTable *n, const u8 *buf,
         d = d1 - 1;
 
         size_t loops = (end - (d - buf)) / S;
-        DEBUG_PRINTF("loops %ld \n", loops);
+        DEBUG_PRINTF("loops %llu \n", loops);
 
         for (size_t i = 0; i < loops; i++, d+= S) {
             DEBUG_PRINTF("d %p \n", d);

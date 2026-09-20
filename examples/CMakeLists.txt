@@ -9,14 +9,14 @@ set_source_files_properties(simplegrep.c PROPERTIES COMPILE_FLAGS
     "-Wall -Wno-unused-parameter")
 target_link_libraries(simplegrep hs)
 
-if (PCAP_LIBRARY)
+if (PCAP_LIBRARY AND NOT WINDOWS)
 add_executable(pcapscan pcapscan.cc)
 set_source_files_properties(pcapscan.cc PROPERTIES COMPILE_FLAGS
     "-Wall -Wno-unused-parameter")
 target_link_libraries(pcapscan hs pcap)
 endif()
 
-if (PCAP_LIBRARY)
+if (PCAP_LIBRARY AND NOT WINDOWS)
 add_executable(patbench patbench.cc)
 set_source_files_properties(patbench.cc PROPERTIES COMPILE_FLAGS
     "-Wall -Wno-unused-parameter")

@@ -34,7 +34,9 @@
 
 #include <string>
 #include <tuple>
+
 #include <sys/mman.h>
+
 using namespace std;
 using namespace testing;
 
@@ -631,6 +633,7 @@ const TerminateMatchData terminateCases[] = {
 
 INSTANTIATE_TEST_CASE_P(Single, HyperscanTestMatchTerminate, ValuesIn(terminateCases));
 
+#if !defined(__MINGW32__) && !defined(__MINGW64__)
 TEST(OutOfBoundRead, mmap) {
     const char* pattern = "bat|cat|mat|rat|fat|sat|pat|hat|vat";
     const char* corpus = "VAt hat pat sat fat rat mat ca";
@@ -654,6 +657,7 @@ TEST(OutOfBoundRead, mmap) {
     hs_free_database(db);
     munmap(buffer, buffer_len);
 }
+#endif
 
 } // namespace
 

@@ -36,6 +36,9 @@
 #include "nfa/shufti.h"
 #include "nfa/shufticompile.h"
 #include "util/target_info.h"
+#if !defined(__MINGW32__) && !defined(__MINGW64__)
+#include "util/pagesize.h"
+#endif
 
 using namespace ue2;
 using std::set;
@@ -935,6 +938,7 @@ TEST(DoubleShufti, ExecNoMatchVectorEdge) {
     }
 }
 
+#if !defined(__MINGW32__) && !defined(__MINGW64__)
 // Regression test: shuftiDoubleExecReal used to read a full vector (S bytes)
 // in the tail, which could overread past buf_end. If the buffer ends at a page
 // boundary followed by an unmapped page, this causes a SIGSEGV.
@@ -949,7 +953,7 @@ TEST(DoubleShufti, ExecNoOverreadPageBoundary) {
                                       reinterpret_cast<u8 *>(&lo2), reinterpret_cast<u8 *>(&hi2));
     ASSERT_TRUE(ret);
 
-    const size_t page_size = sysconf(_SC_PAGE_SIZE);
+    const size_t page_size = get_page_size();
     // Map two pages, then unmap the second to create a guard page.
     u8 *pages = reinterpret_cast<u8 *>(mmap(nullptr, 2 * page_size,
                            PROT_READ | PROT_WRITE,
@@ -987,6 +991,7 @@ TEST(DoubleShufti, ExecNoOverreadPageBoundary) {
 
     munmap(pages, page_size);
 }
+#endif
 
 TEST(DoubleShufti, ExecMatchVectorEdge) {
     m128 lo1, hi1, lo2, hi2;

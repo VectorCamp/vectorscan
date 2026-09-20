@@ -127,6 +127,12 @@ include (${CMAKE_MODULE_PATH}/platform.cmake)
 # Detect OS and if Fat Runtime is available
 include (${CMAKE_MODULE_PATH}/osdetection.cmake)
 
+if (WINDOWS)
+    message(STATUS "This is a Windows build")
+    set(BUILD_SIMDE_BACKEND False)
+    set(BUILD_SIMDE_NATIVE False)
+endif()
+
 if(ARCH_X86_64 AND FAT_RUNTIME AND NOT NO_SIMDE_IN_FAT)
     include (${CMAKE_MODULE_PATH}/simde.cmake)
     set(BUILD_SIMDE_NATIVE True)

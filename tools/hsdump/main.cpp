@@ -350,9 +350,13 @@ void clearDir(const string &path) {
 
 static
 int makeDirectory(const string &dirName) {
+#if defined(__MINGW32__) || defined(__MINGW64__)
+    return mkdir(dirName.c_str());
+#else
     mode_t mode = S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP |
                   S_IROTH | S_IXOTH;
     return mkdir(dirName.c_str(), mode);
+#endif
 }
 
 static

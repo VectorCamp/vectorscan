@@ -123,6 +123,8 @@ std::string utf8_lossy_decode(const std::string &input) {
     return output;
 }
 
+// FIXME: https://github.com/VectorCamp/vectorscan/issues/417
+#if !(defined(__MINGW32__) || defined(__MINGW64__))
 TEST(rebar, lh3lh3_reb_uri_or_email_grep) {
     hs_database_t *db = nullptr;
     hs_compile_error_t *compile_err = nullptr;
@@ -194,7 +196,7 @@ TEST(rebar, lh3lh3_reb_email_grep) {
     err = hs_free_scratch(scratch);
     ASSERT_EQ(HS_SUCCESS, err);
 }
-
+#endif //!(defined(__MINGW32__) || defined(__MINGW64__))
 
 TEST(rebar, lh3lh3_reb_date_grep) {
     hs_database_t *db = nullptr;

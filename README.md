@@ -122,6 +122,20 @@ Vectorscan has been available since [PR#27382](https://github.com/openwrt/packag
 
 TBD
 
+### Windows MSYS2 UCRT64
+
+Assuming you have an MSYS2 environment installed, you need to install the following packages using `pacman`:
+
+```
+# pacman -S git mingw-w64-ucrt-x86_64-boost mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-libpcap mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-pcre2 mingw-w64-ucrt-x86_64-pkgconf mingw-w64-ucrt-x86_64-ragel mingw-w64-ucrt-x86_64-sqlite3 
+```
+
+Recommended but not necessary is `ccache` if you want to decrease build speed.
+
+```
+# pacman -S mingw-w64-ucrt-x86_64-ccache
+```
+
 ### MacOS X (M1/M2/M3 CPUs only)
 Assuming an existing HomeBrew installation:
 
@@ -235,6 +249,7 @@ Common options for Cmake are:
 
 * `BUILD_SIMDE_BACKEND=[On|Off]` Enable SIMDe backend. If this is chosen all native (SSE/AVX/AVX512/Neon/SVE/VSX) backends will be disabled and a SIMDe SSE4.2 emulation backend will be enabled. This will enable Vectorscan to build and run on architectures without SIMD.
 * `BUILD_SIMDE_NATIVE=[On|Off]` Enable SIMDe native emulation of x86 SSE4.2 intrinsics on the building platform. That is, SSE4.2 intrinsics will be emulated using Neon on an Arm platform, or VSX on a Power platform, etc.
+* `NO_SIMDE_IN_FAT=[On|Off]` Do not include SIMDe backend in x86 Fat binary. Using SIMDe backend allows Fat runtimes to run on x86-64-v1 which is SSE2 only.
 
 ## Build
 

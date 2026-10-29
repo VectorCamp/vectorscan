@@ -36,7 +36,7 @@
 #include "util/simd_utils.h"
 
 #include "util/arch.h"
-#ifdef HAVE_SVE
+#ifdef CAN_USE_WIDE_TRUFFLE
 using namespace ue2;
 
 #define SKIP_IF_NO_WIDE_AVAILABLE() \

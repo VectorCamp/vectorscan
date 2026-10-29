@@ -363,6 +363,7 @@ template SuperVector<16> SuperVector<16>::vshl_128_imm<1>() const;
 template SuperVector<16> SuperVector<16>::vshl_128_imm<4>() const;
 template SuperVector<16> SuperVector<16>::vshr_8_imm<1>() const;
 template SuperVector<16> SuperVector<16>::vshr_8_imm<4>() const;
+template SuperVector<16> SuperVector<16>::vshr_8_imm<5>() const;
 template SuperVector<16> SuperVector<16>::vshr_16_imm<1>() const;
 template SuperVector<16> SuperVector<16>::vshr_64_imm<1>() const;
 template SuperVector<16> SuperVector<16>::vshr_64_imm<4>() const;

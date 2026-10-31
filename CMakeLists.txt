@@ -1221,7 +1221,7 @@ if(BUILD_BENCHMARKS)
     add_subdirectory(benchmarks)
 endif()
 
-option(BUILD_DOC "Build the Hyperscan documentation (default TRUE)" TRUE)
+option(BUILD_DOC "Build the Hyperscan documentation (default TRUE)" FALSE)
 if(BUILD_DOC)
     add_subdirectory(doc/dev-reference)
 endif()

@@ -104,6 +104,14 @@ In order to build on Debian/Ubuntu make sure you install the following build dep
 $ sudo apt install build-essential cmake ragel pkg-config libsqlite3-dev libpcap-dev
 ```
 
+If you want to build the documentation you also need to install the following packages:
+
+```
+$ sudo apt install python3-breathe doxygen
+```
+
+(python3-breathe will pull Python Sphinx as a dependency).
+
 ### Fedora
 In order to build on Fedora make sure you install the following build dependencies
 
@@ -122,9 +130,9 @@ Vectorscan has been available since [PR#27382](https://github.com/openwrt/packag
 
 TBD
 
-### Windows MSYS2 UCRT64
+### Windows MSYS2 (UCRT64, MINGW64, CLANG64)
 
-Assuming you have an MSYS2 environment installed, you need to install the following packages using `pacman`:
+Assuming you have an MSYS2 UCRT64 environment installed, you need to install the following packages using `pacman`:
 
 ```
 # pacman -S git mingw-w64-ucrt-x86_64-boost mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-libpcap mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-pcre2 mingw-w64-ucrt-x86_64-pkgconf mingw-w64-ucrt-x86_64-ragel mingw-w64-ucrt-x86_64-sqlite3 
@@ -134,6 +142,27 @@ Recommended but not necessary is `ccache` if you want to decrease build speed.
 
 ```
 # pacman -S mingw-w64-ucrt-x86_64-ccache
+```
+
+To build documentation you will also need to install doxygen and python3-breathe packages (breathe will also pull Sphinx packages):
+
+```
+# pacman -S mingw-w64-ucrt-x86_64-doxygen mingw-w64-ucrt-x86_64-python-breathe
+```
+
+For the other MSYS2 environments (MINGW64/CLANG64), you will need to install the appropriate packages:
+
+MINGW64:
+```
+# pacman -S git mingw-w64-ucrt-x86_64-boost mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-libpcap mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-pcre2 mingw-w64-ucrt-x86_64-pkgconf mingw-w64-ucrt-x86_64-ragel mingw-w64-ucrt-x86_64-sqlite3 
+# pacman -S mingw-w64-x86_64-ccache
+# pacman -S mingw-w64-x86_64-doxygen mingw-w64-x86_64-python-breathe
+```
+CLANG64:
+```
+# pacman -S git mingw-w64-ucrt-x86_64-boost mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-libpcap mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-pcre2 mingw-w64-ucrt-x86_64-pkgconf mingw-w64-ucrt-x86_64-ragel mingw-w64-ucrt-x86_64-sqlite3 
+# pacman -S mingw-w64-x86_64-ccache
+# pacman -S mingw-w64-x86_64-doxygen mingw-w64-x86_64-python-breathe
 ```
 
 ### MacOS X (M1/M2/M3 CPUs only)
@@ -244,6 +273,7 @@ Common options for Cmake are:
 ## Other options
 
 * `SANITIZE=[address|memory|undefined]` (experimental) Use `libasan` sanitizer to detect possible bugs. For now only `address` is tested. This will eventually be integrated in the CI.
+* `BUILD_DOC=[On|Off]` Build Hyperscan/Vectorscan Documentation. Requires Python Sphinx, Python Breathe and Doxygen. Default: OFF
 
 ## SIMDe options
 

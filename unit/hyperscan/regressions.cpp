@@ -66,7 +66,7 @@ TEST(rebar, leipzig_math_symbols_count) {
     ASSERT_TRUE(scratch != nullptr);
 
     string filename = "unit/hyperscan/datafiles/leipzig-3200.txt";
-    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str());
+    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str(), std::ios::binary);
     std::stringstream buffer;
     buffer << file.rdbuf(); // Read the file into the buffer
     std::string data = buffer.str(); // Convert the buffer into a std::string
@@ -123,8 +123,6 @@ std::string utf8_lossy_decode(const std::string &input) {
     return output;
 }
 
-// FIXME: https://github.com/VectorCamp/vectorscan/issues/417
-#if !(defined(__MINGW32__) || defined(__MINGW64__))
 TEST(rebar, lh3lh3_reb_uri_or_email_grep) {
     hs_database_t *db = nullptr;
     hs_compile_error_t *compile_err = nullptr;
@@ -142,7 +140,7 @@ TEST(rebar, lh3lh3_reb_uri_or_email_grep) {
     ASSERT_TRUE(scratch != nullptr);
 
     string filename = "unit/hyperscan/datafiles/lh3lh3-reb-howto.txt";
-    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str());
+    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str(), std::ios::binary);
     std::stringstream buffer;
     buffer << file.rdbuf(); // Read the file into the buffer
     std::string data = buffer.str(); // Convert the buffer into a std::string
@@ -178,7 +176,7 @@ TEST(rebar, lh3lh3_reb_email_grep) {
     ASSERT_TRUE(scratch != nullptr);
 
     string filename = "unit/hyperscan/datafiles/lh3lh3-reb-howto.txt";
-    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str());
+    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str(), std::ios::binary);
     std::stringstream buffer;
     buffer << file.rdbuf(); // Read the file into the buffer
     std::string data = buffer.str(); // Convert the buffer into a std::string
@@ -196,7 +194,6 @@ TEST(rebar, lh3lh3_reb_email_grep) {
     err = hs_free_scratch(scratch);
     ASSERT_EQ(HS_SUCCESS, err);
 }
-#endif //!(defined(__MINGW32__) || defined(__MINGW64__))
 
 TEST(rebar, lh3lh3_reb_date_grep) {
     hs_database_t *db = nullptr;
@@ -216,7 +213,7 @@ TEST(rebar, lh3lh3_reb_date_grep) {
 
 
     string filename = "unit/hyperscan/datafiles/lh3lh3-reb-howto.txt";
-    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str());
+    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str(), std::ios::binary);
     std::stringstream buffer;
     buffer << file.rdbuf(); // Read the file into the buffer
     std::string data = buffer.str(); // Convert the buffer into a std::string

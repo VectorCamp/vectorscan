@@ -1251,7 +1251,7 @@ bytecode_ptr<NFA> mcsheng64Compile16(dfa_info&info, dstate_id_t sheng_end,
 static
 void fill_in_succ_table_64_8(NFA *nfa, const dfa_info &info,
                              dstate_id_t sheng_end) {
-    u8 *succ_table = reinterpret_cast<u8 *>(reinterpret_cast<char *>(nfa) + sizeof(NFA) + sizeof(mcsheng));
+    u8 *succ_table = reinterpret_cast<u8 *>(reinterpret_cast<char *>(nfa) + sizeof(NFA) + sizeof(mcsheng64));
 
     u8 alphaShift = info.getAlphaShift();
     assert(alphaShift <= 8);

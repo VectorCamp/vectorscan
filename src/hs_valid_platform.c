@@ -35,6 +35,8 @@
 #include "util/arch/x86/cpuid_inline.h"
 #elif defined(ARCH_AARCH64)
 #include "util/arch/arm/cpuid_inline.h"
+#elif defined(ARCH_SW_64)
+#include "util/arch/sw64/cpuid_inline.h"
 #endif
 #endif
 
@@ -61,6 +63,8 @@ hs_error_t HS_CDECL hs_valid_platform(void) {
     // cppcheck-suppress knownConditionTrueFalse
     return check_neon()? HS_SUCCESS: HS_ARCH_ERROR;
 #elif defined(ARCH_PPC64EL) || defined(VS_SIMDE_BACKEND)
+    return HS_SUCCESS;
+#elif defined(ARCH_SW_64)
     return HS_SUCCESS;
 #endif
 #endif

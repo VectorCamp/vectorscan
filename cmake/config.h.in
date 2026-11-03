@@ -24,6 +24,9 @@
 /* "Define if building for PPC64EL" */
 #cmakedefine ARCH_PPC64EL
 
+/* "Define if building for SW64" */
+#cmakedefine ARCH_SW_64
+
 /* "Define if cross compiling for AARCH64" */
 #cmakedefine CROSS_COMPILE_AARCH64
 

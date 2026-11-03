@@ -76,4 +76,7 @@
 #include <altivec.h>
 #endif
 
+/* sw_64 has no compiler-supplied intrinsics header; SIMD primitives
+ * are implemented via scalar fallback in arch/sw64/simd_utils.h */
+
 #endif // INTRINSICS_H

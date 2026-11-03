@@ -147,11 +147,13 @@ elseif (ARCH_ARM32 OR ARCH_AARCH64)
     include (${CMAKE_MODULE_PATH}/cflags-arm.cmake)
 elseif (ARCH_PPC64EL)
     include (${CMAKE_MODULE_PATH}/cflags-ppc64le.cmake)
+elseif (ARCH_SW_64)
+    include (${CMAKE_MODULE_PATH}/cflags-sw64.cmake)
 else ()
     message(FATAL_ERROR "Unsupported platform")
 endif ()
 
-if (ARCH_PPC64EL)
+if (ARCH_PPC64EL OR ARCH_SW_64)
     set(ARCH_FLAG mcpu)
 else ()
     set(ARCH_FLAG march)
@@ -300,6 +302,10 @@ elseif (ARCH_PPC64EL)
 set (hs_exec_common_SRCS
     ${hs_exec_common_SRCS}
     src/util/arch/ppc64el/cpuid_flags.c)
+elseif (ARCH_SW_64)
+set (hs_exec_common_SRCS
+    ${hs_exec_common_SRCS}
+    src/util/arch/sw64/cpuid_flags.c)
 endif ()
 
 set (hs_exec_SRCS
@@ -462,6 +468,11 @@ set (hs_exec_SRCS
     ${hs_exec_SRCS}
     src/nfa/vermicelli_simd.cpp
     src/util/supervector/arch/ppc64el/impl.cpp)
+elseif (ARCH_SW_64)
+set (hs_exec_SRCS
+    ${hs_exec_SRCS}
+    src/nfa/vermicelli_simd.cpp
+    src/util/supervector/arch/sw64/impl.cpp)
 endif()
 
 

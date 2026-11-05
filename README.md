@@ -94,9 +94,6 @@ some small but necessary changes were made that might break compatibility with h
 
 ## Install Common Dependencies
 
-### Arch Linux
-A PKGBUILD for [Vectorscan](https://aur.archlinux.org/packages/vectorscan) is available in the [AUR](https://aur.archlinux.org/)
-
 ### Debian/Ubuntu
 In order to build on Debian/Ubuntu make sure you install the following build dependencies
 
@@ -126,9 +123,8 @@ Note: On Fedora vectorscan can be installed via dnf (vectorscan or vectorscan-de
 ### OpenWrt
 Vectorscan has been available since [PR#27382](https://github.com/openwrt/packages/pull/27382) was merged. To build it, use the [OpenWrt Build System](https://openwrt.org/docs/guide-developer/toolchain/install-buildsystem) or download a nightly snapshot.
 
-### Other distributions
-
-TBD
+### Arch Linux
+A PKGBUILD for [Vectorscan](https://aur.archlinux.org/packages/vectorscan) is available in the [AUR](https://aur.archlinux.org/)
 
 ### Windows MSYS2 (UCRT64, MINGW64, CLANG64)
 
@@ -154,86 +150,23 @@ For the other MSYS2 environments (MINGW64/CLANG64), you will need to install the
 
 MINGW64:
 ```
-# pacman -S git mingw-w64-ucrt-x86_64-boost mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-libpcap mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-pcre2 mingw-w64-ucrt-x86_64-pkgconf mingw-w64-ucrt-x86_64-ragel mingw-w64-ucrt-x86_64-sqlite3 
+# pacman -S git mingw-w64-x86_64-boost mingw-w64-x86_64-cmake mingw-w64-x86_64-gcc mingw-w64-x86_64-libpcap mingw-w64-x86_64-ninja mingw-w64-x86_64-pcre2 mingw-w64-x86_64-pkgconf mingw-w64-x86_64-ragel mingw-w64-x86_64-sqlite3 
 # pacman -S mingw-w64-x86_64-ccache
 # pacman -S mingw-w64-x86_64-doxygen mingw-w64-x86_64-python-breathe
 ```
 CLANG64:
 ```
-# pacman -S git mingw-w64-ucrt-x86_64-boost mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-libpcap mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-pcre2 mingw-w64-ucrt-x86_64-pkgconf mingw-w64-ucrt-x86_64-ragel mingw-w64-ucrt-x86_64-sqlite3 
-# pacman -S mingw-w64-x86_64-ccache
-# pacman -S mingw-w64-x86_64-doxygen mingw-w64-x86_64-python-breathe
+# pacman -S git mingw-w64-clang-x86_64-boost mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-libpcap mingw-w64-clang-x86_64-ninja mingw-w64-clang-x86_64-pcre2 mingw-w64-clang-x86_64-pkgconf mingw-w64-clang-x86_64-ragel mingw-w64-clang-x86_64-sqlite3
+# pacman -S mingw-w64-clang-x86_64-ccache
+# pacman -S mingw-w64-clang-x86_64-doxygen mingw-w64-clang-x86_64-python-breathe
 ```
 
-### MacOS X (M1/M2/M3 CPUs only)
+### MacOS X (Apple Silicon)
 Assuming an existing HomeBrew installation:
 
 ```
-% brew install boost cmake gcc libpcap pkg-config ragel sqlite
+% brew install boost cmake gcc libpcap pkg-config ragel sqlite doxygen
 ```
-
-### *BSD
-In NetBSD you will almost certainly need to have a newer compiler installed. 
-Also you will need to install cmake, sqlite, boost and ragel. 
-Also, libpcap is necessary for some of the benchmarks, so let's install that 
-as well.
-When using pkgsrc, you would typically do this using something
-similar to
-```
-pkg_add gcc12-12.3.0.tgz
-pkg_add boost-headers-1.83.0.tgz  boost-jam-1.83.0.tgz      boost-libs-1.83.0nb1.tgz
-pkg_add ragel-6.10.tgz
-pkg_add cmake-3.28.1.tgz
-pkg_add sqlite3-3.44.2.tgz
-pkg_add libpcap-1.10.4.tgz
-```
-Version numbers etc will of course vary. One would either download the
-binary packages or build them using pkgsrc. There exist some NetBSD pkg 
-tools like ```pkgin``` which help download e.g. dependencies as binary packages,
-but overall NetBSD leaves a lot of detail exposed to the user.
-The main package system used in NetBSD is pkgsrc and one will probably
-want to read up more about it than is in the scope of this document.
-See https://www.netbsd.org/docs/software/packages.html for more information.
-
-This will not replace the compiler in the standard base distribution, and
-cmake will probably find the base dist's compiler when it checks automatically.
-Using the example of gcc12 from pkgsrc, one will need to set two
-environment variables before starting: 
-```
-export CC="/usr/pkg/gcc12/bin/cc"
-export CXX="/usr/pkg/gcc12/bin/g++"
-```
-
-In FreeBSD similarly, you might want to install a different compiler.
-If you want to use gcc, it is recommended to use gcc12.
-You will also, as in NetBSD, need to install cmake, sqlite, boost and ragel packages.
-Using the example of gcc12 from pkg:
-installing the desired compiler: 
-```
-pkg install gcc12
-pkg install boost-all
-pkg install ragel
-pkg install cmake
-pkg install sqlite
-pkg install libpcap
-pkg install ccache
-```
-and then before beginning the cmake and build process, set
-the environment variables to point to this compiler: 
-```
-export CC="/usr/local/bin/gcc"
-export CXX="/usr/local/bin/g++"
-```
-A further note in FreeBSD, on the PowerPC and ARM platforms, 
-the gcc12 package installs to a slightly different name, on FreeBSD/ppc, 
-gcc12 will be found using: 
-```
-export CC="/usr/local/bin/gcc12"
-export CXX="/usr/local/bin/g++12"
-```
-
-Then continue with the build as below. 
-
 
 ## Configure & build
 

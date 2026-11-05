@@ -54,6 +54,11 @@ static really_inline
 svuint8_t blockSingleMaskWide(svuint8_t shuf_mask_lo_highclear, svuint8_t shuf_mask_lo_highset, svuint8_t chars);
 #endif //HAVE_SVE2
 #else
+#ifdef CAN_USE_WIDE_TRUFFLE
+template <uint16_t S>
+static really_inline
+const SuperVector<S> blockSingleMaskWide(SuperVector<S> shuf_mask_lo_highclear, SuperVector<S> shuf_mask_lo_highset, SuperVector<S> chars);
+#endif
 template <uint16_t S>
 static really_inline
 const SuperVector<S> blockSingleMask(SuperVector<S> shuf_mask_lo_highclear, SuperVector<S> shuf_mask_lo_highset, SuperVector<S> chars);
@@ -95,6 +100,7 @@ const u8 *scanBlock(svuint8_t shuf_mask_lo_highclear, svuint8_t shuf_mask_lo_hig
 #else
             DEBUG_PRINTF("Wide Truffle is not supported with 128b vectors unless SVE2 is enabled");
             assert(false);
+            return nullptr;
 #endif
         } else {
             result_mask = blockSingleMaskWide32(shuf_mask_lo_highclear, chars);
@@ -260,14 +266,24 @@ const u8 *rtruffleExecSVE(m256 shuf_mask_32, const u8 *buf, const u8 *buf_end){
     return buf - 1;
 }
 #else
-template <uint16_t S>
+template <uint16_t S, bool is_wide>
 static really_inline
 const u8 *fwdBlock(SuperVector<S> shuf_mask_lo_highclear, SuperVector<S> shuf_mask_lo_highset, SuperVector<S> chars, const u8 *buf) {
-    SuperVector<S> res = blockSingleMask(shuf_mask_lo_highclear, shuf_mask_lo_highset, chars);
-    return first_zero_match_inverted<S>(buf, res);
+    if constexpr (is_wide) {
+#ifdef CAN_USE_WIDE_TRUFFLE
+        SuperVector<S> res = blockSingleMaskWide(shuf_mask_lo_highclear, shuf_mask_lo_highset, chars);
+        return first_zero_match_inverted<S>(buf, res);
+#else
+        assert(false);
+        return nullptr;
+#endif
+    } else {
+        SuperVector<S> res = blockSingleMask(shuf_mask_lo_highclear, shuf_mask_lo_highset, chars);
+        return first_zero_match_inverted<S>(buf, res);
+    }
 }
 
-template <uint16_t S>
+template <uint16_t S, bool is_wide>
 const u8 *truffleExecReal(const m128 &shuf_mask_lo_highclear, m128 shuf_mask_lo_highset, const u8 *buf, const u8 *buf_end) {
     assert(buf && buf_end);
     assert(buf < buf_end);
@@ -289,7 +305,7 @@ const u8 *truffleExecReal(const m128 &shuf_mask_lo_highclear, m128 shuf_mask_lo_
         if (!ISALIGNED_N(d, S)) {
             SuperVector<S> chars = SuperVector<S>::loadu(d);
             const u8 *dup = ROUNDUP_PTR(d, S);
-            rv = fwdBlock(wide_shuf_mask_lo_highclear, wide_shuf_mask_lo_highset, chars, d);
+            rv = fwdBlock<S, is_wide>(wide_shuf_mask_lo_highclear, wide_shuf_mask_lo_highset, chars, d);
             if (rv && rv < dup) return rv;
             d = dup;
         }
@@ -298,7 +314,7 @@ const u8 *truffleExecReal(const m128 &shuf_mask_lo_highclear, m128 shuf_mask_lo_
             __builtin_prefetch(d + 16*64);
             DEBUG_PRINTF("d %p \n", d);
             SuperVector<S> chars = SuperVector<S>::load(d);
-            rv = fwdBlock(wide_shuf_mask_lo_highclear, wide_shuf_mask_lo_highset, chars, d);
+            rv = fwdBlock<S, is_wide>(wide_shuf_mask_lo_highclear, wide_shuf_mask_lo_highset, chars, d);
             if (rv) return rv;
             d += S;
         }
@@ -317,7 +333,7 @@ const u8 *truffleExecReal(const m128 &shuf_mask_lo_highclear, m128 shuf_mask_lo_
           chars = SuperVector<S>::loadu(buf_end - S);
           end_buf = buf_end - S;
         }
-        rv = fwdBlock(wide_shuf_mask_lo_highclear, wide_shuf_mask_lo_highset, chars, end_buf);
+        rv = fwdBlock<S, is_wide>(wide_shuf_mask_lo_highclear, wide_shuf_mask_lo_highset, chars, end_buf);
         DEBUG_PRINTF("rv %p \n", rv);
         if (rv && rv < buf_end) return rv;
     }
@@ -325,15 +341,25 @@ const u8 *truffleExecReal(const m128 &shuf_mask_lo_highclear, m128 shuf_mask_lo_
     return buf_end;
 }
 
-template <uint16_t S>
+template <uint16_t S, bool is_wide>
 static really_inline
-const u8 *revBlock(SuperVector<S> shuf_mask_lo_highclear, SuperVector<S> shuf_mask_lo_highset, SuperVector<S> v, 
+const u8 *revBlock(SuperVector<S> shuf_mask_lo_highclear, SuperVector<S> shuf_mask_lo_highset, SuperVector<S> v,
                     const u8 *buf) {
-    SuperVector<S> res = blockSingleMask(shuf_mask_lo_highclear, shuf_mask_lo_highset, v);
-    return last_zero_match_inverted<S>(buf, res);
+    if constexpr (is_wide) {
+#ifdef CAN_USE_WIDE_TRUFFLE
+        SuperVector<S> res = blockSingleMaskWide(shuf_mask_lo_highclear, shuf_mask_lo_highset, v);
+        return last_zero_match_inverted<S>(buf, res);
+#else
+        assert(false);
+        return nullptr;
+#endif
+    } else {
+        SuperVector<S> res = blockSingleMask(shuf_mask_lo_highclear, shuf_mask_lo_highset, v);
+        return last_zero_match_inverted<S>(buf, res);
+    }
 }
 
-template <uint16_t S>
+template <uint16_t S, bool is_wide>
 const u8 *rtruffleExecReal(m128 shuf_mask_lo_highclear, m128 shuf_mask_lo_highset, const u8 *buf, const u8 *buf_end){
     assert(buf && buf_end);
     assert(buf < buf_end);
@@ -355,7 +381,7 @@ const u8 *rtruffleExecReal(m128 shuf_mask_lo_highclear, m128 shuf_mask_lo_highse
         if (!ISALIGNED_N(d, S)) {
             SuperVector<S> chars = SuperVector<S>::loadu(d - S);
             const u8 *dbot = ROUNDDOWN_PTR(d, S);
-            rv = revBlock(wide_shuf_mask_lo_highclear, wide_shuf_mask_lo_highset, chars, d - S);
+            rv = revBlock<S, is_wide>(wide_shuf_mask_lo_highclear, wide_shuf_mask_lo_highset, chars, d - S);
             DEBUG_PRINTF("rv %p \n", rv);
             if (rv >= dbot) return rv;
             d = dbot;
@@ -368,7 +394,7 @@ const u8 *rtruffleExecReal(m128 shuf_mask_lo_highclear, m128 shuf_mask_lo_highse
 
             d -= S;
             SuperVector<S> chars = SuperVector<S>::load(d);
-            rv = revBlock(wide_shuf_mask_lo_highclear, wide_shuf_mask_lo_highset, chars, d);
+            rv = revBlock<S, is_wide>(wide_shuf_mask_lo_highclear, wide_shuf_mask_lo_highset, chars, d);
             if (rv) return rv;
         }
     }
@@ -383,7 +409,7 @@ const u8 *rtruffleExecReal(m128 shuf_mask_lo_highclear, m128 shuf_mask_lo_highse
         } else {
           chars = SuperVector<S>::loadu(buf);
         }
-        rv = revBlock(wide_shuf_mask_lo_highclear, wide_shuf_mask_lo_highset, chars, buf);
+        rv = revBlock<S, is_wide>(wide_shuf_mask_lo_highclear, wide_shuf_mask_lo_highset, chars, buf);
         DEBUG_PRINTF("rv %p \n", rv);
         if (rv && rv < buf_end) return rv;
     }

@@ -58,7 +58,15 @@ const u8 *rtruffleExecWide(m256 mask, const u8 *buf,
     }
 }
 #else // HAVE_SVE
-#error "Wide truffle enabled for the target architecture but no implementation found"
+const u8 *truffleExecWide(m256 mask, const u8 *buf,
+                      const u8 *buf_end) {
+    return truffleExecReal<VECTORSIZE, true>(mask.lo, mask.hi, buf, buf_end);
+}
+
+const u8 *rtruffleExecWide(m256 mask, const u8 *buf,
+                       const u8 *buf_end) {
+    return rtruffleExecReal<VECTORSIZE, true>(mask.lo, mask.hi, buf, buf_end);
+}
 #endif // HAVE_SVE
 #endif // CAN_USE_WIDE_TRUFFLE
 
@@ -84,11 +92,11 @@ const u8 *rtruffleExec(m128 mask_lo, m128 mask_hi, const u8 *buf,
 #else
 const u8 *truffleExec(m128 mask_lo, m128 mask_hi, const u8 *buf,
                       const u8 *buf_end) {
-    return truffleExecReal<VECTORSIZE>(mask_lo, mask_hi, buf, buf_end);
+    return truffleExecReal<VECTORSIZE, false>(mask_lo, mask_hi, buf, buf_end);
 }
 
 const u8 *rtruffleExec(m128 mask_lo, m128 mask_hi, const u8 *buf,
                        const u8 *buf_end) {
-    return rtruffleExecReal<VECTORSIZE>(mask_lo, mask_hi, buf, buf_end);
+    return rtruffleExecReal<VECTORSIZE, false>(mask_lo, mask_hi, buf, buf_end);
 }
 #endif //HAVE_SVE

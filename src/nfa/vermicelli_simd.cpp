@@ -613,6 +613,8 @@ extern "C" const u8 *rvermicelliDoubleExec(char c1, char c2, char nocase, const 
     return rvermicelliDoubleExecReal<VECTORSIZE>(c1, c2, casemask, buf, buf_end);
 }
 
+// FIXME: Need a better way to fix this
+#ifndef HAVE_SVE2
 extern "C" const u8 *vermicelliDoubleMaskedExec(char c1, char c2, char m1, char m2,
                                      const u8 *buf, const u8 *buf_end) {
     DEBUG_PRINTF("double verm scan (\\x%02hhx&\\x%02hhx)(\\x%02hhx&\\x%02hhx) "
@@ -621,3 +623,4 @@ extern "C" const u8 *vermicelliDoubleMaskedExec(char c1, char c2, char m1, char 
 
     return vermicelliDoubleMaskedExecReal<VECTORSIZE>(c1, c2, m1, m2, buf, buf_end);
 }
+#endif

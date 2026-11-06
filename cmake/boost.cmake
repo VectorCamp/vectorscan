@@ -1,5 +1,7 @@
 # Various checks related to Boost
 
+set(BOOST_CXX_FLAGS "")
+
 set(BOOST_USE_STATIC_LIBS OFF)
 set(BOOST_USE_MULTITHREADED OFF)
 set(BOOST_USE_STATIC_RUNTIME OFF)
@@ -59,7 +61,7 @@ if (BOOST_ICL_BROKEN_WITH_LIBCXX)
         "its ICL loses intervals under the new std::set lookups, which makes character classes match input they exclude "
         "(https://github.com/VectorCamp/vectorscan/issues/419). Use Boost 1.92 or later, or build against libstdc++. "
         "libc++ 22 or 23 is detected so we are adding -D_LIBCPP_ENABLE_LEGACY_TREE_LOWER_UPPER_BOUND to CMAKE_CXX_FLAGS.")
-    set(EXTRA_CXX_FLAGS "${EXTRA_CXX_FLAGS} -D_LIBCPP_ENABLE_LEGACY_TREE_LOWER_UPPER_BOUND")
+   set(BOOST_CXX_FLAGS "-D_LIBCPP_ENABLE_LEGACY_TREE_LOWER_UPPER_BOUND")
 endif()
 
 # Boost 1.62 has a bug that we've patched around, check if it is required

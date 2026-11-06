@@ -135,8 +135,10 @@ if (WINDOWS)
 endif()
 
 if(ARCH_X86_64 AND FAT_RUNTIME AND NOT NO_SIMDE_IN_FAT)
-    include (${CMAKE_MODULE_PATH}/simde.cmake)
-    set(BUILD_SIMDE_NATIVE True)
+    if (NOT (WINDOWS AND CMAKE_COMPILER_IS_CLANG))
+       include (${CMAKE_MODULE_PATH}/simde.cmake)
+       set(BUILD_SIMDE_NATIVE True)
+    endif()
 endif()
 
 if(BUILD_SIMDE_BACKEND)

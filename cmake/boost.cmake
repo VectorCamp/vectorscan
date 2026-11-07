@@ -1,5 +1,7 @@
 # Various checks related to Boost
 
+set(BOOST_CXX_FLAGS "")
+
 set(BOOST_USE_STATIC_LIBS OFF)
 set(BOOST_USE_MULTITHREADED OFF)
 set(BOOST_USE_STATIC_RUNTIME OFF)
@@ -55,10 +57,11 @@ int main() { return 0; }
 set (CMAKE_REQUIRED_INCLUDES "${saved_INCLUDES}")
 
 if (BOOST_ICL_BROKEN_WITH_LIBCXX)
-    message(FATAL_ERROR "Boost ${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION}.${Boost_SUBMINOR_VERSION} cannot be used with libc++ 22 or later: "
+    message(WARNING "Boost ${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION}.${Boost_SUBMINOR_VERSION} cannot be used with libc++ 22 or later: "
         "its ICL loses intervals under the new std::set lookups, which makes character classes match input they exclude "
         "(https://github.com/VectorCamp/vectorscan/issues/419). Use Boost 1.92 or later, or build against libstdc++. "
-        "With libc++ 22 or 23 you can instead add -D_LIBCPP_ENABLE_LEGACY_TREE_LOWER_UPPER_BOUND to CMAKE_CXX_FLAGS.")
+        "libc++ 22 or 23 is detected so we are adding -D_LIBCPP_ENABLE_LEGACY_TREE_LOWER_UPPER_BOUND to CMAKE_CXX_FLAGS.")
+   set(BOOST_CXX_FLAGS "-D_LIBCPP_ENABLE_LEGACY_TREE_LOWER_UPPER_BOUND")
 endif()
 
 # Boost 1.62 has a bug that we've patched around, check if it is required

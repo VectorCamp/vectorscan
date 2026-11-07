@@ -135,8 +135,10 @@ if (WINDOWS)
 endif()
 
 if(ARCH_X86_64 AND FAT_RUNTIME AND NOT NO_SIMDE_IN_FAT)
-    include (${CMAKE_MODULE_PATH}/simde.cmake)
-    set(BUILD_SIMDE_NATIVE True)
+    if (NOT (WINDOWS AND CMAKE_COMPILER_IS_CLANG))
+       include (${CMAKE_MODULE_PATH}/simde.cmake)
+       set(BUILD_SIMDE_NATIVE True)
+    endif()
 endif()
 
 if(BUILD_SIMDE_BACKEND)
@@ -266,6 +268,9 @@ else()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_CXX_FLAGS}")
 endif()
+
+# Add extra Boost CXX Flags set during configuration
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${BOOST_CXX_FLAGS}")
 
 SET(hs_HEADERS
     ${PROJECT_BINARY_DIR}/hs_version.h

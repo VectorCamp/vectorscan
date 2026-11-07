@@ -505,3 +505,21 @@ TEST(bug339, delayed_fragment_assert) {
 
     hs_free_database(db);
 }
+
+TEST(bug416, pattern_ending_unterminated_comment) {
+    /* Minimal (?x) free-spacing pattern whose last line is an
+     * unterminated '#' comment -- the shape of the two real corpus
+     * patterns named above, reduced to its essence. */
+    const char *plain = "(?x) abc  # trailing comment, no newline";
+
+    static char wrapped[128];
+    snprintf(wrapped, sizeof(wrapped), "%s\n", plain);
+
+    hs_database_t *db = NULL;
+    hs_compile_error_t *err = NULL;
+    hs_error_t rc = hs_compile(plain, HS_FLAG_DOTALL, HS_MODE_BLOCK, NULL, &db, &err);
+
+    ASSERT_EQ(HS_SUCCESS, rc);
+    rc = hs_compile(wrapped, HS_FLAG_DOTALL, HS_MODE_BLOCK, NULL, &db, &err);
+    ASSERT_EQ(HS_SUCCESS, rc);
+}

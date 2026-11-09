@@ -9,3 +9,8 @@ hs_scratch_free
 hs_database_alloc
 hs_database_free
 ^_
+mmbit_maxlevel_from_keyshift_lut
+mmbit_root_offset_from_level
+mmbit_maxlevel_direct_lut
+mmbit_keyshift_lut
+.refptr.rose

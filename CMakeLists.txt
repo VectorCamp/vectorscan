@@ -4,10 +4,10 @@ project (vectorscan C CXX)
 
 set (HS_MAJOR_VERSION 5)
 set (HS_MINOR_VERSION 4)
-set (HS_PATCH_VERSION 13)
+set (HS_PATCH_VERSION 14)
 set (HS_VERSION ${HS_MAJOR_VERSION}.${HS_MINOR_VERSION}.${HS_PATCH_VERSION})
 
-string (TIMESTAMP BUILD_DATE "%Y-%m-%d")
+string (TIMESTAMP BUILD_DATE "%Y-%m-%d" UTC)
 message(STATUS "Build date: ${BUILD_DATE}")
 
 # Dependencies check
@@ -37,6 +37,7 @@ endif()
 # Add ccache to speed builds
 find_program(CCACHE_FOUND ccache)
 if(CCACHE_FOUND)
+    message(STATUS "CCache found, will use for compiling")
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
 endif(CCACHE_FOUND)
@@ -127,9 +128,17 @@ include (${CMAKE_MODULE_PATH}/platform.cmake)
 # Detect OS and if Fat Runtime is available
 include (${CMAKE_MODULE_PATH}/osdetection.cmake)
 
+if (WINDOWS)
+    message(STATUS "This is a Windows build")
+    set(BUILD_SIMDE_BACKEND False)
+    set(BUILD_SIMDE_NATIVE False)
+endif()
+
 if(ARCH_X86_64 AND FAT_RUNTIME AND NOT NO_SIMDE_IN_FAT)
-    include (${CMAKE_MODULE_PATH}/simde.cmake)
-    set(BUILD_SIMDE_NATIVE True)
+    if (NOT (WINDOWS AND CMAKE_COMPILER_IS_CLANG))
+       include (${CMAKE_MODULE_PATH}/simde.cmake)
+       set(BUILD_SIMDE_NATIVE True)
+    endif()
 endif()
 
 if(BUILD_SIMDE_BACKEND)
@@ -259,6 +268,9 @@ else()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_CXX_FLAGS}")
 endif()
+
+# Add extra Boost CXX Flags set during configuration
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${BOOST_CXX_FLAGS}")
 
 SET(hs_HEADERS
     ${PROJECT_BINARY_DIR}/hs_version.h
@@ -420,7 +432,6 @@ set (hs_exec_SRCS
     src/util/fatbit.h
     src/util/join.h
     src/util/multibit.h
-    src/util/multibit.c
     src/util/multibit_compress.h
     src/util/multibit_internal.h
     src/util/pack_bits.h
@@ -963,9 +974,11 @@ else ()
 
     if (ARCH_IA32 OR ARCH_X86_64)
         if (NOT BUILD_AVX512)
-            set (DISPATCHER_DEFINE "-DDISABLE_AVX512_DISPATCH")
+            message(STATUS "Excluding AVX512 from Fat runtime")
+	    set (DISPATCHER_DEFINE "${DISPATCHER_DEFINE} -DDISABLE_AVX512_DISPATCH")
         endif (NOT BUILD_AVX512)
         if (NOT BUILD_AVX512VBMI)
+            message(STATUS "Excluding AVX512VBMI from Fat runtime")
             set (DISPATCHER_DEFINE "${DISPATCHER_DEFINE} -DDISABLE_AVX512VBMI_DISPATCH")
         endif (NOT BUILD_AVX512VBMI)
 	# Make the dispatcher use the lowest arch denominator
@@ -1213,7 +1226,7 @@ if(BUILD_BENCHMARKS)
     add_subdirectory(benchmarks)
 endif()
 
-option(BUILD_DOC "Build the Hyperscan documentation (default TRUE)" TRUE)
+option(BUILD_DOC "Build the Hyperscan documentation (default TRUE)" FALSE)
 if(BUILD_DOC)
     add_subdirectory(doc/dev-reference)
 endif()

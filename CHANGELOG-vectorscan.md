@@ -2,6 +2,28 @@
 
 This is a list of notable changes to Vectorscan, in reverse chronological order. For Hyperscan Changelog, check CHANGELOG.md
 
+## [5.4.14] 2026-11-07
+
+Technically this release does not include many changes, however we recently signed two support contracts with OISF (of Suricata fame) and Google. The first outcome of this funding was just achieved: Windows MSYS2 platform was added, in particular the environments UCRT64, MINGW64 and CLANG64 (x86 only, no Arm yet). All these should build out of the box -see the README.md for instructions. Expect more optimizations and improvements in the next months.
+
+Following the supported platforms announcement, we also have to announce that this version (5.4.14) is the last with full support of Power VSX. In the next version (5.4.15) VSX will be deprecated and will be removed in the version after that (5.4.16 or 5.5.x which ever comes first). The reason is that the lack of support of this platform by IBM and other vendors leave us no choice. We have no Power system anymore apart from an unstable VM that runs our CI runner. Our multiple attempts to confirm funding for support of this port (as well as creating a big-endian port for ppc64 and IBM Z) were without success. For this reason, we are left with no choice than to deprecate and eventually remove support for Power. If you are interested in reversing this decision, you may contact us at info@vectorcamp.gr.
+We will again repeat that support for new architectures is going to be rejected unless there is a support contract.
+Regarding untested platforms like FreeBSD (only on x86 and Arm), we are happy to accept patches with small fixes, but the platforms will remain unsupported.
+
+Lastly, some more fixes were included for reported bugs.
+
+Contributions in detail:
+
+5lx:
+      fix(cmake): determine the fat runtime output object without rev (#412)
+
+Eliah Rusin:
+      fix(cmake): reject libc++ 22 or later with Boost.ICL older than 1.92 (#420)
+
+Julien Cegarra:
+      fix(unit): read rebar data files in binary mode (#417) (#421)
+
+
 ## [5.4.13] 2026-08-21
 
 This is an release that has long been long overdue. Many changes from many contributors, whom we have to thank.

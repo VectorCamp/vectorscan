@@ -1,21 +1,24 @@
-find_program(DOXYGEN doxygen)
+find_program(DOXYGEN doxygen REQUIRED)
+find_program(SPHINX_BUILD sphinx-build REQUIRED)
+find_package(Python3 REQUIRED)
 
-if (DOXYGEN STREQUAL DOXYGEN-NOTFOUND)
-    message(STATUS "Doxygen not found, unable to generate API reference")
-else()
+execute_process(
+    COMMAND ${Python3_EXECUTABLE} -c "import breathe"
+    RESULT_VARIABLE BREATHE_FOUND
+    OUTPUT_QUIET
+)
+if (NOT ${BREATHE_FOUND} EQUAL 0)
+    message(FATAL_ERROR "Python package 'breathe' is missing")
+endif()
+
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/hyperscan.doxyfile.in"
     "${CMAKE_CURRENT_BINARY_DIR}/hyperscan.doxyfile" @ONLY)
 
 add_custom_target(dev-reference-doxygen
     ${DOXYGEN} ${CMAKE_CURRENT_BINARY_DIR}/hyperscan.doxyfile
     COMMENT "Building doxygen XML for API reference")
-endif()
 
-find_program(SPHINX_BUILD sphinx-build)
 
-if (SPHINX_BUILD STREQUAL SPHINX_BUILD-NOTFOUND)
-    message(STATUS "Sphinx not found, unable to generate developer reference")
-else()
 set(SPHINX_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/_build")
 set(SPHINX_CACHE_DIR "${CMAKE_CURRENT_BINARY_DIR}/_doctrees")
 set(SPHINX_HTML_DIR "${CMAKE_CURRENT_BINARY_DIR}/html")
@@ -46,4 +49,3 @@ add_custom_target(dev-reference-man ALL
 
 install(FILES ${CMAKE_BINARY_DIR}/doc/dev-reference/man/vectorscan.7
     DESTINATION "${CMAKE_INSTALL_MANDIR}/man7/")
-endif()

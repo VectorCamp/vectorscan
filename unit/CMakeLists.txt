@@ -33,6 +33,11 @@ if(CMAKE_COMPILER_IS_CLANG AND ARCH_PPC64EL)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-pass-failed")
 endif()
 
+if(WINDOWS)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error")
+endif()
+
 add_definitions(-DGTEST_HAS_PTHREAD=0 -DSRCDIR=${PROJECT_SOURCE_DIR})
 
 set(unit_hyperscan_SOURCES

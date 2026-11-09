@@ -2915,7 +2915,7 @@ void findInclusionGroups(vector<LitFragment> &fragments,
     size_t fragNum = fragments.size();
     vector<u32> candidates;
     for (size_t j = 0; j < fragNum; j++) {
-        DEBUG_PRINTF("frag id %lu\n", j);
+        DEBUG_PRINTF("frag id %llu\n", j);
         u32 id = j;
         if (contains(includedIdMap, id) ||
             contains(includedDelayIdMap, id)) {

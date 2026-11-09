@@ -78,7 +78,7 @@ static inline void print_m128_2x64(const char *label, m128 vec) {
     store128(data, vec);
     DEBUG_PRINTF("%12s: ", label);
     for(int i=1; i >= 0; i--)
-        printf("%016lx ", data[i]);
+        printf("%016llx ", data[i]);
     printf("\n");
 }
 #else

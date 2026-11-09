@@ -115,7 +115,7 @@ Dependency                                              Version     Notes
 `CMake <http://www.cmake.org/>`_                        >=2.8.11
 `Ragel <http://www.colm.net/open-source/ragel/>`_       6.9
 `Python <http://www.python.org/>`_                      2.7
-`Boost <http://boost.org/>`_                            >=1.57      Boost headers required
+`Boost <http://boost.org/>`_                            >=1.57      Boost headers required; >=1.92 with libc++ 22 or later
 `Pcap <http://tcpdump.org>`_                            >=0.8       Optional: needed for example code only
 ======================================================= =========== ======================================
 

@@ -30,12 +30,15 @@
 #include "config.h"
 
 #include <set>
-#include <sys/mman.h>
 
 #include "gtest/gtest.h"
 #include "nfa/shufti.h"
 #include "nfa/shufticompile.h"
 #include "util/target_info.h"
+#if HAVE_MMAP
+#include <sys/mman.h>
+#include "util/pagesize.h"
+#endif // HAVE_MMAP
 
 using namespace ue2;
 using std::set;
@@ -896,7 +899,7 @@ TEST(DoubleShufti, ExecMatchMixed3) {
     for (size_t i = 0; i < 400; i++) {
         t2[len - i] = 'x';
         t2[len - i + 1] = 'y';
-        DEBUG_PRINTF("i = %ld\n", i);
+        DEBUG_PRINTF("i = %llu\n", i);
         const u8 *rv = shuftiDoubleExec(lo1, hi1, lo2, hi2,
                                         reinterpret_cast<u8 *>(t2), reinterpret_cast<u8 *>(t2) + len);
 
@@ -926,7 +929,7 @@ TEST(DoubleShufti, ExecNoMatchVectorEdge) {
     for (size_t i = 0; i < 70; i++) {
         t1[len - i] = 'a';
         t1[len - i + 1] = 'b';
-        DEBUG_PRINTF("i = %ld\n", i);
+        DEBUG_PRINTF("i = %llu\n", i);
         const u8 *rv = shuftiDoubleExec(lo1, hi1, lo2, hi2,
                                         reinterpret_cast<u8 *>(t1), reinterpret_cast<u8 *>(t1) + len);
 
@@ -935,6 +938,7 @@ TEST(DoubleShufti, ExecNoMatchVectorEdge) {
     }
 }
 
+#ifdef HAVE_MMAP
 // Regression test: shuftiDoubleExecReal used to read a full vector (S bytes)
 // in the tail, which could overread past buf_end. If the buffer ends at a page
 // boundary followed by an unmapped page, this causes a SIGSEGV.
@@ -949,7 +953,7 @@ TEST(DoubleShufti, ExecNoOverreadPageBoundary) {
                                       reinterpret_cast<u8 *>(&lo2), reinterpret_cast<u8 *>(&hi2));
     ASSERT_TRUE(ret);
 
-    const size_t page_size = sysconf(_SC_PAGE_SIZE);
+    const size_t page_size = get_page_size();
     // Map two pages, then unmap the second to create a guard page.
     u8 *pages = reinterpret_cast<u8 *>(mmap(nullptr, 2 * page_size,
                            PROT_READ | PROT_WRITE,
@@ -987,6 +991,7 @@ TEST(DoubleShufti, ExecNoOverreadPageBoundary) {
 
     munmap(pages, page_size);
 }
+#endif // HAVE_MMAP
 
 TEST(DoubleShufti, ExecMatchVectorEdge) {
     m128 lo1, hi1, lo2, hi2;
@@ -1281,7 +1286,7 @@ TEST(ReverseShufti, ExecMatch6) {
 
     for (size_t i = 0; i < len; i++) {
         t1[i] = 'a';
-        DEBUG_PRINTF("i=%ld\n", i);
+        DEBUG_PRINTF("i=%llu\n", i);
         const u8 *rv = rshuftiExec(lo, hi, reinterpret_cast<u8 *>(t1), reinterpret_cast<u8 *>(t1) + len);
 
         ASSERT_EQ(reinterpret_cast<const u8 *>(t1) + i, rv);

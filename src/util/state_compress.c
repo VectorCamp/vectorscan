@@ -301,7 +301,8 @@ m256 loadcompressed256_64bit(const void *ptr, m256 mvec) {
 
     unpack_bits_64(v, (const u8 *)ptr, bits, 4);
 
-#ifdef HAVE_SVE2_BITPERM
+#if defined(HAVE_SVE2_BITPERM) && (__GNUC__ >= 16 )
+    // FIXME: GCC < 16 produces wrong code here
     u64a ALIGN_ATTR(16) x[4];
     bdep64x2(x, v, &mvec.lo);
     bdep64x2(&x[2], &v[2], &mvec.hi);
@@ -443,7 +444,8 @@ m384 loadcompressed384_64bit(const void *ptr, m384 mvec) {
 
     unpack_bits_64(v, (const u8 *)ptr, bits, 6);
 
-#ifdef HAVE_SVE2_BITPERM
+#if defined(HAVE_SVE2_BITPERM) && (__GNUC__ >= 16 )
+    // FIXME: GCC < 16 produces wrong code here
     u64a ALIGN_ATTR(16) x[6];
     bdep64x2(x, v, &mvec.lo);
     bdep64x2(&x[2], &v[2], &mvec.mid);
@@ -609,7 +611,8 @@ m512 loadcompressed512_64bit(const void *ptr, m512 mvec) {
 
     unpack_bits_64(v, (const u8 *)ptr, bits, 8);
 
-#ifdef HAVE_SVE2_BITPERM
+#if defined(HAVE_SVE2_BITPERM) && (__GNUC__ >= 16 )
+    // FIXME: GCC < 16 produces wrong code here
     u64a ALIGN_ATTR(16) x[8];
     bdep64x2(x, v, &mvec.lo.lo);
     bdep64x2(&x[2], &v[2], &mvec.lo.hi);

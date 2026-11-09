@@ -38,7 +38,7 @@
 #include "util/bitutils.h"
 
 #ifdef HAVE_SVE2
-#include "vermicelli_sve.h"
+#include "arm/vermicelli_sve.h"
 #else
 
 #ifdef __cplusplus

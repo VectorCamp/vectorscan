@@ -34,7 +34,11 @@
 
 #include <string>
 #include <tuple>
+
+#ifdef HAVE_MMAP
 #include <sys/mman.h>
+#endif // HAVE_MMAP
+
 using namespace std;
 using namespace testing;
 
@@ -631,6 +635,7 @@ const TerminateMatchData terminateCases[] = {
 
 INSTANTIATE_TEST_CASE_P(Single, HyperscanTestMatchTerminate, ValuesIn(terminateCases));
 
+#ifdef HAVE_MMAP
 TEST(OutOfBoundRead, mmap) {
     const char* pattern = "bat|cat|mat|rat|fat|sat|pat|hat|vat";
     const char* corpus = "VAt hat pat sat fat rat mat ca";
@@ -654,6 +659,7 @@ TEST(OutOfBoundRead, mmap) {
     hs_free_database(db);
     munmap(buffer, buffer_len);
 }
+#endif // HAVE_MMAP
 
 } // namespace
 

@@ -46,6 +46,9 @@ cat ${KEEPSYMS_IN} ${LIBCSYMS} >> ${KEEPSYMS}
 ${CCACHE} "$@"
 # rename the symbols in the object
 ${NM} ${NM_FLAG} posix -g ${OUT} | cut -f1 -d' ' | grep -v -f ${KEEPSYMS} | sed "s/\(.*\)/\1 ${PREFIX}_\1/" >> ${SYMSFILE}
+# C++ symbols are kept above, but template instantiations are emitted in every variant that uses them and the
+# linker keeps a single copy for all variants, so rename the ones this object defines as well
+${NM} ${NM_FLAG} posix -g --defined-only ${OUT} | cut -f1 -d' ' | grep '^_Z' | sed "s/\(.*\)/\1 ${PREFIX}_\1/" >> ${SYMSFILE}
 if test -s ${SYMSFILE}
 then
     ${OBJCOPY} --redefine-syms=${SYMSFILE} ${OUT}
@@ -61,6 +64,10 @@ ${OBJDUMP} -h ${OUT} 2>/dev/null | grep '\.rdata\$\.refptr\.' | awk '{print $2}'
     esac
     echo "--rename-section=${sect}=${PREFIX}_${sect}" >> ${SECTFILE}
 done 2>/dev/null
+
+# ld also matches the COMDAT sections of the renamed C++ symbols by name, so .text$_Z... -> .text$<prefix>__Z...
+${OBJDUMP} -h ${OUT} | awk '{print $2}' | grep '^\.[a-z]*\$_Z' | \
+    sed "s/^\([^\$]*\)\$\(.*\)$/--rename-section=&=\1\$${PREFIX}_\2/" >> ${SECTFILE}
 
 if [ -s "${SECTFILE}" ]; then
     ${OBJCOPY} $(cat ${SECTFILE}) ${OUT} 2>/dev/null

@@ -60,7 +60,7 @@ SECTFILE=$(mktemp -p /tmp ${PREFIX}_sections.XXXXX)
 # Get list of .rdata$.refptr.* sections - use objdump -h to show section headers
 ${OBJDUMP} -h ${OUT} 2>/dev/null | grep '\.rdata\$\.refptr\.' | awk '{print $2}' | while IFS= read -r sect; do
     case "$sect" in
-        *.refptr.mmbit*|*.refptr.hs_*|*.refptr.rose*) continue ;;
+        *.refptr.mmbit*|*.refptr.hs_*) continue ;;
     esac
     echo "--rename-section=${sect}=${PREFIX}_${sect}" >> ${SECTFILE}
 done 2>/dev/null

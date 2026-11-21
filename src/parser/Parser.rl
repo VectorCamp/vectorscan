@@ -2006,7 +2006,7 @@ unique_ptr<Component> parse(const char *ptr, ParseMode &globalMode) {
             throw ParseError(oss.str());
         }
 
-        if (inComment) {
+        if (inComment && *p != '\n' && *p != '\0') {
             throw ParseError("Unterminated comment.");
         }
 
